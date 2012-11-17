@@ -56,7 +56,13 @@
   #define CV_XADD(addr,delta) _InterlockedExchangeAdd(const_cast<void*>(reinterpret_cast<volatile void*>(addr)), delta)
 #elif defined __GNUC__
 
-  #if __GNUC__*10 + __GNUC_MINOR__ >= 42
+  #if defined __clang__ && __clang_major__ >= 3
+    #ifdef __ATOMIC_SEQ_CST
+        #define CV_XADD(addr, delta) __c11_atomic_fetch_add((_Atomic(int)*)(addr), (delta), __ATOMIC_SEQ_CST)
+    #else
+        #define CV_XADD(addr, delta) __atomic_fetch_add((_Atomic(int)*)(addr), (delta), 5)
+    #endif
+  #elif __GNUC__*10 + __GNUC_MINOR__ >= 42
 
     #if !defined WIN32 && (defined __i486__ || defined __i586__ || \
         defined __i686__ || defined __MMX__ || defined __SSE__  || defined __ppc__)
@@ -85,6 +91,11 @@
 #endif
 
 #include <limits>
+
+#ifdef _MSC_VER
+# pragma warning(push)
+# pragma warning(disable:4127) //conditional expression is constant
+#endif
 
 namespace cv
 {
@@ -2455,18 +2466,10 @@ dot(const Vector<_Tp>& v1, const Vector<_Tp>& v2)
     assert(v1.size() == v2.size());
 
     _Tw s = 0;
-    if( n > 0 )
-    {
-        const _Tp *ptr1 = &v1[0], *ptr2 = &v2[0];
-     #if CV_ENABLE_UNROLLED
-        const size_t n2 = (n > 4) ? n : 4;
-        for(; i <= n2 - 4; i += 4 )
-            s += (_Tw)ptr1[i]*ptr2[i] + (_Tw)ptr1[i+1]*ptr2[i+1] +
-                (_Tw)ptr1[i+2]*ptr2[i+2] + (_Tw)ptr1[i+3]*ptr2[i+3];
-    #endif
-        for( ; i < n; i++ )
-            s += (_Tw)ptr1[i]*ptr2[i];
-    }
+    const _Tp *ptr1 = &v1[0], *ptr2 = &v2[0];
+    for( ; i < n; i++ )
+        s += (_Tw)ptr1[i]*ptr2[i];
+
     return s;
 }
 
@@ -3780,23 +3783,6 @@ struct CV_EXPORTS Formatted
     vector<int> params;
 };
 
-
-/** Writes a point to an output stream in Matlab notation
- */
-template<typename _Tp> inline std::ostream& operator<<(std::ostream& out, const Point_<_Tp>& p)
-{
-    out << "[" << p.x << ", " << p.y << "]";
-    return out;
-}
-
-/** Writes a point to an output stream in Matlab notation
- */
-template<typename _Tp> inline std::ostream& operator<<(std::ostream& out, const Point3_<_Tp>& p)
-{
-    out << "[" << p.x << ", " << p.y << ", " << p.z << "]";
-    return out;
-}
-
 static inline Formatted format(const Mat& mtx, const char* fmt,
                                const vector<int>& params=vector<int>())
 {
@@ -3858,6 +3844,71 @@ template<typename _Tp> static inline std::ostream& operator << (std::ostream& ou
 }
 
 
+/** Writes a Matx to an output stream.
+ */
+template<typename _Tp, int m, int n> inline std::ostream& operator<<(std::ostream& out, const Matx<_Tp, m, n>& matx)
+{
+    out << cv::Mat(matx);
+    return out;
+}
+
+/** Writes a point to an output stream in Matlab notation
+ */
+template<typename _Tp> inline std::ostream& operator<<(std::ostream& out, const Point_<_Tp>& p)
+{
+    out << "[" << p.x << ", " << p.y << "]";
+    return out;
+}
+
+/** Writes a point to an output stream in Matlab notation
+ */
+template<typename _Tp> inline std::ostream& operator<<(std::ostream& out, const Point3_<_Tp>& p)
+{
+    out << "[" << p.x << ", " << p.y << ", " << p.z << "]";
+    return out;
+}
+
+/** Writes a Vec to an output stream. Format example : [10, 20, 30]
+ */
+template<typename _Tp, int n> inline std::ostream& operator<<(std::ostream& out, const Vec<_Tp, n>& vec)
+{
+    out << "[";
+
+    if(Vec<_Tp, n>::depth < CV_32F)
+    {
+        for (int i = 0; i < n - 1; ++i) {
+            out << (int)vec[i] << ", ";
+        }
+        out << (int)vec[n-1] << "]";
+    }
+    else
+    {
+        for (int i = 0; i < n - 1; ++i) {
+            out << vec[i] << ", ";
+        }
+        out << vec[n-1] << "]";
+    }
+
+    return out;
+}
+
+/** Writes a Size_ to an output stream. Format example : [640 x 480]
+ */
+template<typename _Tp> inline std::ostream& operator<<(std::ostream& out, const Size_<_Tp>& size)
+{
+    out << "[" << size.width << " x " << size.height << "]";
+    return out;
+}
+
+/** Writes a Rect_ to an output stream. Format example : [640 x 480 from (10, 20)]
+ */
+template<typename _Tp> inline std::ostream& operator<<(std::ostream& out, const Rect_<_Tp>& rect)
+{
+    out << "[" << rect.width << " x " << rect.height << " from (" << rect.x << ", " << rect.y << ")]";
+    return out;
+}
+
+
 template<typename _Tp> inline Ptr<_Tp> Algorithm::create(const string& name)
 {
     return _create(name).ptr<_Tp>();
@@ -3875,6 +3926,22 @@ inline void Algorithm::set(const char* _name, const Ptr<_Tp>& value)
 
 template<typename _Tp>
 inline void Algorithm::set(const string& _name, const Ptr<_Tp>& value)
+{
+    this->set<_Tp>(_name.c_str(), value);
+}
+
+template<typename _Tp>
+inline void Algorithm::setAlgorithm(const char* _name, const Ptr<_Tp>& value)
+{
+    Ptr<Algorithm> algo_ptr = value. template ptr<cv::Algorithm>();
+    if (algo_ptr.empty()) {
+        CV_Error( CV_StsUnsupportedFormat, "unknown/unsupported Ptr type of the second parameter of the method Algorithm::set");
+    }
+    info()->set(this, _name, ParamType<Algorithm>::type, &algo_ptr);
+}
+
+template<typename _Tp>
+inline void Algorithm::setAlgorithm(const string& _name, const Ptr<_Tp>& value)
 {
     this->set<_Tp>(_name.c_str(), value);
 }
@@ -3912,6 +3979,10 @@ template<typename _Tp> inline void AlgorithmInfo::addParam(Algorithm& algo, cons
 }
 
 }
+
+#ifdef _MSC_VER
+# pragma warning(pop)
+#endif
 
 #endif // __cplusplus
 #endif

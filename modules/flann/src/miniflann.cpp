@@ -331,7 +331,7 @@ buildIndex(void*& index, const Mat& data, const IndexParams& params, const Dista
 #if CV_NEON
 typedef ::cvflann::Hamming<uchar> HammingDistance;
 #else
-typedef ::cvflann::HammingLUT2 HammingDistance;
+typedef ::cvflann::HammingLUT HammingDistance;
 #endif
 
 Index::Index()
@@ -500,7 +500,7 @@ int runRadiusSearch_(void* index, const Mat& query, Mat& indices, Mat& dists,
     ::cvflann::Matrix<DistanceType> _dists((DistanceType*)dists.data, dists.rows, dists.cols);
 
     return ((IndexType*)index)->radiusSearch(_query, _indices, _dists,
-                                            saturate_cast<DistanceType>(radius),
+                                            saturate_cast<float>(radius),
                                             (const ::cvflann::SearchParams&)get_params(params));
 }
 
