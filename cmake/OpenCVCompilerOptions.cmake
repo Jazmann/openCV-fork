@@ -1,4 +1,4 @@
-if(MINGW)
+if(MINGW OR (X86 AND UNIX AND NOT APPLE))
   # mingw compiler is known to produce unstable SSE code with -O3 hence we are trying to use -O2 instead
   if(CMAKE_COMPILER_IS_GNUCXX)
     foreach(flags CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_DEBUG)
@@ -56,18 +56,12 @@ if(MINGW)
   endif()
 endif()
 
-if(OPENCV_CAN_BREAK_BINARY_COMPATIBILITY)
-  add_definitions(-DOPENCV_CAN_BREAK_BINARY_COMPATIBILITY)
-endif()
-
 if(CMAKE_COMPILER_IS_GNUCXX)
   # High level of warnings.
   add_extra_compiler_option(-W)
   add_extra_compiler_option(-Wall)
   add_extra_compiler_option(-Werror=return-type)
-  if(OPENCV_CAN_BREAK_BINARY_COMPATIBILITY)
-    add_extra_compiler_option(-Werror=non-virtual-dtor)
-  endif()
+  #add_extra_compiler_option(-Werror=non-virtual-dtor)
   add_extra_compiler_option(-Werror=address)
   add_extra_compiler_option(-Werror=sequence-point)
   add_extra_compiler_option(-Wformat)

@@ -340,12 +340,12 @@ void GPUErode(const oclMat &src, oclMat &dst, oclMat &mat_kernel, Size &ksize, c
     Context *clCxt = src.clCxt;
     string kernelName;
     size_t localThreads[3] = {16, 16, 1};
-    size_t globalThreads[3] = {(src.cols + localThreads[0]) / localThreads[0] *localThreads[0], (src.rows + localThreads[1]) / localThreads[1] *localThreads[1], 1};
+    size_t globalThreads[3] = {(src.cols + localThreads[0] - 1) / localThreads[0] *localThreads[0], (src.rows + localThreads[1] - 1) / localThreads[1] *localThreads[1], 1};
 
     if(src.type() == CV_8UC1)
     {
         kernelName = "morph_C1_D0";
-        globalThreads[0] = ((src.cols + 3) / 4 + localThreads[0]) / localThreads[0] * localThreads[0];
+        globalThreads[0] = ((src.cols + 3) / 4 + localThreads[0] - 1) / localThreads[0] * localThreads[0];
         CV_Assert( localThreads[0]*localThreads[1] * 8 >= (localThreads[0] * 4 + ksize.width - 1) * (localThreads[1] + ksize.height - 1) );
     }
     else
@@ -489,7 +489,7 @@ namespace
         MorphologyFilterEngine_GPU(const Ptr<BaseFilter_GPU> &filter2D_, int iters_) :
             Filter2DEngine_GPU(filter2D_), iters(iters_) {}
 
-        virtual void apply(const oclMat &src, oclMat &dst, Rect roi = Rect(0, 0, -1, -1))
+        virtual void apply(const oclMat &src, oclMat &dst)
         {
             Filter2DEngine_GPU::apply(src, dst);
             //if (iters > 1)
@@ -778,7 +778,7 @@ namespace
         virtual void apply(const oclMat &src, oclMat &dst, Rect roi = Rect(0, 0, -1, -1))
         {
             Size src_size = src.size();
-            int src_type = src.type();
+            //int src_type = src.type();
 
             int cn = src.oclchannels();
             //dst.create(src_size, src_type);
@@ -1235,7 +1235,7 @@ void linearRowFilter_gpu(const oclMat &src, const oclMat &dst, oclMat mat_kernel
     openCLExecuteKernel(clCxt, &filter_sep_row, kernelName, globalThreads, localThreads, args, channels, src.depth(), compile_option);
 }
 
-Ptr<BaseRowFilter_GPU> cv::ocl::getLinearRowFilter_GPU(int srcType, int bufType, const Mat &rowKernel, int anchor, int bordertype)
+Ptr<BaseRowFilter_GPU> cv::ocl::getLinearRowFilter_GPU(int srcType, int /*bufType*/, const Mat &rowKernel, int anchor, int bordertype)
 {
     static const gpuFilter1D_t gpuFilter1D_callers[6] =
     {
@@ -1391,7 +1391,7 @@ void linearColumnFilter_gpu(const oclMat &src, const oclMat &dst, oclMat mat_ker
     openCLExecuteKernel(clCxt, &filter_sep_col, kernelName, globalThreads, localThreads, args, -1, -1, compile_option);
 }
 
-Ptr<BaseColumnFilter_GPU> cv::ocl::getLinearColumnFilter_GPU(int bufType, int dstType, const Mat &columnKernel, int anchor, int bordertype, double delta)
+Ptr<BaseColumnFilter_GPU> cv::ocl::getLinearColumnFilter_GPU(int /*bufType*/, int dstType, const Mat &columnKernel, int anchor, int bordertype, double /*delta*/)
 {
     static const gpuFilter1D_t gpuFilter1D_callers[6] =
     {

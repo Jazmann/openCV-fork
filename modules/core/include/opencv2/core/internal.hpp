@@ -59,16 +59,7 @@
 #  endif
 #endif
 
-#if defined WIN32 || defined WINCE
-#  ifndef _WIN32_WINNT         // This is needed for the declaration of TryEnterCriticalSection in winbase.h with Visual Studio 2005 (and older?)
-#    define _WIN32_WINNT 0x0400  // http://msdn.microsoft.com/en-us/library/ms686857(VS.85).aspx
-#  endif
-#  include <windows.h>
-#  undef small
-#  undef min
-#  undef max
-#  undef abs
-#else
+#if !defined WIN32 && !defined WINCE
 #  include <pthread.h>
 #endif
 
@@ -263,20 +254,20 @@ namespace cv
 } //namespace cv
 
 #define CV_INIT_ALGORITHM(classname, algname, memberinit) \
-    static Algorithm* create##classname() \
+    static ::cv::Algorithm* create##classname() \
     { \
         return new classname; \
     } \
     \
-    static AlgorithmInfo& classname##_info() \
+    static ::cv::AlgorithmInfo& classname##_info() \
     { \
-        static AlgorithmInfo classname##_info_var(algname, create##classname); \
+        static ::cv::AlgorithmInfo classname##_info_var(algname, create##classname); \
         return classname##_info_var; \
     } \
     \
-    static AlgorithmInfo& classname##_info_auto = classname##_info(); \
+    static ::cv::AlgorithmInfo& classname##_info_auto = classname##_info(); \
     \
-    AlgorithmInfo* classname::info() const \
+    ::cv::AlgorithmInfo* classname::info() const \
     { \
         static volatile bool initialized = false; \
         \

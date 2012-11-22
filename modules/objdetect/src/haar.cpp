@@ -54,6 +54,9 @@
 
 #if CV_AVX
 #  define CV_HAAR_USE_AVX 1
+#  if defined _MSC_VER
+#    pragma warning( disable : 4752 )
+#  endif
 #else
 #  if CV_SSE2 || CV_SSE3
 #    define CV_HAAR_USE_SSE 1
@@ -412,6 +415,9 @@ icvCreateHidHaarClassifierCascade( CvHaarClassifierCascade* cascade )
 #define calc_sum(rect,offset) \
     ((rect).p0[offset] - (rect).p1[offset] - (rect).p2[offset] + (rect).p3[offset])
 
+#define calc_sumf(rect,offset) \
+    static_cast<float>((rect).p0[offset] - (rect).p1[offset] - (rect).p2[offset] + (rect).p3[offset])
+
 
 CV_IMPL void
 cvSetImagesForHaarClassifierCascade( CvHaarClassifierCascade* _cascade,
@@ -652,7 +658,7 @@ double icvEvalHidHaarClassifierAVX( CvHidHaarClassifier* classifier,
         nodes[6] = (classifier+6)->node + idxV[6];
         nodes[7] = (classifier+7)->node + idxV[7];
 
-        __m256 t = _mm256_set1_ps(variance_norm_factor);
+        __m256 t = _mm256_set1_ps(static_cast<float>(variance_norm_factor));
 
         t = _mm256_mul_ps(t, _mm256_set_ps(nodes[7]->threshold,
                                            nodes[6]->threshold,
@@ -663,14 +669,14 @@ double icvEvalHidHaarClassifierAVX( CvHidHaarClassifier* classifier,
                                            nodes[1]->threshold,
                                            nodes[0]->threshold));
 
-        __m256 offset = _mm256_set_ps(calc_sum(nodes[7]->feature.rect[0], p_offset),
-                                      calc_sum(nodes[6]->feature.rect[0], p_offset),
-                                      calc_sum(nodes[5]->feature.rect[0], p_offset),
-                                      calc_sum(nodes[4]->feature.rect[0], p_offset),
-                                      calc_sum(nodes[3]->feature.rect[0], p_offset),
-                                      calc_sum(nodes[2]->feature.rect[0], p_offset),
-                                      calc_sum(nodes[1]->feature.rect[0], p_offset),
-                                      calc_sum(nodes[0]->feature.rect[0], p_offset));
+        __m256 offset = _mm256_set_ps(calc_sumf(nodes[7]->feature.rect[0], p_offset),
+                                      calc_sumf(nodes[6]->feature.rect[0], p_offset),
+                                      calc_sumf(nodes[5]->feature.rect[0], p_offset),
+                                      calc_sumf(nodes[4]->feature.rect[0], p_offset),
+                                      calc_sumf(nodes[3]->feature.rect[0], p_offset),
+                                      calc_sumf(nodes[2]->feature.rect[0], p_offset),
+                                      calc_sumf(nodes[1]->feature.rect[0], p_offset),
+                                      calc_sumf(nodes[0]->feature.rect[0], p_offset));
 
         __m256 weight = _mm256_set_ps(nodes[7]->feature.rect[0].weight,
                                       nodes[6]->feature.rect[0].weight,
@@ -683,14 +689,14 @@ double icvEvalHidHaarClassifierAVX( CvHidHaarClassifier* classifier,
 
         __m256 sum = _mm256_mul_ps(offset, weight);
 
-        offset = _mm256_set_ps(calc_sum(nodes[7]->feature.rect[1], p_offset),
-                               calc_sum(nodes[6]->feature.rect[1], p_offset),
-                               calc_sum(nodes[5]->feature.rect[1], p_offset),
-                               calc_sum(nodes[4]->feature.rect[1], p_offset),
-                               calc_sum(nodes[3]->feature.rect[1], p_offset),
-                               calc_sum(nodes[2]->feature.rect[1], p_offset),
-                               calc_sum(nodes[1]->feature.rect[1], p_offset),
-                               calc_sum(nodes[0]->feature.rect[1], p_offset));
+        offset = _mm256_set_ps(calc_sumf(nodes[7]->feature.rect[1], p_offset),
+                               calc_sumf(nodes[6]->feature.rect[1], p_offset),
+                               calc_sumf(nodes[5]->feature.rect[1], p_offset),
+                               calc_sumf(nodes[4]->feature.rect[1], p_offset),
+                               calc_sumf(nodes[3]->feature.rect[1], p_offset),
+                               calc_sumf(nodes[2]->feature.rect[1], p_offset),
+                               calc_sumf(nodes[1]->feature.rect[1], p_offset),
+                               calc_sumf(nodes[0]->feature.rect[1], p_offset));
 
         weight = _mm256_set_ps(nodes[7]->feature.rect[1].weight,
                                nodes[6]->feature.rect[1].weight,
@@ -704,26 +710,32 @@ double icvEvalHidHaarClassifierAVX( CvHidHaarClassifier* classifier,
         sum = _mm256_add_ps(sum, _mm256_mul_ps(offset, weight));
 
         if( nodes[0]->feature.rect[2].p0 )
-            tmp[0] = calc_sum(nodes[0]->feature.rect[2], p_offset) * nodes[0]->feature.rect[2].weight;
+            tmp[0] = calc_sumf(nodes[0]->feature.rect[2], p_offset) * nodes[0]->feature.rect[2].weight;
         if( nodes[1]->feature.rect[2].p0 )
-            tmp[1] = calc_sum(nodes[1]->feature.rect[2], p_offset) * nodes[1]->feature.rect[2].weight;
+            tmp[1] = calc_sumf(nodes[1]->feature.rect[2], p_offset) * nodes[1]->feature.rect[2].weight;
         if( nodes[2]->feature.rect[2].p0 )
-            tmp[2] = calc_sum(nodes[2]->feature.rect[2], p_offset) * nodes[2]->feature.rect[2].weight;
+            tmp[2] = calc_sumf(nodes[2]->feature.rect[2], p_offset) * nodes[2]->feature.rect[2].weight;
         if( nodes[3]->feature.rect[2].p0 )
-            tmp[3] = calc_sum(nodes[3]->feature.rect[2], p_offset) * nodes[3]->feature.rect[2].weight;
+            tmp[3] = calc_sumf(nodes[3]->feature.rect[2], p_offset) * nodes[3]->feature.rect[2].weight;
         if( nodes[4]->feature.rect[2].p0 )
-            tmp[4] = calc_sum(nodes[4]->feature.rect[2], p_offset) * nodes[4]->feature.rect[2].weight;
+            tmp[4] = calc_sumf(nodes[4]->feature.rect[2], p_offset) * nodes[4]->feature.rect[2].weight;
         if( nodes[5]->feature.rect[2].p0 )
-            tmp[5] = calc_sum(nodes[5]->feature.rect[2], p_offset) * nodes[5]->feature.rect[2].weight;
+            tmp[5] = calc_sumf(nodes[5]->feature.rect[2], p_offset) * nodes[5]->feature.rect[2].weight;
         if( nodes[6]->feature.rect[2].p0 )
-            tmp[6] = calc_sum(nodes[6]->feature.rect[2], p_offset) * nodes[6]->feature.rect[2].weight;
+            tmp[6] = calc_sumf(nodes[6]->feature.rect[2], p_offset) * nodes[6]->feature.rect[2].weight;
         if( nodes[7]->feature.rect[2].p0 )
-            tmp[7] = calc_sum(nodes[7]->feature.rect[2], p_offset) * nodes[7]->feature.rect[2].weight;
+            tmp[7] = calc_sumf(nodes[7]->feature.rect[2], p_offset) * nodes[7]->feature.rect[2].weight;
 
         sum = _mm256_add_ps(sum,_mm256_load_ps(tmp));
 
-        __m256 left  = _mm256_set_ps(nodes[7]->left, nodes[6]->left, nodes[5]->left, nodes[4]->left, nodes[3]->left, nodes[2]->left, nodes[1]->left, nodes[0]->left );
-        __m256 right = _mm256_set_ps(nodes[7]->right,nodes[6]->right,nodes[5]->right,nodes[4]->right,nodes[3]->right,nodes[2]->right,nodes[1]->right,nodes[0]->right);
+        __m256 left  = _mm256_set_ps(static_cast<float>(nodes[7]->left), static_cast<float>(nodes[6]->left),
+                                     static_cast<float>(nodes[5]->left), static_cast<float>(nodes[4]->left),
+                                     static_cast<float>(nodes[3]->left), static_cast<float>(nodes[2]->left),
+                                     static_cast<float>(nodes[1]->left), static_cast<float>(nodes[0]->left));
+        __m256 right = _mm256_set_ps(static_cast<float>(nodes[7]->right),static_cast<float>(nodes[6]->right),
+                                     static_cast<float>(nodes[5]->right),static_cast<float>(nodes[4]->right),
+                                     static_cast<float>(nodes[3]->right),static_cast<float>(nodes[2]->right),
+                                     static_cast<float>(nodes[1]->right),static_cast<float>(nodes[0]->right));
 
         _mm256_store_si256((__m256i*)idxV, _mm256_cvttps_epi32(_mm256_blendv_ps(right, left, _mm256_cmp_ps(sum, t, _CMP_LT_OQ))));
 
@@ -918,7 +930,7 @@ cvRunHaarClassifierCascadeSum( const CvHaarClassifierCascade* _cascade,
                         classifiers[7] = cascade->stage_classifier[i].classifier + j + 7;
                         nodes[7] = classifiers[7]->node;
 
-                        __m256 t = _mm256_set1_ps(variance_norm_factor);
+                        __m256 t = _mm256_set1_ps(static_cast<float>(variance_norm_factor));
                         t = _mm256_mul_ps(t, _mm256_set_ps(nodes[7]->threshold,
                                                            nodes[6]->threshold,
                                                            nodes[5]->threshold,
@@ -928,14 +940,14 @@ cvRunHaarClassifierCascadeSum( const CvHaarClassifierCascade* _cascade,
                                                            nodes[1]->threshold,
                                                            nodes[0]->threshold));
 
-                        __m256 offset = _mm256_set_ps(calc_sum(nodes[7]->feature.rect[0], p_offset),
-                                                      calc_sum(nodes[6]->feature.rect[0], p_offset),
-                                                      calc_sum(nodes[5]->feature.rect[0], p_offset),
-                                                      calc_sum(nodes[4]->feature.rect[0], p_offset),
-                                                      calc_sum(nodes[3]->feature.rect[0], p_offset),
-                                                      calc_sum(nodes[2]->feature.rect[0], p_offset),
-                                                      calc_sum(nodes[1]->feature.rect[0], p_offset),
-                                                      calc_sum(nodes[0]->feature.rect[0], p_offset));
+                        __m256 offset = _mm256_set_ps(calc_sumf(nodes[7]->feature.rect[0], p_offset),
+                                                      calc_sumf(nodes[6]->feature.rect[0], p_offset),
+                                                      calc_sumf(nodes[5]->feature.rect[0], p_offset),
+                                                      calc_sumf(nodes[4]->feature.rect[0], p_offset),
+                                                      calc_sumf(nodes[3]->feature.rect[0], p_offset),
+                                                      calc_sumf(nodes[2]->feature.rect[0], p_offset),
+                                                      calc_sumf(nodes[1]->feature.rect[0], p_offset),
+                                                      calc_sumf(nodes[0]->feature.rect[0], p_offset));
 
                         __m256 weight = _mm256_set_ps(nodes[7]->feature.rect[0].weight,
                                                       nodes[6]->feature.rect[0].weight,
@@ -948,14 +960,14 @@ cvRunHaarClassifierCascadeSum( const CvHaarClassifierCascade* _cascade,
 
                         __m256 sum = _mm256_mul_ps(offset, weight);
 
-                        offset = _mm256_set_ps(calc_sum(nodes[7]->feature.rect[1], p_offset),
-                                               calc_sum(nodes[6]->feature.rect[1], p_offset),
-                                               calc_sum(nodes[5]->feature.rect[1], p_offset),
-                                               calc_sum(nodes[4]->feature.rect[1], p_offset),
-                                               calc_sum(nodes[3]->feature.rect[1], p_offset),
-                                               calc_sum(nodes[2]->feature.rect[1], p_offset),
-                                               calc_sum(nodes[1]->feature.rect[1], p_offset),
-                                               calc_sum(nodes[0]->feature.rect[1], p_offset));
+                        offset = _mm256_set_ps(calc_sumf(nodes[7]->feature.rect[1], p_offset),
+                                               calc_sumf(nodes[6]->feature.rect[1], p_offset),
+                                               calc_sumf(nodes[5]->feature.rect[1], p_offset),
+                                               calc_sumf(nodes[4]->feature.rect[1], p_offset),
+                                               calc_sumf(nodes[3]->feature.rect[1], p_offset),
+                                               calc_sumf(nodes[2]->feature.rect[1], p_offset),
+                                               calc_sumf(nodes[1]->feature.rect[1], p_offset),
+                                               calc_sumf(nodes[0]->feature.rect[1], p_offset));
 
                         weight = _mm256_set_ps(nodes[7]->feature.rect[1].weight,
                                                nodes[6]->feature.rect[1].weight,
@@ -1023,7 +1035,7 @@ cvRunHaarClassifierCascadeSum( const CvHaarClassifierCascade* _cascade,
                         classifiers[7] = cascade->stage_classifier[i].classifier + j + 7;
                         nodes[7] = classifiers[7]->node;
 
-                        __m256 t = _mm256_set1_ps(variance_norm_factor);
+                        __m256 t = _mm256_set1_ps(static_cast<float>(variance_norm_factor));
 
                         t = _mm256_mul_ps(t, _mm256_set_ps(nodes[7]->threshold,
                                                            nodes[6]->threshold,
@@ -1034,14 +1046,14 @@ cvRunHaarClassifierCascadeSum( const CvHaarClassifierCascade* _cascade,
                                                            nodes[1]->threshold,
                                                            nodes[0]->threshold));
 
-                        __m256 offset = _mm256_set_ps(calc_sum(nodes[7]->feature.rect[0], p_offset),
-                                                      calc_sum(nodes[6]->feature.rect[0], p_offset),
-                                                      calc_sum(nodes[5]->feature.rect[0], p_offset),
-                                                      calc_sum(nodes[4]->feature.rect[0], p_offset),
-                                                      calc_sum(nodes[3]->feature.rect[0], p_offset),
-                                                      calc_sum(nodes[2]->feature.rect[0], p_offset),
-                                                      calc_sum(nodes[1]->feature.rect[0], p_offset),
-                                                      calc_sum(nodes[0]->feature.rect[0], p_offset));
+                        __m256 offset = _mm256_set_ps(calc_sumf(nodes[7]->feature.rect[0], p_offset),
+                                                      calc_sumf(nodes[6]->feature.rect[0], p_offset),
+                                                      calc_sumf(nodes[5]->feature.rect[0], p_offset),
+                                                      calc_sumf(nodes[4]->feature.rect[0], p_offset),
+                                                      calc_sumf(nodes[3]->feature.rect[0], p_offset),
+                                                      calc_sumf(nodes[2]->feature.rect[0], p_offset),
+                                                      calc_sumf(nodes[1]->feature.rect[0], p_offset),
+                                                      calc_sumf(nodes[0]->feature.rect[0], p_offset));
 
                         __m256 weight = _mm256_set_ps(nodes[7]->feature.rect[0].weight,
                                                       nodes[6]->feature.rect[0].weight,
@@ -1054,14 +1066,14 @@ cvRunHaarClassifierCascadeSum( const CvHaarClassifierCascade* _cascade,
 
                         __m256 sum = _mm256_mul_ps(offset, weight);
 
-                        offset = _mm256_set_ps(calc_sum(nodes[7]->feature.rect[1], p_offset),
-                                               calc_sum(nodes[6]->feature.rect[1], p_offset),
-                                               calc_sum(nodes[5]->feature.rect[1], p_offset),
-                                               calc_sum(nodes[4]->feature.rect[1], p_offset),
-                                               calc_sum(nodes[3]->feature.rect[1], p_offset),
-                                               calc_sum(nodes[2]->feature.rect[1], p_offset),
-                                               calc_sum(nodes[1]->feature.rect[1], p_offset),
-                                               calc_sum(nodes[0]->feature.rect[1], p_offset));
+                        offset = _mm256_set_ps(calc_sumf(nodes[7]->feature.rect[1], p_offset),
+                                               calc_sumf(nodes[6]->feature.rect[1], p_offset),
+                                               calc_sumf(nodes[5]->feature.rect[1], p_offset),
+                                               calc_sumf(nodes[4]->feature.rect[1], p_offset),
+                                               calc_sumf(nodes[3]->feature.rect[1], p_offset),
+                                               calc_sumf(nodes[2]->feature.rect[1], p_offset),
+                                               calc_sumf(nodes[1]->feature.rect[1], p_offset),
+                                               calc_sumf(nodes[0]->feature.rect[1], p_offset));
 
                         weight = _mm256_set_ps(nodes[7]->feature.rect[1].weight,
                                                nodes[6]->feature.rect[1].weight,
@@ -1075,21 +1087,21 @@ cvRunHaarClassifierCascadeSum( const CvHaarClassifierCascade* _cascade,
                         sum = _mm256_add_ps(sum, _mm256_mul_ps(offset, weight));
 
                         if( nodes[0]->feature.rect[2].p0 )
-                            tmp[0] = calc_sum(nodes[0]->feature.rect[2],p_offset) * nodes[0]->feature.rect[2].weight;
+                            tmp[0] = calc_sumf(nodes[0]->feature.rect[2],p_offset) * nodes[0]->feature.rect[2].weight;
                         if( nodes[1]->feature.rect[2].p0 )
-                            tmp[1] = calc_sum(nodes[1]->feature.rect[2],p_offset) * nodes[1]->feature.rect[2].weight;
+                            tmp[1] = calc_sumf(nodes[1]->feature.rect[2],p_offset) * nodes[1]->feature.rect[2].weight;
                         if( nodes[2]->feature.rect[2].p0 )
-                            tmp[2] = calc_sum(nodes[2]->feature.rect[2],p_offset) * nodes[2]->feature.rect[2].weight;
+                            tmp[2] = calc_sumf(nodes[2]->feature.rect[2],p_offset) * nodes[2]->feature.rect[2].weight;
                         if( nodes[3]->feature.rect[2].p0 )
-                            tmp[3] = calc_sum(nodes[3]->feature.rect[2],p_offset) * nodes[3]->feature.rect[2].weight;
+                            tmp[3] = calc_sumf(nodes[3]->feature.rect[2],p_offset) * nodes[3]->feature.rect[2].weight;
                         if( nodes[4]->feature.rect[2].p0 )
-                            tmp[4] = calc_sum(nodes[4]->feature.rect[2],p_offset) * nodes[4]->feature.rect[2].weight;
+                            tmp[4] = calc_sumf(nodes[4]->feature.rect[2],p_offset) * nodes[4]->feature.rect[2].weight;
                         if( nodes[5]->feature.rect[2].p0 )
-                            tmp[5] = calc_sum(nodes[5]->feature.rect[2],p_offset) * nodes[5]->feature.rect[2].weight;
+                            tmp[5] = calc_sumf(nodes[5]->feature.rect[2],p_offset) * nodes[5]->feature.rect[2].weight;
                         if( nodes[6]->feature.rect[2].p0 )
-                            tmp[6] = calc_sum(nodes[6]->feature.rect[2],p_offset) * nodes[6]->feature.rect[2].weight;
+                            tmp[6] = calc_sumf(nodes[6]->feature.rect[2],p_offset) * nodes[6]->feature.rect[2].weight;
                         if( nodes[7]->feature.rect[2].p0 )
-                            tmp[7] = calc_sum(nodes[7]->feature.rect[2],p_offset) * nodes[7]->feature.rect[2].weight;
+                            tmp[7] = calc_sumf(nodes[7]->feature.rect[2],p_offset) * nodes[7]->feature.rect[2].weight;
 
                         sum = _mm256_add_ps(sum, _mm256_load_ps(tmp));
 

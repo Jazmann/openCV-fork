@@ -73,22 +73,56 @@ void print_info()
 #endif
 
 }
-
+std::string workdir;
 int main(int argc, char **argv)
 {
-    std::vector<cv::ocl::Info> oclinfo;
     TS::ptr()->init("ocl");
     InitGoogleTest(&argc, argv);
+    const char *keys =
+        "{ h | false              | print help message }"
+		"{ w | ../../../samples/c/| set working directory i.e. -w=C:\\}"
+        "{ t | gpu                | set device type:i.e. -t=cpu or gpu}"
+        "{ p | 0                  | set platform id i.e. -p=0}"
+        "{ d | 0                  | set device id i.e. -d=0}";
 
-    print_info();
-    int devnums = getDevice(oclinfo);
-    if(devnums < 1)
+    CommandLineParser cmd(argc, argv, keys);
+    if (cmd.get<string>("h")=="true")
     {
-        std::cout << "no device found\n";
+        cout << "Avaible options besides goole test option:" << endl;
+        cmd.printMessage();
+        return 0;
+    }
+    workdir = cmd.get<string>("w");
+    string type = cmd.get<string>("t");
+    unsigned int pid = cmd.get<unsigned int>("p");
+    int device = cmd.get<int>("d");
+    print_info();
+    int flag = CVCL_DEVICE_TYPE_GPU;
+
+    if(type == "cpu")
+    {
+        flag = CVCL_DEVICE_TYPE_CPU;
+    }
+    std::vector<cv::ocl::Info> oclinfo;
+    int devnums = getDevice(oclinfo);
+    if(devnums <= device || device < 0)
+    {
+        std::cout << "device invalid\n";
         return -1;
     }
-    //if you want to use undefault device, set it here
-    //setDevice(oclinfo[0]);
+
+    if(pid >= oclinfo.size())
+    {
+        std::cout << "platform invalid\n";
+        return -1;
+    }
+
+    if(pid != 0 || device != 0)
+    {
+        setDevice(oclinfo[pid], device);
+    }
+
+    cout << "Device type:" << type << endl << "Device name:" << oclinfo[pid].DeviceName[device] << endl;
     setBinpath(CLBINPATH);
     return RUN_ALL_TESTS();
 }

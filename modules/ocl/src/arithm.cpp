@@ -772,7 +772,7 @@ Scalar arithmetic_sum(const oclMat &src, int type = 0)
 {
     size_t groupnum = src.clCxt->impl->maxComputeUnits;
     CV_Assert(groupnum != 0);
-    int vlen = src.oclchannels() == 3 ? 12 : 8, dbsize = groupnum * vlen, status;
+    int vlen = src.oclchannels() == 3 ? 12 : 8, dbsize = groupnum * vlen;
     Context *clCxt = src.clCxt;
     T *p = new T[dbsize];
     cl_mem dstBuffer = openCLCreateBuffer(clCxt, CL_MEM_WRITE_ONLY, dbsize * sizeof(T));
@@ -813,6 +813,22 @@ Scalar cv::ocl::sum(const oclMat &src)
     return func(src, 0);
 }
 
+Scalar cv::ocl::absSum(const oclMat &src)
+{
+    if(src.clCxt->impl->double_support == 0 && src.depth() == CV_64F)
+    {
+        CV_Error(CV_GpuNotSupported, "select device don't support double");
+    }
+    static sumFunc functab[2] =
+    {
+        arithmetic_sum<float>,
+        arithmetic_sum<double>
+    };
+
+    sumFunc func;
+    func = functab[src.clCxt->impl->double_support];
+    return func(src, 1);
+}
 
 Scalar cv::ocl::sqrSum(const oclMat &src)
 {
@@ -930,7 +946,7 @@ template <typename T> void arithmetic_minMax(const oclMat &src, double *minVal, 
     CV_Assert(groupnum != 0);
     groupnum = groupnum * 2;
     int vlen = 8;
-    int dbsize = groupnum * 2 * vlen * sizeof(T) , status;
+    int dbsize = groupnum * 2 * vlen * sizeof(T) ;
     Context *clCxt = src.clCxt;
     cl_mem dstBuffer = openCLCreateBuffer(clCxt, CL_MEM_WRITE_ONLY, dbsize);
     *minVal = std::numeric_limits<double>::max() , *maxVal = -std::numeric_limits<double>::max();
@@ -945,13 +961,17 @@ template <typename T> void arithmetic_minMax(const oclMat &src, double *minVal, 
     T *p = new T[groupnum * vlen * 2];
     memset(p, 0, dbsize);
     openCLReadBuffer(clCxt, dstBuffer, (void *)p, dbsize);
-    for(int i = 0; i < vlen * groupnum; i++)
-    {
-        *minVal = *minVal < p[i] ? *minVal : p[i];
+    if(minVal != NULL){
+        for(int i = 0; i < vlen * (int)groupnum; i++)
+        {
+            *minVal = *minVal < p[i] ? *minVal : p[i];
+        }
     }
-    for(int i = vlen * groupnum; i < 2 * vlen * groupnum; i++)
-    {
-        *maxVal = *maxVal > p[i] ? *maxVal : p[i];
+    if(maxVal != NULL){
+        for(int i = vlen * (int)groupnum; i < 2 * vlen * (int)groupnum; i++)
+        {
+            *maxVal = *maxVal > p[i] ? *maxVal : p[i];
+        }
     }
     delete[] p;
     openCLFree(dstBuffer);
@@ -1606,7 +1626,7 @@ void arithmetic_minMaxLoc(const oclMat &src, double *minVal, double *maxVal,
     size_t groupnum = src.clCxt->impl->maxComputeUnits;
     CV_Assert(groupnum != 0);
     int minloc = -1 , maxloc = -1;
-    int vlen = 4, dbsize = groupnum * vlen * 4 * sizeof(T) , status;
+    int vlen = 4, dbsize = groupnum * vlen * 4 * sizeof(T) ;
     Context *clCxt = src.clCxt;
     cl_mem dstBuffer = openCLCreateBuffer(clCxt, CL_MEM_WRITE_ONLY, dbsize);
     *minVal = std::numeric_limits<double>::max() , *maxVal = -std::numeric_limits<double>::max();
@@ -1621,15 +1641,15 @@ void arithmetic_minMaxLoc(const oclMat &src, double *minVal, double *maxVal,
     T *p = new T[groupnum * vlen * 4];
     memset(p, 0, dbsize);
     openCLReadBuffer(clCxt, dstBuffer, (void *)p, dbsize);
-    for(int i = 0; i < vlen * groupnum; i++)
+    for(int i = 0; i < vlen * (int)groupnum; i++)
     {
         *minVal = (*minVal < p[i] || p[i + 2 * vlen * groupnum] == -1) ? *minVal : p[i];
-        minloc = (*minVal < p[i] || p[i + 2 * vlen * groupnum] == -1) ? minloc : p[i + 2 * vlen * groupnum];
+        minloc = (*minVal < p[i] || p[i + 2 * vlen * groupnum] == -1) ? minloc : cvRound(p[i + 2 * vlen * groupnum]);
     }
-    for(int i = vlen * groupnum; i < 2 * vlen * groupnum; i++)
+    for(int i = vlen * (int)groupnum; i < 2 * vlen * (int)groupnum; i++)
     {
         *maxVal = (*maxVal > p[i] || p[i + 2 * vlen * groupnum] == -1) ? *maxVal : p[i];
-        maxloc = (*maxVal > p[i] || p[i + 2 * vlen * groupnum] == -1) ? maxloc : p[i + 2 * vlen * groupnum];
+        maxloc = (*maxVal > p[i] || p[i + 2 * vlen * groupnum] == -1) ? maxloc : cvRound(p[i + 2 * vlen * groupnum]);
     }
 
     int pre_rows = src.offset / src.step;
@@ -1717,7 +1737,7 @@ int cv::ocl::countNonZero(const oclMat &src)
     }
     CV_Assert(groupnum != 0);
     groupnum = groupnum * 2;
-    int vlen = 8 , dbsize = groupnum * vlen, status;
+    int vlen = 8 , dbsize = groupnum * vlen;
     //cl_ulong start, end;
     Context *clCxt = src.clCxt;
     string kernelName = "arithm_op_nonzero";

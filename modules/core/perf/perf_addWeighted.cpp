@@ -23,7 +23,14 @@ PERF_TEST_P(Size_MatType, addWeighted, TYPICAL_MATS_ADWEIGHTED)
 
     declare.in(src1, src2, dst, WARMUP_RNG).out(dst);
 
+    if (CV_MAT_DEPTH(type) == CV_32S)
+    {
+        // there might be not enough precision for integers
+        src1 /= 2048;
+        src2 /= 2048;
+    }
+
     TEST_CYCLE() cv::addWeighted( src1, alpha, src2, beta, gamma, dst, dst.type() );
 
-    SANITY_CHECK(dst);
+    SANITY_CHECK(dst, 1);
 }

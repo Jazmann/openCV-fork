@@ -42,6 +42,14 @@
 
 #include "precomp.hpp"
 
+#if defined WIN32 || defined WINCE
+    #include <windows.h>
+    #undef small
+    #undef min
+    #undef max
+    #undef abs
+#endif
+
 #if defined __linux__ || defined __APPLE__
     #include <unistd.h>
     #include <stdio.h>
@@ -362,8 +370,8 @@ void cv::setNumThreads( int threads )
     else if (pplScheduler == 0 || 1 + pplScheduler->GetNumberOfVirtualProcessors() != (unsigned int)threads)
     {
         pplScheduler = Concurrency::Scheduler::Create(Concurrency::SchedulerPolicy(2,
-                       Concurrency::PolicyElementKey::MinConcurrency, threads-1,
-                       Concurrency::PolicyElementKey::MaxConcurrency, threads-1));
+                       Concurrency::MinConcurrency, threads-1,
+                       Concurrency::MaxConcurrency, threads-1));
     }
 
 #endif
