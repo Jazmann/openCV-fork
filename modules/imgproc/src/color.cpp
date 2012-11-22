@@ -3251,6 +3251,29 @@ struct mRGBA2RGBA
 
 }//namespace cv
 
+////////////////// Convert to Rotated ColorSpace /////////////////
+
+template<typename _Tp> struct RGB2Rot
+{
+    typedef _Tp channel_type;
+    
+    RGB2Rot(Mat& _Tf, Mat& _TfRange, Vec& _TfScale) : Tf(_Tf), TfRange(_TfRange), TfScale(_TfScale) {}
+    void operator()(const _Tp* src, _Tp* dst, int n) const
+    {
+        Mat T = Tf, TRange = TfRange;
+        Vec TScale = TfScale;
+        n *= 3;
+        for( int i = 0; i < n; i += 3, src += 3 )
+        {
+            _Tp t0 = src[bidx], t1 = src[1], t2 = src[bidx ^ 2];
+            dst[i] = t0; dst[i+1] = t1; dst[i+2] = t2;
+        }
+    }
+    
+    Mat<CV_8U> Tf, TfRange;
+    Vec<float> TfScale;
+};
+
 //////////////////////////////////////////////////////////////////////////////////////////
 //                                   The main function                                  //
 //////////////////////////////////////////////////////////////////////////////////////////
