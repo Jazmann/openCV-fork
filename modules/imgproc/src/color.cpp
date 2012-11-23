@@ -3265,9 +3265,7 @@ template<typename _Tp> struct RGB2Rot
         n *= 3;
         for( int i = 0; i < n; i += 3, src += 3 )
         {
-            _Tp t0 = src[bidx], t1 = src[1], t2 = src[bidx ^ 2];
-            dst[i] = t0; dst[i+1] = t1; dst[i+2] = t2;
-        }
+            dst[i] = saturate_cast<uchar>( )(T * src[i] - TMin )/(TRange) );        }
     }
     
     Mat<CV_8U> Tf, TfRange;
