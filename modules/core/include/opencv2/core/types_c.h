@@ -568,23 +568,47 @@ IplConvKernelFP;
 \****************************************************************************************/
 
 #define CV_CN_MAX     512
-#define CV_CN_SHIFT   3
+// CV_CN_SHIFT resrves the first 4 bits for the Data Types (CV_8U, etc) 
+#define CV_CN_SHIFT   4 
+// CV_DEPTH_MAX is the maximum number of Data types allowed.
 #define CV_DEPTH_MAX  (1 << CV_CN_SHIFT)
 
-#define CV_8U   0
-#define CV_8S   1
-#define CV_16U  2
-#define CV_16S  3
-#define CV_32S  4
-#define CV_32F  5
-#define CV_64F  6
-#define CV_USRTYPE1 7
+#define CV_2U   0
+#define CV_4U   1
+#define CV_8U   2
+#define CV_8S   3
+#define CV_16U  4
+#define CV_16S  5
+#define CV_32S  6
+#define CV_32F  7
+#define CV_64F  8
+#define CV_USRTYPE1 9
+#define CV_USRTYPE2 10
+#define CV_USRTYPE3 11
+#define CV_USRTYPE4 12
+#define CV_USRTYPE5 13
+#define CV_USRTYPE6 14
+#define CV_USRTYPE7 15
 
+// CV_MAT_DEPTH_MASK bit mask which keeps only the right-most CV_CN_SHIFT bits. Keeps the user from screwing up when using CV_MAKETYPE.
 #define CV_MAT_DEPTH_MASK       (CV_DEPTH_MAX - 1)
+// CV_MAT_DEPTH(flags) applies the mask to the bits in flags.
 #define CV_MAT_DEPTH(flags)     ((flags) & CV_MAT_DEPTH_MASK)
-
+// CV_MAKETYPE(depth,cn) generated an integer using the right-most CV_CN_SHIFT bits for the depth and the rest for the channels.
 #define CV_MAKETYPE(depth,cn) (CV_MAT_DEPTH(depth) + (((cn)-1) << CV_CN_SHIFT))
 #define CV_MAKE_TYPE CV_MAKETYPE
+
+#define CV_2UC1 CV_MAKETYPE(CV_2U,1)
+#define CV_2UC2 CV_MAKETYPE(CV_2U,2)
+#define CV_2UC3 CV_MAKETYPE(CV_2U,3)
+#define CV_2UC4 CV_MAKETYPE(CV_2U,4)
+#define CV_2UC(n) CV_MAKETYPE(CV_2U,(n))
+
+#define CV_4UC1 CV_MAKETYPE(CV_4U,1)
+#define CV_4UC2 CV_MAKETYPE(CV_4U,2)
+#define CV_4UC3 CV_MAKETYPE(CV_4U,3)
+#define CV_4UC4 CV_MAKETYPE(CV_4U,4)
+#define CV_4UC(n) CV_MAKETYPE(CV_4U,(n))
 
 #define CV_8UC1 CV_MAKETYPE(CV_8U,1)
 #define CV_8UC2 CV_MAKETYPE(CV_8U,2)
