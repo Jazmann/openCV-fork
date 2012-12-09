@@ -398,6 +398,8 @@ public:
 template<typename _Tp> class CV_EXPORTS DataDepth {};
 
 template<> class DataDepth<bool> { public: enum { value = CV_8U, fmt=(int)'u' }; };
+template<> class DataDepth<u2bit> { public: enum { value = CV_2U, fmt=(int)'u' }; };
+template<> class DataDepth<u4bit> { public: enum { value = CV_4U, fmt=(int)'u' }; };
 template<> class DataDepth<uchar> { public: enum { value = CV_8U, fmt=(int)'u' }; };
 template<> class DataDepth<schar> { public: enum { value = CV_8S, fmt=(int)'c' }; };
 template<> class DataDepth<char> { public: enum { value = CV_8S, fmt=(int)'c' }; };
@@ -1011,6 +1013,30 @@ public:
            type = CV_MAKETYPE(depth, channels) };
 };
 
+template<> class DataType<u2bit>
+{
+public:
+    typedef u2bit value_type;
+    typedef u4bit work_type;
+    typedef value_type channel_type;
+    typedef value_type vec_type;
+    enum { generic_type = 0, depth = DataDepth<channel_type>::value, channels = 1,
+            fmt=DataDepth<channel_type>::fmt,
+            type = CV_MAKETYPE(depth, channels) };
+};
+    
+template<> class DataType<u4bit>
+{
+public:
+    typedef u4bit value_type;
+    typedef uchar work_type;
+    typedef value_type channel_type;
+    typedef value_type vec_type;
+    enum { generic_type = 0, depth = DataDepth<channel_type>::value, channels = 1,
+            fmt=DataDepth<channel_type>::fmt,
+            type = CV_MAKETYPE(depth, channels) };
+};
+    
 template<> class DataType<uchar>
 {
 public:

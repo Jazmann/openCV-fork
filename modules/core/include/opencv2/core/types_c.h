@@ -167,6 +167,8 @@ x/*M////////////////////////////////////////////////////////////////////////////
 #endif
 
 #ifndef HAVE_IPL
+   typedef unsigned char u2bit; // 2 bit int representation
+   typedef unsigned char u4bit; // 4 bit int representation
    typedef unsigned char uchar;
    typedef unsigned short ushort;
 #endif
