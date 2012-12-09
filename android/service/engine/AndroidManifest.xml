@@ -2,14 +2,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.opencv.engine"
 <<<<<<< HEAD
+<<<<<<< HEAD
     android:versionCode="20@ANDROID_PLATFORM_VERSION_CODE@"
     android:versionName="2.0" >
 =======
     android:versionCode="21"
     android:versionName="2.1" >
 >>>>>>> upstream/2.4
+=======
+    android:versionCode="23@ANDROID_PLATFORM_VERSION_CODE@"
+    android:versionName="2.3" >
+>>>>>>> upstream/master
 
-    <uses-sdk android:minSdkVersion="8" />
+    <uses-sdk android:minSdkVersion="@ANDROID_NATIVE_API_LEVEL@" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false"/>
 
     <application
