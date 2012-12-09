@@ -408,7 +408,6 @@ template<> class DataDepth<char> { public: enum { value = CV_8S, fmt=(int)'c' };
 template<> class DataDepth<ushort> { public: enum { value = CV_16U, fmt=(int)'w' }; };
 template<> class DataDepth<short> { public: enum { value = CV_16S, fmt=(int)'s' }; };
 template<> class DataDepth<int> { public: enum { value = CV_32S, fmt=(int)'i' }; };
-// this is temporary solution to support 32-bit unsigned integers
 template<> class DataDepth<unsigned> { public: enum { value = CV_32U, fmt=(int)'i' }; };
 template<> class DataDepth<float> { public: enum { value = CV_32F, fmt=(int)'f' }; };
 template<> class DataDepth<double> { public: enum { value = CV_64F, fmt=(int)'d' }; };
