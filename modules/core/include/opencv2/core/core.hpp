@@ -1094,6 +1094,8 @@ public:
            fmt=DataDepth<channel_type>::fmt,
            type = CV_MAKETYPE(depth, channels) };
 };
+    
+    std::int8u_t
 
 template<> class DataType<double>
 {
