@@ -1308,7 +1308,7 @@ namespace cv
         else if( scn == 3 && dcn == 1 )
         {
             for( x = 0; x < len; x++, src += 3 )
-                dst[x] = saturate_cast<T>(m[0]*src[0] + m[1]*src[1] + m[2]*src[2] + m[3]);
+                dst[x] = saturate_cast<DT>(m[0]*src[0] + m[1]*src[1] + m[2]*src[2] + m[3]);
         }
         else if( scn == 4 && dcn == 4 )
         {

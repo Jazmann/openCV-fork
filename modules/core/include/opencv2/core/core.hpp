@@ -398,8 +398,10 @@ public:
 template<typename _Tp> class CV_EXPORTS DataDepth {};
 
 template<> class DataDepth<bool> { public: enum { value = CV_8U, fmt=(int)'u' }; };
+    /*
 template<> class DataDepth<u2bit> { public: enum { value = CV_2U, fmt=(int)'u' }; };
 template<> class DataDepth<u4bit> { public: enum { value = CV_4U, fmt=(int)'u' }; };
+     */
 template<> class DataDepth<uchar> { public: enum { value = CV_8U, fmt=(int)'u' }; };
 template<> class DataDepth<schar> { public: enum { value = CV_8S, fmt=(int)'c' }; };
 template<> class DataDepth<char> { public: enum { value = CV_8S, fmt=(int)'c' }; };
@@ -1012,7 +1014,7 @@ public:
            fmt=DataDepth<channel_type>::fmt,
            type = CV_MAKETYPE(depth, channels) };
 };
-
+/*
 template<> class DataType<u2bit>
 {
 public:
@@ -1036,6 +1038,7 @@ public:
             fmt=DataDepth<channel_type>::fmt,
             type = CV_MAKETYPE(depth, channels) };
 };
+*/
     
 template<> class DataType<uchar>
 {
@@ -1132,8 +1135,6 @@ public:
            fmt=DataDepth<channel_type>::fmt,
            type = CV_MAKETYPE(depth, channels) };
 };
-    
-    std::int8u_t
 
 template<> class DataType<double>
 {

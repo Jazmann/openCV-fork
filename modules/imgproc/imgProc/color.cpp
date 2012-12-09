@@ -3257,19 +3257,19 @@ template<typename _Tp> struct RGB2Rot
 {
     typedef _Tp channel_type;
     
-    RGB2Rot(Mat& _Tf, Mat& _TfRange, Vec& _TfScale) : Tf(_Tf), TfRange(_TfRange), TfScale(_TfScale) {}
+    RGB2Rot(cv::Mat& _Tf, cv::Mat& _TfRange, cv::Vec& _TfScale) : Tf(_Tf), TfRange(_TfRange), TfScale(_TfScale) {}
     void operator()(const _Tp* src, _Tp* dst, int n) const
     {
-        Mat T = Tf, TRange = TfRange;
-        Vec TScale = TfScale;
+        cv::Mat T = Tf, TRange = TfRange;
+        cv::Vec TScale = TfScale;
         n *= 3;
         for( int i = 0; i < n; i += 3, src += 3 )
         {
             dst[i] = saturate_cast<uchar>( )(T * src[i] - TMin )/(TRange) );        }
     }
     
-    Mat<CV_8U> Tf, TfRange;
-    Vec<float> TfScale;
+    cv::Mat<CV_8U> Tf, TfRange;
+    cv::Vec<float> TfScale;
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////
