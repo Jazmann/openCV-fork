@@ -1278,6 +1278,67 @@ void cv::gemm( InputArray matA, InputArray matB, double alpha,
 
 namespace cv
 {
+    
+    template<typename ST, typename DT, typename WT> static void
+    transform_( const ST* src, DT* dst, const WT* m, int len, int scn, int dcn )
+    {
+        int x;
+        
+        if( scn == 2 && dcn == 2 )
+        {
+            for( x = 0; x < len*2; x += 2 )
+            {
+                ST v0 = src[x], v1 = src[x+1];
+                DT t0 = saturate_cast<DT>(m[0]*v0 + m[1]*v1 + m[2]);
+                DT t1 = saturate_cast<DT>(m[3]*v0 + m[4]*v1 + m[5]);
+                dst[x] = t0; dst[x+1] = t1;
+            }
+        }
+        else if( scn == 3 && dcn == 3 )
+        {
+            for( x = 0; x < len*3; x += 3 )
+            {
+                ST v0 = src[x], v1 = src[x+1], v2 = src[x+2];
+                DT t0 = saturate_cast<DT>(m[0]*v0 + m[1]*v1 + m[2]*v2 + m[3]);
+                DT t1 = saturate_cast<DT>(m[4]*v0 + m[5]*v1 + m[6]*v2 + m[7]);
+                DT t2 = saturate_cast<DT>(m[8]*v0 + m[9]*v1 + m[10]*v2 + m[11]);
+                dst[x] = t0; dst[x+1] = t1; dst[x+2] = t2;
+            }
+        }
+        else if( scn == 3 && dcn == 1 )
+        {
+            for( x = 0; x < len; x++, src += 3 )
+                dst[x] = saturate_cast<T>(m[0]*src[0] + m[1]*src[1] + m[2]*src[2] + m[3]);
+        }
+        else if( scn == 4 && dcn == 4 )
+        {
+            for( x = 0; x < len*4; x += 4 )
+            {
+                ST v0 = src[x], v1 = src[x+1], v2 = src[x+2], v3 = src[x+3];
+                DT t0 = saturate_cast<DT>(m[0]*v0 + m[1]*v1 + m[2]*v2 + m[3]*v3 + m[4]);
+                DT t1 = saturate_cast<DT>(m[5]*v0 + m[6]*v1 + m[7]*v2 + m[8]*v3 + m[9]);
+                dst[x] = t0; dst[x+1] = t1;
+                t0 = saturate_cast<DT>(m[10]*v0 + m[11]*v1 + m[12]*v2 + m[13]*v3 + m[14]);
+                t1 = saturate_cast<DT>(m[15]*v0 + m[16]*v1 + m[17]*v2 + m[18]*v3 + m[19]);
+                dst[x+2] = t0; dst[x+3] = t1;
+            }
+        }
+        else
+        {
+            for( x = 0; x < len; x++, src += scn, dst += dcn )
+            {
+                const WT* _m = m;
+                int j, k;
+                for( j = 0; j < dcn; j++, _m += scn + 1 )
+                {
+                    WT s = _m[scn];
+                    for( k = 0; k < scn; k++ )
+                        s += _m[k]*src[k];
+                    dst[j] = saturate_cast<DT>(s);
+                }
+            }
+        }
+    }
 
 template<typename T, typename WT> static void
 transform_( const T* src, T* dst, const WT* m, int len, int scn, int dcn )
