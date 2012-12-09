@@ -407,7 +407,7 @@ template<> class DataDepth<ushort> { public: enum { value = CV_16U, fmt=(int)'w'
 template<> class DataDepth<short> { public: enum { value = CV_16S, fmt=(int)'s' }; };
 template<> class DataDepth<int> { public: enum { value = CV_32S, fmt=(int)'i' }; };
 // this is temporary solution to support 32-bit unsigned integers
-template<> class DataDepth<unsigned> { public: enum { value = CV_32S, fmt=(int)'i' }; };
+template<> class DataDepth<unsigned> { public: enum { value = CV_32U, fmt=(int)'i' }; };
 template<> class DataDepth<float> { public: enum { value = CV_32F, fmt=(int)'f' }; };
 template<> class DataDepth<double> { public: enum { value = CV_64F, fmt=(int)'d' }; };
 template<typename _Tp> class DataDepth<_Tp*> { public: enum { value = CV_USRTYPE1, fmt=(int)'r' }; };
@@ -1109,6 +1109,18 @@ public:
            type = CV_MAKETYPE(depth, channels) };
 };
 
+    
+template<> class DataType<unsigned>    {
+public:
+    typedef unsigned value_type;
+    typedef value_type work_type;
+    typedef value_type channel_type;
+    typedef value_type vec_type;
+    enum { generic_type = 0, depth = DataDepth<channel_type>::value, channels = 1,
+           fmt=DataDepth<channel_type>::fmt,
+           type = CV_MAKETYPE(depth, channels) };
+};
+    
 template<> class DataType<float>
 {
 public:

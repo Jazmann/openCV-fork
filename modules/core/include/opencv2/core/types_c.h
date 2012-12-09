@@ -581,16 +581,16 @@ IplConvKernelFP;
 #define CV_8S   3
 #define CV_16U  4
 #define CV_16S  5
-#define CV_32S  6
-#define CV_32F  7
-#define CV_64F  8
-#define CV_USRTYPE1 9
-#define CV_USRTYPE2 10
-#define CV_USRTYPE3 11
-#define CV_USRTYPE4 12
-#define CV_USRTYPE5 13
-#define CV_USRTYPE6 14
-#define CV_USRTYPE7 15
+#define CV_32U  6
+#define CV_32S  7
+#define CV_32F  8
+#define CV_64F  9
+#define CV_USRTYPE1 10
+#define CV_USRTYPE2 11
+#define CV_USRTYPE3 12
+#define CV_USRTYPE4 13
+#define CV_USRTYPE5 14
+#define CV_USRTYPE6 15
 
 // CV_MAT_DEPTH_MASK bit mask which keeps only the right-most CV_CN_SHIFT bits. Keeps the user from screwing up when using CV_MAKETYPE.
 #define CV_MAT_DEPTH_MASK       (CV_DEPTH_MAX - 1)
@@ -635,6 +635,12 @@ IplConvKernelFP;
 #define CV_16SC3 CV_MAKETYPE(CV_16S,3)
 #define CV_16SC4 CV_MAKETYPE(CV_16S,4)
 #define CV_16SC(n) CV_MAKETYPE(CV_16S,(n))
+
+#define CV_32UC1 CV_MAKETYPE(CV_32S,1)
+#define CV_32UC2 CV_MAKETYPE(CV_32S,2)
+#define CV_32UC3 CV_MAKETYPE(CV_32S,3)
+#define CV_32UC4 CV_MAKETYPE(CV_32S,4)
+#define CV_32UC(n) CV_MAKETYPE(CV_32S,(n))
 
 #define CV_32SC1 CV_MAKETYPE(CV_32S,1)
 #define CV_32SC2 CV_MAKETYPE(CV_32S,2)
