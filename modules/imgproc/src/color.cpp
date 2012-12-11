@@ -3269,7 +3269,7 @@ struct mRGBA2RGBA
             n *= 3;
             for( int i = 0; i < n; i += 3, src += 3 )
             {
-                dst[i] = saturate_cast<uchar>( )(T * src[i] - TMin )/(TRange) );        }
+                dst[i] = saturate_cast<uchar>((T * src[i] - TMin )/(TRange) );        }
         }
     };
 
