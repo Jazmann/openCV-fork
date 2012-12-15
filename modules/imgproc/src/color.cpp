@@ -2309,7 +2309,7 @@ struct mRGBA2RGBA
         
     ////////////////// Convert to Rotated ColorSpace /////////////////
     
-    template<typename _Tp> struct RGB2Rot
+    /*template<typename _Tp> struct RGB2Rot
     {
         typedef _Tp channel_type;
         
@@ -2329,6 +2329,28 @@ struct mRGBA2RGBA
             {
                 dst[i] = saturate_cast<uchar>((T * src[i] - TMin )/(TRange) );
             }
+        }
+    };*/
+    
+    template<typename _Tp> struct RGB2Rot
+    {
+        typedef _Tp channel_type;
+        
+        Matx<float, 3, 4> M;
+        
+        // The transform to the new color space is (T vec - 255 TMin)/TRange. 255 is the range of 8bit RGB and can be replaced directly with a different range for 16 and 32 bit RGB spaces. The division by TRange is the direct element wise division and can safely be rounded to recast in the required bit depth.
+        
+        RGB2Rot(Matx<int, 3, 3>& M, Vec<int, 3>&  TRange, Vec<int,3>& TMin)// NOTE: MatX constructor should be able to be constructed using the {} notation using C++11 features
+        {
+            const float tempM[] = {(float)T[0][0]/(float)TRange[0], (float)T[0][1]/(float)TRange[1], (float)T[0][2]/(float)TRange[2], (float)TMin[0]/(float)TRange[0],
+                                   (float)T[1][0]/(float)TRange[0], (float)T[1][1]/(float)TRange[1], (float)T[1][2]/(float)TRange[2], (float)TMin[1]/(float)TRange[1],
+                                   (float)T[2][0]/(float)TRange[0], (float)T[2][1]/(float)TRange[1], (float)T[2][2]/(float)TRange[2], (float)TMin[2]/(float)TRange[2]};
+            M(tempM);
+        }
+        
+        void operator()(const _Tp* src, _Tp* dst, int n) const
+        {
+            transform(*src, *dst, M);
         }
     };
 
