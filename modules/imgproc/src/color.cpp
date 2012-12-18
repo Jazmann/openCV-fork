@@ -2340,12 +2340,12 @@ struct mRGBA2RGBA
         
         // The transform to the new color space is (T vec - 255 TMin)/TRange. 255 is the range of 8bit RGB and can be replaced directly with a different range for 16 and 32 bit RGB spaces. The division by TRange is the direct element wise division and can safely be rounded to recast in the required bit depth.
         
-        RGB2Rot(Matx<int, 3, 3>& M, Vec<int, 3>&  TRange, Vec<int,3>& TMin)// NOTE: MatX constructor should be able to be constructed using the {} notation using C++11 features
+        RGB2Rot(Matx<int, 3, 3>& T, Vec<int, 3>&  TRange, Vec<int,3>& TMin)// NOTE: MatX constructor should be able to be constructed using the {} notation using C++11 features
         {
-            const float tempM[] = {(float)T[0][0]/(float)TRange[0], (float)T[0][1]/(float)TRange[1], (float)T[0][2]/(float)TRange[2], (float)TMin[0]/(float)TRange[0],
-                                   (float)T[1][0]/(float)TRange[0], (float)T[1][1]/(float)TRange[1], (float)T[1][2]/(float)TRange[2], (float)TMin[1]/(float)TRange[1],
-                                   (float)T[2][0]/(float)TRange[0], (float)T[2][1]/(float)TRange[1], (float)T[2][2]/(float)TRange[2], (float)TMin[2]/(float)TRange[2]};
-            M(tempM);
+            M( (float)T(0, 0)/(float)TRange[0], (float)T(0, 1)/(float)TRange[1], (float)T(0, 2)/(float)TRange[2], (float)TMin[0]/(float)TRange[0],
+               (float)T(1, 0)/(float)TRange[0], (float)T(1, 1)/(float)TRange[1], (float)T(1, 2)/(float)TRange[2], (float)TMin[1]/(float)TRange[1],
+               (float)T(2, 0)/(float)TRange[0], (float)T(2, 1)/(float)TRange[1], (float)T(2, 2)/(float)TRange[2], (float)TMin[2]/(float)TRange[2]
+             );
         }
         
         void operator()(const _Tp* src, _Tp* dst, int n) const
@@ -2866,6 +2866,24 @@ void cv::cvtColor( InputArray _src, OutputArray _dst, int code, int dcn )
                     CV_Error( CV_StsBadArg, "Unsupported image depth" );
                 }
             }
+            break;
+        case COLOR_RGB2Rot:
+        {
+            if (dcn <= 0) dcn = 3;
+            CV_Assert( scn == 3 && dcn == 3 );
+            
+            _dst.create(sz, CV_MAKETYPE(depth, dcn));
+            dst = _dst.getMat();
+            cv::Matx<int, 3, 3> M(0,1,0,1,0,0,0,0,1);
+            cv::Vec<int, 3>  TRange(255,255,255);
+            cv::Vec<int,3>   TMin(0,0,0);
+            if( depth == CV_8U )
+            {
+                CvtColorLoop(src, dst, RGB2Rot<uchar>(M, TRange, TMin));
+            } else {
+                CV_Error( CV_StsBadArg, "Unsupported image depth" );
+            }
+        }
             break;
         default:
             CV_Error( CV_StsBadFlag, "Unknown/unsupported color conversion code" );

@@ -1058,13 +1058,18 @@ enum
     COLOR_BayerGB2RGB_EA = COLOR_BayerGR2BGR_EA,
     COLOR_BayerRG2RGB_EA = COLOR_BayerBG2BGR_EA,
     COLOR_BayerGR2RGB_EA = COLOR_BayerGB2BGR_EA,
+    
+    // Rotated RGB spaces.
+    COLOR_RGB2Rot = 131,
 
-    COLOR_COLORCVT_MAX  = 131
+    COLOR_COLORCVT_MAX  = 132
 };
 
 
 //! converts image from one color space to another
-CV_EXPORTS_W void cvtColor( InputArray src, OutputArray dst, int code, int dstCn=0 );
+    CV_EXPORTS_W void cvtColor( InputArray src, OutputArray dst, int code, int dstCn=0 );
+    template <typename Cvt> CV_EXPORTS_W void CvtColorLoop(const Mat& src, Mat& dst, const Cvt& cvt);
+    
 
 //! raster image moments
 class CV_EXPORTS_W_MAP Moments
