@@ -51,6 +51,7 @@
 
 #ifdef __cplusplus
 
+#include <initializer_list>
 #ifndef SKIP_INCLUDES
 #include <limits.h>
 #include <algorithm>
@@ -73,7 +74,8 @@ namespace cv {
 #undef min
 #undef max
 #undef Complex
-
+    
+using std::initializer_list;
 using std::vector;
 using std::string;
 using std::ptrdiff_t;
@@ -450,6 +452,11 @@ public:
 
     //! default constructor
     Matx();
+    Matx(std::initializer_list<_Tp> initList)
+    {
+        // Generate error if initList.size() != m*n
+        uninitialized_copy(initList.begin(), initList.end(), val);
+    }
 
     Matx(_Tp v0); //!< 1x1 matrix
     Matx(_Tp v0, _Tp v1); //!< 1x2 or 2x1 matrix

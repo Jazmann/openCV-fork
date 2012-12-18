@@ -11,6 +11,8 @@ include (CMakeForceCompiler)
 #CMAKE_FORCE_C_COMPILER (gcc gcc)
 #CMAKE_FORCE_CXX_COMPILER (g++ g++)
 
+set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++")
+
 set (CMAKE_C_SIZEOF_DATA_PTR 4)
 set (CMAKE_C_HAS_ISYSROOT 1)
 set (CMAKE_C_COMPILER_ABI ELF)
