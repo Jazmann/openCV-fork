@@ -1960,7 +1960,7 @@ struct YUV420p2RGB888Invoker
         const int rangeBegin = range.begin() * 2;
         const int rangeEnd = range.end() * 2;
 
-        size_t uvsteps[2] = {width/2, stride - width/2};
+        size_t uvsteps[2] = {(size_t)(width/2), (size_t)(stride - width/2)};
         int usIdx = ustepIdx, vsIdx = vstepIdx;
 
         const uchar* y1 = my1 + rangeBegin * stride;
@@ -2028,7 +2028,7 @@ struct YUV420p2RGBA8888Invoker
         int rangeBegin = range.begin() * 2;
         int rangeEnd = range.end() * 2;
 
-        size_t uvsteps[2] = {width/2, stride - width/2};
+        size_t uvsteps[2] = {(size_t)(width/2), (size_t)(stride - width/2)};
         int usIdx = ustepIdx, vsIdx = vstepIdx;
 
         const uchar* y1 = my1 + rangeBegin * stride;
@@ -2342,15 +2342,15 @@ struct mRGBA2RGBA
         
         RGB2Rot(Matx<int, 3, 3>& T, Vec<int, 3>&  TRange, Vec<int,3>& TMin)// NOTE: MatX constructor should be able to be constructed using the {} notation using C++11 features
         {
-            M( (float)T(0, 0)/(float)TRange[0], (float)T(0, 1)/(float)TRange[1], (float)T(0, 2)/(float)TRange[2], (float)TMin[0]/(float)TRange[0],
+            /*M( (float)T(0, 0)/(float)TRange[0], (float)T(0, 1)/(float)TRange[1], (float)T(0, 2)/(float)TRange[2], (float)TMin[0]/(float)TRange[0],
                (float)T(1, 0)/(float)TRange[0], (float)T(1, 1)/(float)TRange[1], (float)T(1, 2)/(float)TRange[2], (float)TMin[1]/(float)TRange[1],
                (float)T(2, 0)/(float)TRange[0], (float)T(2, 1)/(float)TRange[1], (float)T(2, 2)/(float)TRange[2], (float)TMin[2]/(float)TRange[2]
-             );
+             );*/
         }
         
         void operator()(const _Tp* src, _Tp* dst, int n) const
         {
-            transform(*src, *dst, M);
+            //transform(*src, *dst, M);
         }
     };
 

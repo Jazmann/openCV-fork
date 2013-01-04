@@ -209,6 +209,12 @@ macro(CHECK_MODULE module_name define)
     set(ALIAS_LIBRARIES         ${ALIAS}_LIBRARIES)
 
     PKG_CHECK_MODULES(${ALIAS} ${module_name})
+    message(ALIAS               ${ALIASOF_${module_name}})
+    message(ALIAS_FOUND                 ${${ALIAS}_FOUND})
+    message(ALIAS_INCLUDE_DIRS   ${${ALIAS}_INCLUDE_DIRS})
+    message(ALIAS_LIBRARY_DIRS   ${${ALIAS}_LIBRARY_DIRS})
+    message(ALIAS_LIBRARIES         ${${ALIAS}_LIBRARIES})
+    message(PKG_CONFIG_PATH = "${PKG_CONFIG_PATH}")
 
     if(${ALIAS_FOUND})
       set(${define} 1)

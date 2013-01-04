@@ -99,7 +99,7 @@ ocv_clear_vars(HAVE_FFMPEG HAVE_FFMPEG_CODEC HAVE_FFMPEG_FORMAT HAVE_FFMPEG_UTIL
 if(WITH_FFMPEG)
   if(WIN32)
     include("${OpenCV_SOURCE_DIR}/3rdparty/ffmpeg/ffmpeg_version.cmake")
-  elseif(UNIX)
+  elseif(UNIX AND NOT APPLE)
     CHECK_MODULE(libavcodec HAVE_FFMPEG_CODEC)
     CHECK_MODULE(libavformat HAVE_FFMPEG_FORMAT)
     CHECK_MODULE(libavutil HAVE_FFMPEG_UTIL)
