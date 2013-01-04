@@ -41,6 +41,7 @@
 //M*/
 
 #include "precomp.hpp"
+#include <numeric>
 #include <algorithm>
 #include <numeric>
 #include <functional>

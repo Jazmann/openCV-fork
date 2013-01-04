@@ -390,6 +390,9 @@ if(UNIX)
     endif()
   else()
     add_definitions(-DHAVE_ALLOCA -DHAVE_ALLOCA_H -DHAVE_LIBPTHREAD -DHAVE_UNISTD_H)
+    message("Setting up Xcode for C++11 with libc++.")
+    set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++0x")
+    set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
   endif()
 endif()
 
@@ -399,8 +402,7 @@ include(cmake/OpenCVModule.cmake)
 # ----------------------------------------------------------------------------
 #  Detect 3rd-party libraries
 # ----------------------------------------------------------------------------
-
-    message(STATUS "Detect 3rd-party libraries : OpenCVFindLibsGrfmt")
+message("CMMAKE_LIBRARY_PATH=${CMAKE_LIBRARY_PATH}")
 include(cmake/OpenCVFindLibsGrfmt.cmake)
     message(STATUS "Detect 3rd-party libraries : OpenCVFindLibsGUI")
 include(cmake/OpenCVFindLibsGUI.cmake)
