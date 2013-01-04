@@ -42,7 +42,7 @@
 
 #include "precomp.hpp"
 #include <algorithm>
-#include <cmath>
+#include <numeric>
 #include <functional>
 #include <fstream>
 #include <limits>

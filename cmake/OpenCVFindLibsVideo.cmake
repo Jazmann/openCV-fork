@@ -98,8 +98,7 @@ endif(WITH_XIMEA)
 ocv_clear_vars(HAVE_FFMPEG HAVE_FFMPEG_CODEC HAVE_FFMPEG_FORMAT HAVE_FFMPEG_UTIL HAVE_FFMPEG_SWSCALE HAVE_GENTOO_FFMPEG HAVE_FFMPEG_FFMPEG)
 if(WITH_FFMPEG)
   if(WIN32)
-    include("${OpenCV_SOURCE_DIR}/3rdparty/ffmpeg/ffmpeg_version.cmake")
-  elseif(UNIX)
+  elseif(UNIX AND NOT APPLE)
     CHECK_MODULE(libavcodec HAVE_FFMPEG_CODEC)
     CHECK_MODULE(libavformat HAVE_FFMPEG_FORMAT)
     CHECK_MODULE(libavutil HAVE_FFMPEG_UTIL)
@@ -128,7 +127,7 @@ if(WITH_FFMPEG)
 
   if(APPLE)
     find_path(FFMPEG_INCLUDE_DIR "libavformat/avformat.h"
-              PATHS /usr/local /usr /opt
+              PATHS /usr/local /usr /opt /opt/local
               PATH_SUFFIXES include
               DOC "The path to FFMPEG headers")
     if(FFMPEG_INCLUDE_DIR)
