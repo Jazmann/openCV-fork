@@ -41,6 +41,7 @@
 //M*/
 
 #include <opencv2/gpu/device/common.hpp>
+#include <opencv2/gpu/device/saturate_cast.hpp>
 
 #include <icf.hpp>
 #include <float.h>
@@ -48,6 +49,194 @@
 
 namespace cv { namespace gpu { namespace device {
 namespace icf {
+
+    template <int FACTOR>
+    __device__ __forceinline__ uchar shrink(const uchar* ptr, const int pitch, const int y, const int x)
+    {
+        int out = 0;
+#pragma unroll
+        for(int dy = 0; dy < FACTOR; ++dy)
+#pragma unroll
+            for(int dx = 0; dx < FACTOR; ++dx)
+            {
+                out += ptr[dy * pitch + dx];
+            }
+
+        return static_cast<uchar>(out / (FACTOR * FACTOR));
+    }
+
+    template<int FACTOR>
+    __global__ void shrink(const uchar* __restrict__ hogluv, const int inPitch,
+                                 uchar* __restrict__ shrank, const int outPitch )
+    {
+        const int y = blockIdx.y * blockDim.y + threadIdx.y;
+        const int x = blockIdx.x * blockDim.x + threadIdx.x;
+
+        const uchar* ptr = hogluv + (FACTOR * y) * inPitch + (FACTOR * x);
+
+        shrank[ y * outPitch + x] = shrink<FACTOR>(ptr, inPitch, y, x);
+    }
+
+    void shrink(const cv::gpu::PtrStepSzb& channels, cv::gpu::PtrStepSzb shrunk)
+    {
+        dim3 block(32, 8);
+        dim3 grid(shrunk.cols / 32, shrunk.rows / 8);
+        shrink<4><<<grid, block>>>((uchar*)channels.ptr(), channels.step, (uchar*)shrunk.ptr(), shrunk.step);
+        cudaSafeCall(cudaDeviceSynchronize());
+    }
+
+    __device__ __forceinline__ void luv(const float& b, const float& g, const float& r, uchar& __l, uchar& __u, uchar& __v)
+    {
+        // rgb -> XYZ
+        float x = 0.412453f * r + 0.357580f * g + 0.180423f * b;
+        float y = 0.212671f * r + 0.715160f * g + 0.072169f * b;
+        float z = 0.019334f * r + 0.119193f * g + 0.950227f * b;
+
+        // computed for D65
+        const float _ur = 0.19783303699678276f;
+        const float _vr = 0.46833047435252234f;
+
+        const float divisor = fmax((x + 15.f * y + 3.f * z), FLT_EPSILON);
+        const float _u = __fdividef(4.f * x, divisor);
+        const float _v = __fdividef(9.f * y, divisor);
+
+        float hack = static_cast<float>(__float2int_rn(y * 2047)) / 2047;
+        const float L = fmax(0.f, ((116.f * cbrtf(hack)) - 16.f));
+        const float U = 13.f * L * (_u - _ur);
+        const float V = 13.f * L * (_v - _vr);
+
+        // L in [0, 100], u in [-134, 220], v in [-140, 122]
+        __l = static_cast<uchar>( L * (255.f / 100.f));
+        __u = static_cast<uchar>((U + 134.f) * (255.f / (220.f + 134.f )));
+        __v = static_cast<uchar>((V + 140.f) * (255.f / (122.f + 140.f )));
+    }
+
+    __global__ void bgr2Luv_d(const uchar* rgb, const int rgbPitch, uchar* luvg, const int luvgPitch)
+    {
+        const int y = blockIdx.y * blockDim.y + threadIdx.y;
+        const int x = blockIdx.x * blockDim.x + threadIdx.x;
+
+        uchar3 color = ((uchar3*)(rgb + rgbPitch * y))[x];
+        uchar l, u, v;
+        luv(color.x / 255.f, color.y / 255.f, color.z / 255.f, l, u, v);
+
+        luvg[luvgPitch *  y + x] = l;
+        luvg[luvgPitch * (y + 480) + x] = u;
+        luvg[luvgPitch * (y + 2 * 480) + x] = v;
+    }
+
+    void bgr2Luv(const PtrStepSzb& bgr, PtrStepSzb luv)
+    {
+        dim3 block(32, 8);
+        dim3 grid(bgr.cols / 32, bgr.rows / 8);
+
+        bgr2Luv_d<<<grid, block>>>((const uchar*)bgr.ptr(0), bgr.step, (uchar*)luv.ptr(0), luv.step);
+
+        cudaSafeCall(cudaDeviceSynchronize());
+    }
+
+    template<bool isDefaultNum>
+    __device__ __forceinline__ int fast_angle_bin(const float& dx, const float& dy)
+    {
+        const float angle_quantum = CV_PI / 6.f;
+        float angle = atan2(dx, dy) + (angle_quantum / 2.f);
+
+        if (angle < 0) angle += CV_PI;
+
+        const float angle_scaling = 1.f / angle_quantum;
+        return static_cast<int>(angle * angle_scaling) % 6;
+    }
+
+    template<>
+    __device__ __forceinline__ int fast_angle_bin<true>(const float& dy, const float& dx)
+    {
+        int index = 0;
+
+        float max_dot = fabs(dx);
+
+        {
+            const float dot_product = fabs(dx * 0.8660254037844386f + dy * 0.5f);
+
+            if(dot_product > max_dot)
+            {
+                max_dot = dot_product;
+                index = 1;
+            }
+        }
+        {
+            const float dot_product = fabs(dy * 0.8660254037844386f + dx * 0.5f);
+
+            if(dot_product > max_dot)
+            {
+                max_dot = dot_product;
+                index = 2;
+            }
+        }
+        {
+            int i = 3;
+            float2 bin_vector_i;
+            bin_vector_i.x = ::cos(i * (CV_PI / 6.f));
+            bin_vector_i.y = ::sin(i * (CV_PI / 6.f));
+
+            const float dot_product = fabs(dx * bin_vector_i.x + dy * bin_vector_i.y);
+            if(dot_product > max_dot)
+            {
+                max_dot = dot_product;
+                index = i;
+            }
+        }
+        {
+            const float dot_product = fabs(dx * (-0.4999999999999998f) + dy * 0.8660254037844387f);
+            if(dot_product > max_dot)
+            {
+                max_dot = dot_product;
+                index = 4;
+            }
+        }
+        {
+            const float dot_product = fabs(dx * (-0.8660254037844387f) + dy * 0.49999999999999994f);
+            if(dot_product > max_dot)
+            {
+                max_dot = dot_product;
+                index = 5;
+            }
+        }
+        return index;
+    }
+
+    texture<uchar,  cudaTextureType2D, cudaReadModeElementType> tgray;
+
+    template<bool isDefaultNum>
+    __global__ void gray2hog(PtrStepSzb mag)
+    {
+        const int x = blockIdx.x * blockDim.x + threadIdx.x;
+        const int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+        const float dx = tex2D(tgray, x + 1, y + 0) - tex2D(tgray, x - 1, y - 0);
+        const float dy = tex2D(tgray, x + 0, y + 1) - tex2D(tgray, x - 0, y - 1);
+
+        const float magnitude = sqrtf((dx * dx) + (dy * dy)) * (1.0f / sqrtf(2));
+        const uchar cmag = static_cast<uchar>(magnitude);
+
+        mag( 480 * 6 + y, x) = cmag;
+        mag( 480 * fast_angle_bin<isDefaultNum>(dy, dx) + y, x) = cmag;
+    }
+
+    void gray2hog(const PtrStepSzb& gray, PtrStepSzb mag, const int bins)
+    {
+        dim3 block(32, 8);
+        dim3 grid(gray.cols / 32, gray.rows / 8);
+
+        cudaChannelFormatDesc desc = cudaCreateChannelDesc<uchar>();
+        cudaSafeCall( cudaBindTexture2D(0, tgray, gray.data, desc, gray.cols, gray.rows, gray.step) );
+
+        if (bins == 6)
+            gray2hog<true><<<grid, block>>>(mag);
+        else
+            gray2hog<false><<<grid, block>>>(mag);
+
+        cudaSafeCall(cudaDeviceSynchronize());
+    }
 
     // ToDo: use textures or uncached load instruction.
     __global__ void magToHist(const uchar* __restrict__ mag,

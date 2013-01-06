@@ -40,16 +40,15 @@
 //
 //M*/
 
-#include <precomp.hpp>
+#include "precomp.hpp"
 
 namespace cv { namespace gpu
 {
 
 CV_INIT_ALGORITHM(SCascade, "CascadeDetector.SCascade",
-                  obj.info()->addParam(obj, "minScale",    obj.minScale);
-                  obj.info()->addParam(obj, "maxScale",    obj.maxScale);
-                  obj.info()->addParam(obj, "scales",      obj.scales);
-                  obj.info()->addParam(obj, "rejCriteria", obj.rejCriteria));
+                  obj.info()->addParam(obj, "minScale", obj.minScale);
+                  obj.info()->addParam(obj, "maxScale", obj.maxScale);
+                  obj.info()->addParam(obj, "scales",   obj.scales));
 
 bool initModule_gpu(void)
 {

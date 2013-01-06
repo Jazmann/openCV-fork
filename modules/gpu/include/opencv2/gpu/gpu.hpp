@@ -850,7 +850,7 @@ CV_EXPORTS void HoughLinesDownload(const GpuMat& d_lines, OutputArray h_lines, O
 //! HoughLinesP
 
 //! finds line segments in the black-n-white image using probabalistic Hough transform
-CV_EXPORTS void HoughLinesP(const GpuMat& image, GpuMat& lines, CannyBuf& cannyBuf, int minLineLength, int maxLineGap, int maxLines = 4096);
+CV_EXPORTS void HoughLinesP(const GpuMat& image, GpuMat& lines, HoughLinesBuf& buf, float rho, float theta, int minLineLength, int maxLineGap, int maxLines = 4096);
 
 //! HoughCircles
 
@@ -1529,6 +1529,33 @@ public:
 
 // ======================== GPU version for soft cascade ===================== //
 
+class CV_EXPORTS ChannelsProcessor
+{
+public:
+    enum
+    {
+        GENERIC   = 1 << 4,
+        SEPARABLE = 2 << 4
+    };
+
+    // Appends specified number of HOG first-order features integrals into given vector.
+    // Param frame is an input 3-channel bgr image.
+    // Param channels is a GPU matrix of optionally shrinked channels
+    // Param stream is stream is a high-level CUDA stream abstraction used for asynchronous execution.
+    virtual void apply(InputArray frame, OutputArray channels, Stream& stream = Stream::Null()) = 0;
+
+    // Creates a specific preprocessor implementation.
+    // Param shrinkage is a resizing factor. Resize is applied before the computing integral sum
+    // Param bins is a number of HOG-like channels.
+    // Param flags is a channel computing extra flags.
+    static cv::Ptr<ChannelsProcessor> create(const int shrinkage, const int bins, const int flags = GENERIC);
+
+    virtual ~ChannelsProcessor();
+
+protected:
+    ChannelsProcessor();
+};
+
 // Implementation of soft (stageless) cascaded detector.
 class CV_EXPORTS SCascade : public Algorithm
 {
@@ -1547,14 +1574,15 @@ public:
         enum {PEDESTRIAN = 0};
     };
 
-    enum { NO_REJECT = 1, DOLLAR = 2, /*PASCAL = 4,*/ DEFAULT = NO_REJECT};
+    enum { NO_REJECT = 1, DOLLAR = 2, /*PASCAL = 4,*/ DEFAULT = NO_REJECT, NMS_MASK = 0xF};
 
     // An empty cascade will be created.
     // Param minScale is a minimum scale relative to the original size of the image on which cascade will be applyed.
     // Param minScale is a maximum scale relative to the original size of the image on which cascade will be applyed.
     // Param scales is a number of scales from minScale to maxScale.
-    // Param rejfactor is used for NMS.
-    SCascade(const double minScale = 0.4, const double maxScale = 5., const int scales = 55, const int rejCriteria = 1);
+    // Param flags is an extra tuning flags.
+    SCascade(const double minScale = 0.4, const double maxScale = 5., const int scales = 55,
+        const int flags = NO_REJECT || ChannelsProcessor::GENERIC);
 
     virtual ~SCascade();
 
@@ -1576,13 +1604,6 @@ public:
     // Param stream is stream is a high-level CUDA stream abstraction used for asynchronous execution
     virtual void detect(InputArray image, InputArray rois, OutputArray objects, Stream& stream = Stream::Null()) const;
 
-    // Convert ROI matrix into the suitable for detect method.
-    // Param roi is an input matrix of the same size as the image.
-    //    There non zero value mean that detector should be executed in this point.
-    // Param mask is an output mask
-    // Param stream is stream is a high-level CUDA stream abstraction used for asynchronous execution
-    virtual void genRoi(InputArray roi, OutputArray mask, Stream& stream = Stream::Null()) const;
-
 private:
 
     struct Fields;
@@ -1590,9 +1611,9 @@ private:
 
     double minScale;
     double maxScale;
-
     int scales;
-    int rejCriteria;
+
+    int flags;
 };
 
 CV_EXPORTS bool initModule_gpu(void);
@@ -1942,8 +1963,6 @@ private:
 
     GpuMat uPyr_[2];
     GpuMat vPyr_[2];
-
-    bool isDeviceArch11_;
 };
 
 
@@ -1960,7 +1979,6 @@ public:
         polyN = 5;
         polySigma = 1.1;
         flags = 0;
-        isDeviceArch11_ = !DeviceInfo().supports(FEATURE_SET_COMPUTE_12);
     }
 
     int numLevels;
@@ -2008,8 +2026,6 @@ private:
     GpuMat frames_[2];
     GpuMat pyrLevel_[2], M_, bufM_, R_[2], blurredFrame_[2];
     std::vector<GpuMat> pyramid0_, pyramid1_;
-
-    bool isDeviceArch11_;
 };
 
 
@@ -2107,6 +2123,17 @@ CV_EXPORTS void calcOpticalFlowBM(const GpuMat& prev, const GpuMat& curr,
                                   Size block_size, Size shift_size, Size max_range, bool use_previous,
                                   GpuMat& velx, GpuMat& vely, GpuMat& buf,
                                   Stream& stream = Stream::Null());
+
+class CV_EXPORTS FastOpticalFlowBM
+{
+public:
+    void operator ()(const GpuMat& I0, const GpuMat& I1, GpuMat& flowx, GpuMat& flowy, int search_window = 21, int block_window = 7, Stream& s = Stream::Null());
+
+private:
+    GpuMat buffer;
+    GpuMat extended_I0;
+    GpuMat extended_I1;
+};
 
 
 //! Interpolate frames (images) using provided optical flow (displacement field).

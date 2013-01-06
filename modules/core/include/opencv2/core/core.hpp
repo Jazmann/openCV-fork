@@ -111,13 +111,6 @@ template<typename _Tp> class CV_EXPORTS MatIterator_;
 template<typename _Tp> class CV_EXPORTS MatConstIterator_;
 template<typename _Tp> class CV_EXPORTS MatCommaInitializer_;
 
-#if !defined(ANDROID) || (defined(_GLIBCXX_USE_WCHAR_T) && _GLIBCXX_USE_WCHAR_T)
-typedef std::basic_string<wchar_t> WString;
-
-CV_EXPORTS string fromUtf16(const WString& str);
-CV_EXPORTS WString toUtf16(const string& str);
-#endif
-
 CV_EXPORTS string format( const char* fmt, ... );
 CV_EXPORTS string tempfile( const char* suffix CV_DEFAULT(0));
 
@@ -1331,6 +1324,8 @@ public:
     operator _Tp* ();
     operator const _Tp*() const;
 
+    bool operator==(const Ptr<_Tp>& ptr) const;
+
     _Tp* obj; //< the object pointer.
     int* refcount; //< the associated reference counter
 };
@@ -1392,7 +1387,7 @@ public:
     virtual int channels(int i=-1) const;
     virtual bool empty() const;
 
-    /*virtual*/ ~_InputArray();
+    virtual ~_InputArray();
 
     int flags;
     void* obj;
@@ -1460,7 +1455,7 @@ public:
     virtual void release() const;
     virtual void clear() const;
 
-    /*virtual*/ ~_OutputArray();
+    virtual ~_OutputArray();
 };
 
 typedef const _InputArray& InputArray;

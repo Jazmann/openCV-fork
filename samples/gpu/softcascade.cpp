@@ -74,10 +74,9 @@ int main(int argc, char** argv)
             return 0;
         }
 
-        cv::gpu::GpuMat dframe(frame), roi(frame.rows, frame.cols, CV_8UC1), trois;
+        cv::gpu::GpuMat dframe(frame), roi(frame.rows, frame.cols, CV_8UC1);
         roi.setTo(cv::Scalar::all(1));
-        cascade.genRoi(roi, trois);
-        cascade.detect(dframe, trois, objects);
+        cascade.detect(dframe, roi, objects);
 
         cv::Mat dt(objects);
         typedef cv::gpu::SCascade::Detection Detection;
@@ -99,7 +98,8 @@ int main(int argc, char** argv)
 
         std::cout << "working..." << std::endl;
         cv::imshow("Soft Cascade demo", result);
-        cv::waitKey(10);
+        if (27 == cv::waitKey(10))
+            break;
     }
 
     return 0;

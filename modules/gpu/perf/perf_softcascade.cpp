@@ -1,6 +1,6 @@
 #include "perf_precomp.hpp"
 
-#define GPU_PERF_TEST_P(fixture, name, params)  \
+#define PERF_TEST_P1(fixture, name, params)  \
     class fixture##_##name : public fixture {\
      public:\
       fixture##_##name() {}\
@@ -9,9 +9,9 @@
         virtual void __gpu();\
       virtual void PerfTestBody();\
     };\
-    TEST_P(fixture##_##name, name /*perf*/){ RunPerfTestBody(); if (PERF_RUN_GPU()) __gpu(); else __cpu();}\
+    TEST_P(fixture##_##name, name /*perf*/){ RunPerfTestBody(); }\
     INSTANTIATE_TEST_CASE_P(/*none*/, fixture##_##name, params);\
-    void fixture##_##name::PerfTestBody()
+    void fixture##_##name::PerfTestBody() { if (PERF_RUN_GPU()) __gpu(); else __cpu(); }
 
 #define RUN_CPU(fixture, name)\
     void fixture##_##name::__cpu()
@@ -52,11 +52,10 @@ namespace {
 typedef std::tr1::tuple<std::string, std::string> fixture_t;
 typedef perf::TestBaseWithParam<fixture_t> SCascadeTest;
 
-GPU_PERF_TEST_P(SCascadeTest, detect,
+PERF_TEST_P1(SCascadeTest, detect,
     testing::Combine(
         testing::Values(std::string("cv/cascadeandhog/sc_cvpr_2012_to_opencv.xml")),
         testing::Values(std::string("cv/cascadeandhog/bahnhof/image_00000000_0.png"))))
-{ }
 
 RUN_GPU(SCascadeTest, detect)
 {
@@ -71,15 +70,14 @@ RUN_GPU(SCascadeTest, detect)
 
     ASSERT_TRUE(cascade.load(fs.getFirstTopLevelNode()));
 
-    cv::gpu::GpuMat objectBoxes(1, 10000 * sizeof(cv::gpu::SCascade::Detection), CV_8UC1), rois(colored.size(), CV_8UC1), trois;
+    cv::gpu::GpuMat objectBoxes(1, 10000 * sizeof(cv::gpu::SCascade::Detection), CV_8UC1), rois(colored.size(), CV_8UC1);
     rois.setTo(1);
-    cascade.genRoi(rois, trois);
 
-    cascade.detect(colored, trois, objectBoxes);
+    cascade.detect(colored, rois, objectBoxes);
 
     TEST_CYCLE()
     {
-        cascade.detect(colored, trois, objectBoxes);
+        cascade.detect(colored, rois, objectBoxes);
     }
 
     SANITY_CHECK(sortDetections(objectBoxes));
@@ -110,12 +108,11 @@ static cv::Rect getFromTable(int idx)
 typedef std::tr1::tuple<std::string, std::string, int> roi_fixture_t;
 typedef perf::TestBaseWithParam<roi_fixture_t> SCascadeTestRoi;
 
-GPU_PERF_TEST_P(SCascadeTestRoi, detectInRoi,
+PERF_TEST_P1(SCascadeTestRoi, detectInRoi,
     testing::Combine(
         testing::Values(std::string("cv/cascadeandhog/sc_cvpr_2012_to_opencv.xml")),
         testing::Values(std::string("cv/cascadeandhog/bahnhof/image_00000000_0.png")),
         testing::Range(0, 5)))
-{}
 
 RUN_GPU(SCascadeTestRoi, detectInRoi)
 {
@@ -142,14 +139,11 @@ RUN_GPU(SCascadeTestRoi, detectInRoi)
         sub.setTo(1);
     }
 
-    cv::gpu::GpuMat trois;
-    cascade.genRoi(rois, trois);
-
-    cascade.detect(colored, trois, objectBoxes);
+    cascade.detect(colored, rois, objectBoxes);
 
     TEST_CYCLE()
     {
-        cascade.detect(colored, trois, objectBoxes);
+        cascade.detect(colored, rois, objectBoxes);
     }
 
     SANITY_CHECK(sortDetections(objectBoxes));
@@ -158,12 +152,11 @@ RUN_GPU(SCascadeTestRoi, detectInRoi)
 NO_CPU(SCascadeTestRoi, detectInRoi)
 
 
-GPU_PERF_TEST_P(SCascadeTestRoi, detectEachRoi,
+PERF_TEST_P1(SCascadeTestRoi, detectEachRoi,
     testing::Combine(
         testing::Values(std::string("cv/cascadeandhog/sc_cvpr_2012_to_opencv.xml")),
         testing::Values(std::string("cv/cascadeandhog/bahnhof/image_00000000_0.png")),
         testing::Range(0, 10)))
-{}
 
 RUN_GPU(SCascadeTestRoi, detectEachRoi)
 {
@@ -186,14 +179,11 @@ RUN_GPU(SCascadeTestRoi, detectEachRoi)
     cv::gpu::GpuMat sub(rois, r);
     sub.setTo(1);
 
-    cv::gpu::GpuMat trois;
-    cascade.genRoi(rois, trois);
-
-    cascade.detect(colored, trois, objectBoxes);
+    cascade.detect(colored, rois, objectBoxes);
 
     TEST_CYCLE()
     {
-        cascade.detect(colored, trois, objectBoxes);
+        cascade.detect(colored, rois, objectBoxes);
     }
 
     SANITY_CHECK(sortDetections(objectBoxes));
@@ -201,18 +191,17 @@ RUN_GPU(SCascadeTestRoi, detectEachRoi)
 
 NO_CPU(SCascadeTestRoi, detectEachRoi)
 
-GPU_PERF_TEST_P(SCascadeTest, detectOnIntegral,
+PERF_TEST_P1(SCascadeTest, detectOnIntegral,
     testing::Combine(
         testing::Values(std::string("cv/cascadeandhog/sc_cvpr_2012_to_opencv.xml")),
         testing::Values(std::string("cv/cascadeandhog/integrals.xml"))))
-{ }
 
-    static std::string itoa(long i)
-    {
-        static char s[65];
-        sprintf(s, "%ld", i);
-        return std::string(s);
-    }
+static std::string itoa(long i)
+{
+    static char s[65];
+    sprintf(s, "%ld", i);
+    return std::string(s);
+}
 
 RUN_GPU(SCascadeTest, detectOnIntegral)
 {
@@ -235,15 +224,14 @@ RUN_GPU(SCascadeTest, detectOnIntegral)
 
     ASSERT_TRUE(cascade.load(fs.getFirstTopLevelNode()));
 
-    cv::gpu::GpuMat objectBoxes(1, 10000 * sizeof(cv::gpu::SCascade::Detection), CV_8UC1), rois(cv::Size(640, 480), CV_8UC1), trois;
+    cv::gpu::GpuMat objectBoxes(1, 10000 * sizeof(cv::gpu::SCascade::Detection), CV_8UC1), rois(cv::Size(640, 480), CV_8UC1);
     rois.setTo(1);
-    cascade.genRoi(rois, trois);
 
-    cascade.detect(hogluv, trois, objectBoxes);
+    cascade.detect(hogluv, rois, objectBoxes);
 
     TEST_CYCLE()
     {
-        cascade.detect(hogluv, trois, objectBoxes);
+        cascade.detect(hogluv, rois, objectBoxes);
     }
 
     SANITY_CHECK(sortDetections(objectBoxes));
@@ -251,11 +239,10 @@ RUN_GPU(SCascadeTest, detectOnIntegral)
 
 NO_CPU(SCascadeTest, detectOnIntegral)
 
-GPU_PERF_TEST_P(SCascadeTest, detectStream,
+PERF_TEST_P1(SCascadeTest, detectStream,
     testing::Combine(
         testing::Values(std::string("cv/cascadeandhog/sc_cvpr_2012_to_opencv.xml")),
         testing::Values(std::string("cv/cascadeandhog/bahnhof/image_00000000_0.png"))))
-{ }
 
 RUN_GPU(SCascadeTest, detectStream)
 {
@@ -270,18 +257,16 @@ RUN_GPU(SCascadeTest, detectStream)
 
     ASSERT_TRUE(cascade.load(fs.getFirstTopLevelNode()));
 
-    cv::gpu::GpuMat objectBoxes(1, 10000 * sizeof(cv::gpu::SCascade::Detection), CV_8UC1), rois(colored.size(), CV_8UC1), trois;
+    cv::gpu::GpuMat objectBoxes(1, 10000 * sizeof(cv::gpu::SCascade::Detection), CV_8UC1), rois(colored.size(), CV_8UC1);
     rois.setTo(1);
 
     cv::gpu::Stream s;
 
-    cascade.genRoi(rois, trois, s);
-
-    cascade.detect(colored, trois, objectBoxes, s);
+    cascade.detect(colored, rois, objectBoxes, s);
 
     TEST_CYCLE()
     {
-        cascade.detect(colored, trois, objectBoxes, s);
+        cascade.detect(colored, rois, objectBoxes, s);
     }
 
 #ifdef HAVE_CUDA
