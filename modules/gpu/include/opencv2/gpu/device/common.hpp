@@ -100,9 +100,9 @@ namespace cv { namespace gpu
         typedef unsigned char uchar;
         typedef unsigned short ushort;
         typedef signed char schar;
-        #ifdef WIN32
+        //#ifdef WIN32
             typedef unsigned int uint;
-        #endif
+        //#endif
 
         template<class T> inline void bindTexture(const textureReference* tex, const PtrStepSz<T>& img)
         {

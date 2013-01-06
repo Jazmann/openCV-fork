@@ -74,15 +74,17 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   add_extra_compiler_option(-Wpointer-arith)
   add_extra_compiler_option(-Wshadow)
   add_extra_compiler_option(-Wsign-promo)
-
-  if(ENABLE_NOISY_WARNINGS)
-    add_extra_compiler_option(-Wcast-align)
-    add_extra_compiler_option(-Wstrict-aliasing=2)
-  else()
-    add_extra_compiler_option(-Wno-narrowing)
-    add_extra_compiler_option(-Wno-delete-non-virtual-dtor)
-    add_extra_compiler_option(-Wno-unnamed-type-template-args)
-  endif()
+  
+ # if(ENABLE_NOISY_WARNINGS)
+ #   add_extra_compiler_option(-Wcast-align)
+ #   add_extra_compiler_option(-Wstrict-aliasing=2)
+#  else()
+ #   add_extra_compiler_option(-Wno-narrowing)
+ #   add_extra_compiler_option(-Wno-delete-non-virtual-dtor)
+ #   add_extra_compiler_option(-Wno-unnamed-type-template-args)
+ # endif()
+  
+  
   add_extra_compiler_option(-fdiagnostics-show-option)
 
   # The -Wno-long-long is required in 64bit systems when including sytem headers.
