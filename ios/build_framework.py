@@ -36,11 +36,15 @@ def build_opencv(srcroot, buildroot, target, arch):
     currdir = os.getcwd()
     os.chdir(builddir)
     # for some reason, if you do not specify CMAKE_BUILD_TYPE, it puts libs to "RELEASE" rather than "Release"
-    cmakeargs = ("-G Xcode " +
-                "-D CMAKE_BUILD_TYPE=Release " +
-                "-D CMAKE_TOOLCHAIN_FILE=%s/ios/cmake/Toolchains/Toolchain-%s_Xcode.cmake " +
-                "-D BUILD_opencv_world=ON " +
-                "-D CMAKE_INSTALL_PREFIX=install") % (srcroot, target)
+    #           "-D CMAKE_BUILD_TYPE=Release " +
+    if target=="OSX" : cmakeargs = ("-G Xcode " +
+                     "-D BUILD_opencv_world=ON " +
+                     "-D CMAKE_INSTALL_PREFIX=install")
+    else: cmakeargs = ("-G Xcode " +
+                     "-D CMAKE_TOOLCHAIN_FILE=%s/ios/cmake/Toolchains/Toolchain-%s_Xcode.cmake " +
+                     "-D BUILD_opencv_world=ON " +
+                     "-D CMAKE_INSTALL_PREFIX=install") % (srcroot, target)
+                     
     # if cmake cache exists, just rerun cmake to update OpenCV.xproj if necessary
     if os.path.isfile(os.path.join(builddir, "CMakeCache.txt")):
         os.system("cmake %s ." % (cmakeargs,))
@@ -52,8 +56,13 @@ def build_opencv(srcroot, buildroot, target, arch):
         if os.path.isfile(wlib):
             os.remove(wlib)
 
-    os.system("xcodebuild -parallelizeTargets ARCHS=%s -jobs 8 -sdk %s -configuration Release -target ALL_BUILD" % (arch, target.lower()))
-    os.system("xcodebuild ARCHS=%s -sdk %s -configuration Release -target install install" % (arch, target.lower()))
+    if target=="OSX" : 
+    	os.system("xcodebuild -parallelizeTargets ARCHS=%s -jobs 8 -configuration Release -target ALL_BUILD" % (arch))
+    	os.system("xcodebuild ARCHS=%s -configuration Release -target install install" % (arch))
+    else:
+    	os.system("xcodebuild -parallelizeTargets ARCHS=%s -jobs 8 -sdk %s -configuration Release -target ALL_BUILD" % (arch, target.lower()))
+    	os.system("xcodebuild ARCHS=%s -sdk %s -configuration Release -target install install" % (arch, target.lower()))
+    
     os.chdir(currdir)
 
 def put_framework_together(srcroot, dstroot):
@@ -83,7 +92,8 @@ def put_framework_together(srcroot, dstroot):
     # form the directory tree
     dstdir = "Versions/A"
     os.makedirs(dstdir + "/Resources")
-
+    print("shutil.copytree(%s + /install/include/opencv2, %s + /Headers)" % (tdir0, dstdir))
+	
     # copy headers
     shutil.copytree(tdir0 + "/install/include/opencv2", dstdir + "/Headers")
 
@@ -112,8 +122,10 @@ def put_framework_together(srcroot, dstroot):
 def build_framework(srcroot, dstroot):
     "main function to do all the work"
 
-    targets = ["iPhoneOS", "iPhoneOS", "iPhoneSimulator"]
-    archs = ["armv7", "armv7s", "i386"]
+  #  targets = ["iPhoneOS", "iPhoneOS", "iPhoneSimulator", "OSX"]
+  #  archs = ["armv7", "armv7s", "i386", "i386"]
+    targets = ["OSX"]
+    archs = ["i386"]
     for i in range(len(targets)):
         build_opencv(srcroot, os.path.join(dstroot, "build"), targets[i], archs[i])
 
