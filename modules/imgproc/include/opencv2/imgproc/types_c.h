@@ -320,8 +320,12 @@ enum
     CV_BayerGB2RGB_EA = CV_BayerGR2BGR_EA,
     CV_BayerRG2RGB_EA = CV_BayerBG2BGR_EA,
     CV_BayerGR2RGB_EA = CV_BayerGB2BGR_EA,
-
-    CV_COLORCVT_MAX  = 131
+    
+    // Rotated RGB Spaces
+    CV_RGB2Rot = 131,
+    
+    // MAX
+    CV_COLORCVT_MAX  = 132
 };
 
 

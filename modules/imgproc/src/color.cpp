@@ -2867,7 +2867,7 @@ void cv::cvtColor( InputArray _src, OutputArray _dst, int code, int dcn )
                 }
             }
             break;
-        case COLOR_RGB2Rot:
+        case CV_RGB2Rot:
         {
             if (dcn <= 0) dcn = 3;
             CV_Assert( scn == 3 && dcn == 3 );
