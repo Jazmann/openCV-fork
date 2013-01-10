@@ -23,6 +23,12 @@ Script will create <outputdir>, if it's missing, and a few its subdirectories:
 The script should handle minor OpenCV updates efficiently
 - it does not recompile the library from scratch each time.
 However, opencv2.framework directory is erased and recreated on each run.
+
+Add a build script phase at the end of the build in XCode if you want to build the framework in XCode.
+Use this command. 
+
+python $SYMROOT/../../make_framework.py
+
 """
 
 import glob, re, os, os.path, shutil, string, sys
