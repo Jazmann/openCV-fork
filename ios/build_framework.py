@@ -29,6 +29,13 @@ import glob, re, os, os.path, shutil, string, sys
 
 def build_opencv(srcroot, buildroot, target, arch):
     "builds OpenCV for device or simulator"
+	# copy over ~/Developer/openCV_Dev/opencv/ios/Info.plist.in  so put_framework_together is srcroot independent
+    # os.system("echo \"mkdir -p %s \" " % (buildroot))
+    # os.system("echo \"cp %s %s \" " % (os.path.join(srcroot,"ios/Info.plist.in"), buildroot))
+    # os.system("echo \"cp %s %s \" " % (os.path.join(srcroot,"ios/make_framework.py "), os.path.join(buildroot,"..")))
+    os.system("mkdir -p %s" % (buildroot))
+    os.system("cp %s %s" % (os.path.join(srcroot,"ios/Info.plist.in"), buildroot))
+    # os.system("cp %s %s" % (os.path.join(srcroot,"ios/make_framework.py "), os.path.join(buildroot,"..")))
 
     builddir = os.path.join(buildroot, target + '-' + arch)
     if not os.path.isdir(builddir):
@@ -38,9 +45,11 @@ def build_opencv(srcroot, buildroot, target, arch):
     # for some reason, if you do not specify CMAKE_BUILD_TYPE, it puts libs to "RELEASE" rather than "Release"
     #           "-D CMAKE_BUILD_TYPE=Release " +
     if target=="OSX" : cmakeargs = ("-G Xcode " +
+                     "-D CMAKE_BUILD_TYPE=Release " +
                      "-D BUILD_opencv_world=ON " +
                      "-D CMAKE_INSTALL_PREFIX=install")
     else: cmakeargs = ("-G Xcode " +
+                     "-D CMAKE_BUILD_TYPE=Release " +
                      "-D CMAKE_TOOLCHAIN_FILE=%s/ios/cmake/Toolchains/Toolchain-%s_Xcode.cmake " +
                      "-D BUILD_opencv_world=ON " +
                      "-D CMAKE_INSTALL_PREFIX=install") % (srcroot, target)
@@ -65,59 +74,6 @@ def build_opencv(srcroot, buildroot, target, arch):
     
     os.chdir(currdir)
 
-def put_framework_together(srcroot, dstroot):
-    "constructs the framework directory after all the targets are built"
-
-    # find the list of targets (basically, ["iPhoneOS", "iPhoneSimulator"])
-    targetlist = glob.glob(os.path.join(dstroot, "build", "*"))
-    targetlist = [os.path.basename(t) for t in targetlist]
-
-    # set the current dir to the dst root
-    currdir = os.getcwd()
-    framework_dir = dstroot + "/opencv2.framework"
-    if os.path.isdir(framework_dir):
-        shutil.rmtree(framework_dir)
-    os.makedirs(framework_dir)
-    os.chdir(framework_dir)
-
-    # determine OpenCV version (without subminor part)
-    tdir0 = "../build/" + targetlist[0]
-    cfg = open(tdir0 + "/cvconfig.h", "rt")
-    for l in cfg.readlines():
-        if l.startswith("#define  VERSION"):
-            opencv_version = l[l.find("\"")+1:l.rfind(".")]
-            break
-    cfg.close()
-
-    # form the directory tree
-    dstdir = "Versions/A"
-    os.makedirs(dstdir + "/Resources")
-    print("shutil.copytree(%s + /install/include/opencv2, %s + /Headers)" % (tdir0, dstdir))
-	
-    # copy headers
-    shutil.copytree(tdir0 + "/install/include/opencv2", dstdir + "/Headers")
-
-    # make universal static lib
-    wlist = " ".join(["../build/" + t + "/lib/Release/libopencv_world.a" for t in targetlist])
-    os.system("lipo -create " + wlist + " -o " + dstdir + "/opencv2")
-
-    # form Info.plist
-    srcfile = open(srcroot + "/ios/Info.plist.in", "rt")
-    dstfile = open(dstdir + "/Resources/Info.plist", "wt")
-    for l in srcfile.readlines():
-        dstfile.write(l.replace("${VERSION}", opencv_version))
-    srcfile.close()
-    dstfile.close()
-
-    # copy cascades
-    # TODO ...
-
-    # make symbolic links
-    os.symlink(dstdir + "/Headers", "Headers")
-    os.symlink(dstdir + "/Resources", "Resources")
-    os.symlink(dstdir + "/opencv2", "opencv2")
-    os.symlink("A", "Versions/Current")
-
 
 def build_framework(srcroot, dstroot):
     "main function to do all the work"
@@ -128,8 +84,10 @@ def build_framework(srcroot, dstroot):
   #  archs = ["x86_64"]
     for i in range(len(targets)):
         build_opencv(srcroot, os.path.join(dstroot, "build"), targets[i], archs[i])
-
-    put_framework_together(srcroot, dstroot)
+    
+    os.system("cp %s %s" % (os.path.join(srcroot,"ios/make_framework.py "), dstroot))
+    os.chdir(dstroot)
+    import make_framework.py
 
 
 if __name__ == "__main__":
