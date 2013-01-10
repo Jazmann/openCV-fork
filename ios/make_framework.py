@@ -49,7 +49,7 @@ def put_framework_together( dstroot):
     os.chdir(framework_dir)
 
     # determine OpenCV version (without subminor part)
-    tdir0 = currdir + "/build/" + targetlist[0]
+    tdir0 = dstroot + "/build/" + targetlist[0]
     cfg = open(tdir0 + "/cvconfig.h", "rt")
     for l in cfg.readlines():
         if l.startswith("#define  VERSION"):
