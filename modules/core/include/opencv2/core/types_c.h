@@ -791,7 +791,7 @@ CvMat;
 
 #define CV_ELEM_SIZE_BITS(type) ( CV_MAT_CN(type) * CV_DEPTH_BITS(type) )
 
-#define CV_ELEM_SIZE_BYTES(type) ((CV_ELEM_SIZE_BITS(type) >> 4)||( (CV_ELEM_SIZE_BITS(type) & 15) ? 1 : 0 ))
+#define CV_ELEM_SIZE_BYTES(type) ((CV_ELEM_SIZE_BITS(type) >> 4) + ( (CV_ELEM_SIZE_BITS(type) & 15) ? 1 : 0 ))
 
 #define CV_ELEM_SIZE(type) CV_ELEM_SIZE_BYTES(type)
 
