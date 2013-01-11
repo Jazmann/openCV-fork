@@ -568,23 +568,51 @@ IplConvKernelFP;
 /****************************************************************************************\
 *                                  Matrix type (CvMat)                                   *
 \****************************************************************************************/
-
-#define CV_CN_MAX     512
+// CV_CN_MAX reserves 9 bits for the channel numbers. 
+#define CV_CN_MAX     (1 << 9)
 // CV_CN_SHIFT resrves the first 4 bits for the Data Types (CV_8U, etc) 
 #define CV_CN_SHIFT   4 
 // CV_DEPTH_MAX is the maximum number of Data types allowed.
 #define CV_DEPTH_MAX  (1 << CV_CN_SHIFT)
 
+/* Size of each channel item,
+ 0x124489 = 1000 0100 0100 0010 0010 0001 0001 ~ array of sizeof(arr_type_elem) */
+// #define CV_ELEM_SIZE1(type) \
+// ((((sizeof(size_t)<<28)|0x8442211) >> CV_MAT_DEPTH(type)*4) & 15)
+
+#define CV_ELEM_SIZE1(type) CV_DEPTH_BYTES(type)
+
+
 #define CV_2U   0
+#define CV_DEPTH_BITS(CV_2U) 2
+#define CV_DEPTH_BYTES(CV_2U) 1
 #define CV_4U   1
+#define CV_DEPTH_BITS(CV_4U) 4
+#define CV_DEPTH_BYTES(CV_4U) 1
 #define CV_8U   2
+#define CV_DEPTH_BITS(CV_8U) 8
+#define CV_DEPTH_BYTES(CV_8U) 1
 #define CV_8S   3
+#define CV_DEPTH_BITS(CV_8S) 8
+#define CV_DEPTH_BYTES(CV_8S) 1
 #define CV_16U  4
+#define CV_DEPTH_BITS(CV_16U) 16
+#define CV_DEPTH_BYTES(CV_16U) 2
 #define CV_16S  5
+#define CV_DEPTH_BITS(CV_16S) 16
+#define CV_DEPTH_BYTES(CV_16S) 2
 #define CV_32U  6
+#define CV_DEPTH_BITS(CV_32U) 32
+#define CV_DEPTH_BYTES(CV_32U) 4
 #define CV_32S  7
+#define CV_DEPTH_BITS(CV_32S) 32
+#define CV_DEPTH_BYTES(CV_32S) 4
 #define CV_32F  8
+#define CV_DEPTH_BITS(CV_32F) 32
+#define CV_DEPTH_BYTES(CV_32F) 4
 #define CV_64F  9
+#define CV_DEPTH_BITS(CV_64F) 64
+#define CV_DEPTH_BYTES(CV_64F) 8
 #define CV_USRTYPE1 10
 #define CV_USRTYPE2 11
 #define CV_USRTYPE3 12
@@ -750,23 +778,37 @@ CvMat;
     (((mat)->rows|(mat)->cols) == 1)
 
 /* Size of each channel item,
-   0x124489 = 1000 0100 0100 0010 0010 0001 0001 ~ array of sizeof(arr_type_elem) */
-#define CV_ELEM_SIZE1(type) \
-    ((((sizeof(size_t)<<28)|0x8442211) >> CV_MAT_DEPTH(type)*4) & 15)
+ 0x124489 = 1000 0100 0100 0010 0010 0001 0001 ~ array of sizeof(arr_type_elem) */
+
+#define CV_ELEM_SIZE1(type) CV_DEPTH_BYTES(type)
+
+// #define CV_ELEM_SIZE1(type) \
+// ((((sizeof(size_t)<<28)|0x8442211) >> CV_MAT_DEPTH(type)*4) & 15)
 
 /* 0x3a50 = 11 10 10 01 01 00 00 ~ array of log2(sizeof(arr_type_elem)) */
-#define CV_ELEM_SIZE(type) \
-    (CV_MAT_CN(type) << ((((sizeof(size_t)/4+1)*16384|0x3a50) >> CV_MAT_DEPTH(type)*2) & 3))
+// In case the channels are packed into fewer than one byte each we calculate : bits_used = channels * bits_per_channel then
+// bytes = Ceiling( bits_used / 8)
 
+#define CV_ELEM_SIZE_BITS(type) ( CV_MAT_CN(type) * CV_DEPTH_BITS(type) )
+
+#define CV_ELEM_SIZE_BYTES(type) ((CV_ELEM_SIZE_BITS(type) >> 4)||( (CV_ELEM_SIZE_BITS(type) & 15) ? 1 : 0 ))
+
+#define CV_ELEM_SIZE(type) CV_ELEM_SIZE_BYTES(type)
+
+// #define CV_ELEM_SIZE(type) CV_MAT_CN(type)
+// (CV_MAT_CN(type) << ((((sizeof(size_t)/4+1)*16384|0x3a50) >> CV_MAT_DEPTH(type)*2) & 3))
 #define IPL2CV_DEPTH(depth) \
     ((((CV_8U)+(CV_16U<<4)+(CV_32F<<8)+(CV_64F<<16)+(CV_8S<<20)+ \
     (CV_16S<<24)+(CV_32S<<28)) >> ((((depth) & 0xF0) >> 2) + \
     (((depth) & IPL_DEPTH_SIGN) ? 20 : 0))) & 15)
 
+
+
 /* Inline constructor. No data is allocated internally!!!
  * (Use together with cvCreateData, or use cvCreateMat instead to
  * get a matrix with allocated data):
  */
+
 CV_INLINE CvMat cvMat( int rows, int cols, int type, void* data CV_DEFAULT(NULL))
 {
     CvMat m;

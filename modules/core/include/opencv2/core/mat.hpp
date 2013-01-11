@@ -392,14 +392,7 @@ inline Mat::operator CvMat() const
     return m;
 }
     
-    /* Size of each channel item,
-     0x124489 = 1000 0100 0100 0010 0010 0001 0001 ~ array of sizeof(arr_type_elem) */
-#define CV_ELEM_SIZE1(type) \
-((((sizeof(size_t)<<28)|0x8442211) >> CV_MAT_DEPTH(type)*4) & 15)
-    
-    /* 0x3a50 = 11 10 10 01 01 00 00 ~ array of log2(sizeof(arr_type_elem)) */
-#define CV_ELEM_SIZE(type) \
-(CV_MAT_CN(type) << ((((sizeof(size_t)/4+1)*16384|0x3a50) >> CV_MAT_DEPTH(type)*2) & 3))
+
 
 inline bool Mat::isContinuous() const { return (flags & CONTINUOUS_FLAG) != 0; }
 inline bool Mat::isSubmatrix() const { return (flags & SUBMATRIX_FLAG) != 0; }
