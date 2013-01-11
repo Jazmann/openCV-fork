@@ -92,6 +92,9 @@
 #include "precomp.hpp"
 #include <limits>
 
+#include <iostream>
+#include <fstream>
+
 namespace cv
 {
 
@@ -2429,23 +2432,54 @@ void cv::cvtColor( InputArray _src, OutputArray _dst, int code, int dcn )
             break;
 
         case CV_BGR2GRAY: case CV_BGRA2GRAY: case CV_RGB2GRAY: case CV_RGBA2GRAY:
+            printf("BGR2Gray : Jasper\n");
             CV_Assert( scn == 3 || scn == 4 );
+            printf("BGR2Gray :  %d == 3  %d == 4 \n",scn,scn);
             _dst.create(sz, CV_MAKETYPE(depth, 1));
+            printf("BGR2Gray : sz.height = %d  sz.width = %d \n",sz.height,sz.width);
+            printf("BGR2Gray : CV_MAKETYPE(%d, 1) = %d \n",depth,CV_MAKETYPE(depth, 1));
+
             dst = _dst.getMat();
+            printf("BGR2Gray : Jasper dst made depth = %d\n",dst.depth());
+            
+     //       inline bool Mat::isContinuous() const { return (flags & CONTINUOUS_FLAG) != 0; }
+     //       inline bool Mat::isSubmatrix() const { return (flags & SUBMATRIX_FLAG) != 0; }
+     //       inline size_t Mat::elemSize() const { return dims > 0 ? step.p[dims-1] : 0; }
+     //       inline size_t Mat::elemSize1() const { return CV_ELEM_SIZE1(flags); }
+     //       inline int Mat::type() const { return CV_MAT_TYPE(flags); }
+     //       inline int Mat::depth() const { return CV_MAT_DEPTH(flags); }
+     //       inline int Mat::channels() const { return CV_MAT_CN(flags); }
+     //       inline size_t Mat::step1(int i) const { return step.p[i]/elemSize1(); }
+     //       inline bool Mat::empty() const { return data == 0 || total() == 0; }
+            
+            printf("Mat : dst :  rows = %d, cols = %d \n", dst.rows, dst.rows);
+            printf("Mat : dst :  elemSize = %lu     \n", dst.elemSize());
+            printf("Mat : dst :  elemSize = %lu     \n", dst.elemSize());
+            printf("Mat : dst :  elemSize1() = %lu  \n", dst.elemSize1());
+            printf("Mat : dst :  type() = %d  \n", dst.type());
+            printf("Mat : dst :  depth() = %d  \n", dst.depth());
+            printf("Mat : dst :  channels() = %d  \n", dst.channels());
+            printf("Mat : dst :  step1(0) = %lu  \n", dst.step1(0));
+            
+
 
             bidx = code == CV_BGR2GRAY || code == CV_BGRA2GRAY ? 0 : 2;
+            printf("BGR2Gray : Jasper bidx = %d \n",bidx);
+
 
             if( depth == CV_8U )
             {
 #ifdef HAVE_TEGRA_OPTIMIZATION
                 if(!tegra::cvtRGB2Gray(src, dst, bidx))
 #endif
+                    printf("BGR2Gray : Jasper\n");
                 CvtColorLoop(src, dst, RGB2Gray<uchar>(scn, bidx, 0));
             }
             else if( depth == CV_16U )
                 CvtColorLoop(src, dst, RGB2Gray<ushort>(scn, bidx, 0));
             else
                 CvtColorLoop(src, dst, RGB2Gray<float>(scn, bidx, 0));
+            printf("Out of cvtColor\n");
             break;
 
         case CV_BGR5652GRAY: case CV_BGR5552GRAY:

@@ -71,9 +71,26 @@ def put_framework_together( dstroot):
     # copy headers
     shutil.copytree(tdir0 + "/install/include/opencv2", dstdir + "/Headers")
 
-    # make universal static lib
-    wlist = " ".join([currdir + "/build/" + t + "/lib/Release/libopencv_world.a" for t in targetlist])
+   # make universal static lib
+    wlist = " "
+    for t in targetlist:
+    	if os.path.isfile(os.path.join(currdir, "build", t, "lib/Debug/libopencv_world.a")) :
+    		wlist = wlist + " " + currdir + "/build/" + t + "/lib/Debug/libopencv_world.a"
+    		print("Linked Debug for target %s\n" % (t))
+    	elif os.path.isfile(os.path.join(currdir, "build", t, "lib/Release/libopencv_world.a")) :
+    		wlist = wlist + " " + currdir + "/build/" + t + "/lib/Release/libopencv_world.a"
+    		print("Linked Release for target %s\n" % (t))
+    	else : 
+    		print("Error : libopencv_world.a not found for target %s\n" % (t))
+    		
+    print("wlist : %s\n" % (wlist))
+    		
     os.system("lipo -create " + wlist + " -o " + dstdir + "/opencv2")
+    
+    
+  #  wlist = " ".join([currdir + "/build/" + t + "/lib/Release/libopencv_world.a" for t in targetlist])
+  #  os.system("lipo -create " + wlist + " -o " + dstdir + "/opencv2")
+
 
     # form Info.plist
     srcfile = open(dstroot + "/build/Info.plist.in", "rt")
