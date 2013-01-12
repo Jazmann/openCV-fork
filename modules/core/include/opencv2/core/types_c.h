@@ -577,7 +577,7 @@ IplConvKernelFP;
 
 #define CV_2U   0
 #define CV_DEPTH_BITS_2U_LOG2   1
-#define CV_DEPTH_BYTES_2U_LOG2   1
+#define CV_DEPTH_BYTES_2U_LOG2   0
 #define CV_4U   1
 #define CV_DEPTH_BITS_4U_LOG2 2
 #define CV_DEPTH_BYTES_4U_LOG2 0
@@ -806,7 +806,7 @@ CvMat;
 // In case the channels are packed into fewer than one byte each we calculate : bits_used = channels * bits_per_channel
 #define CV_ELEM_SIZE_BITS(type) ( CV_MAT_CN(type) * CV_DEPTH_BITS(type) )
 // then bytes = Ceiling( bits_used / 8)
-#define CV_ELEM_SIZE_BYTES(type) ((CV_ELEM_SIZE_BITS(type) >> 4) + ( (CV_ELEM_SIZE_BITS(type) & 15) ? 1 : 0 ))
+#define CV_ELEM_SIZE_BYTES(type) ((CV_ELEM_SIZE_BITS(type) >> 3) + ( (CV_ELEM_SIZE_BITS(type) & 7) ? 1 : 0 ))
 
 #define CV_ELEM_SIZE CV_ELEM_SIZE_BYTES
 
