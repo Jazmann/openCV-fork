@@ -575,50 +575,66 @@ IplConvKernelFP;
 // CV_DEPTH_MAX is the maximum number of Data types allowed.
 #define CV_DEPTH_MAX  (1 << CV_CN_SHIFT)
 
-/* Size of each channel item,
- 0x124489 = 1000 0100 0100 0010 0010 0001 0001 ~ array of sizeof(arr_type_elem) */
-// #define CV_ELEM_SIZE1(type) \
-// ((((sizeof(size_t)<<28)|0x8442211) >> CV_MAT_DEPTH(type)*4) & 15)
-
-#define CV_ELEM_SIZE1(type) CV_DEPTH_BYTES(type)
-
-
 #define CV_2U   0
-#define CV_DEPTH_BITS(CV_2U) 2
-#define CV_DEPTH_BYTES(CV_2U) 1
+#define CV_DEPTH_BITS_2U_LOG2   1
+#define CV_DEPTH_BYTES_2U_LOG2   1
 #define CV_4U   1
-#define CV_DEPTH_BITS(CV_4U) 4
-#define CV_DEPTH_BYTES(CV_4U) 1
+#define CV_DEPTH_BITS_4U_LOG2 2
+#define CV_DEPTH_BYTES_4U_LOG2 0
 #define CV_8U   2
-#define CV_DEPTH_BITS(CV_8U) 8
-#define CV_DEPTH_BYTES(CV_8U) 1
+#define CV_DEPTH_BITS_8U_LOG2 3
+#define CV_DEPTH_BYTES_8U_LOG2 0
 #define CV_8S   3
-#define CV_DEPTH_BITS(CV_8S) 8
-#define CV_DEPTH_BYTES(CV_8S) 1
+#define CV_DEPTH_BITS_8S_LOG2 3
+#define CV_DEPTH_BYTES_8S_LOG2 0
 #define CV_16U  4
-#define CV_DEPTH_BITS(CV_16U) 16
-#define CV_DEPTH_BYTES(CV_16U) 2
+#define CV_DEPTH_BITS_16U_LOG2 4
+#define CV_DEPTH_BYTES_16U_LOG2 1
 #define CV_16S  5
-#define CV_DEPTH_BITS(CV_16S) 16
-#define CV_DEPTH_BYTES(CV_16S) 2
+#define CV_DEPTH_BITS_16S_LOG2 4
+#define CV_DEPTH_BYTES_16S_LOG2 1
 #define CV_32U  6
-#define CV_DEPTH_BITS(CV_32U) 32
-#define CV_DEPTH_BYTES(CV_32U) 4
+#define CV_DEPTH_BITS_32U_LOG2 5
+#define CV_DEPTH_BYTES_32U_LOG2 2
 #define CV_32S  7
-#define CV_DEPTH_BITS(CV_32S) 32
-#define CV_DEPTH_BYTES(CV_32S) 4
+#define CV_DEPTH_BITS_32S_LOG2 5
+#define CV_DEPTH_BYTES_32S_LOG2 2
 #define CV_32F  8
-#define CV_DEPTH_BITS(CV_32F) 32
-#define CV_DEPTH_BYTES(CV_32F) 4
+#define CV_DEPTH_BITS_32F_LOG2 5
+#define CV_DEPTH_BYTES_32F_LOG2 2
 #define CV_64F  9
-#define CV_DEPTH_BITS(CV_64F) 64
-#define CV_DEPTH_BYTES(CV_64F) 8
+#define CV_DEPTH_BITS_64F_LOG2 6
+#define CV_DEPTH_BYTES_64F_LOG2 3
 #define CV_USRTYPE1 10
 #define CV_USRTYPE2 11
 #define CV_USRTYPE3 12
 #define CV_USRTYPE4 13
 #define CV_USRTYPE5 14
 #define CV_USRTYPE6 15
+
+#define CV_DEPTH_BYTES_MAGIC ( \
+(CV_DEPTH_BYTES_64F_LOG2 << CV_64F *2)|(CV_DEPTH_BYTES_32F_LOG2 << CV_32F *2)|\
+(CV_DEPTH_BYTES_32S_LOG2 << CV_32S *2)|(CV_DEPTH_BYTES_32U_LOG2 << CV_32U *2)|\
+(CV_DEPTH_BYTES_16S_LOG2 << CV_16S *2)|(CV_DEPTH_BYTES_16U_LOG2 << CV_16U *2)|\
+(CV_DEPTH_BYTES_8S_LOG2  << CV_8S  *2)|(CV_DEPTH_BYTES_8U_LOG2  << CV_8U  *2)|\
+(CV_DEPTH_BYTES_4U_LOG2  << CV_4U  *2)|(CV_DEPTH_BYTES_2U_LOG2  << CV_2U  *2) )
+
+#define CV_DEPTH_BYTES(type) (1 << ( (CV_DEPTH_BYTES_MAGIC >> (type*2)) &3) )
+
+
+#define CV_DEPTH_BITS_MAGIC ( \
+(CV_DEPTH_BITS_64F_LOG2 << CV_64F *3)|(CV_DEPTH_BITS_32F_LOG2 << CV_32F *3)|\
+(CV_DEPTH_BITS_32S_LOG2 << CV_32S *3)|(CV_DEPTH_BITS_32U_LOG2 << CV_32U *3)|\
+(CV_DEPTH_BITS_16S_LOG2 << CV_16S *3)|(CV_DEPTH_BITS_16U_LOG2 << CV_16U *3)|\
+(CV_DEPTH_BITS_8S_LOG2  << CV_8S  *3)|(CV_DEPTH_BITS_8U_LOG2  << CV_8U  *3)|\
+(CV_DEPTH_BITS_4U_LOG2  << CV_4U  *3)|(CV_DEPTH_BITS_2U_LOG2  << CV_2U  *3) )
+
+#define CV_DEPTH_BITS(type) (1 << ( (CV_DEPTH_BITS_MAGIC >> (type*3)) & 7) )
+
+
+
+
+
 
 // CV_MAT_DEPTH_MASK bit mask which keeps only the right-most CV_CN_SHIFT bits. Keeps the user from screwing up when using CV_MAKETYPE.
 #define CV_MAT_DEPTH_MASK       (CV_DEPTH_MAX - 1)
@@ -707,6 +723,13 @@ IplConvKernelFP;
 #define CV_MAT_MAGIC_VAL    0x42420000
 #define CV_TYPE_NAME_MAT    "opencv-matrix"
 
+/* Size of each channel item,
+ 0x124489 = 1000 0100 0100 0010 0010 0001 0001 ~ array of sizeof(arr_type_elem) */
+// #define CV_ELEM_SIZE1(type) \
+// ((((sizeof(size_t)<<28)|0x8442211) >> CV_MAT_DEPTH(type)*4) & 15)
+
+//#define CV_ELEM_SIZE1(type) CV_DEPTH_BYTES(type)
+
 typedef struct CvMat
 {
     int type;
@@ -777,26 +800,16 @@ CvMat;
 #define CV_IS_MAT_CONST(mat)  \
     (((mat)->rows|(mat)->cols) == 1)
 
-/* Size of each channel item,
- 0x124489 = 1000 0100 0100 0010 0010 0001 0001 ~ array of sizeof(arr_type_elem) */
+// Size of each channel item
+#define CV_ELEM_SIZE1 CV_DEPTH_BYTES
 
-#define CV_ELEM_SIZE1(type) CV_DEPTH_BYTES(type)
-
-// #define CV_ELEM_SIZE1(type) \
-// ((((sizeof(size_t)<<28)|0x8442211) >> CV_MAT_DEPTH(type)*4) & 15)
-
-/* 0x3a50 = 11 10 10 01 01 00 00 ~ array of log2(sizeof(arr_type_elem)) */
-// In case the channels are packed into fewer than one byte each we calculate : bits_used = channels * bits_per_channel then
-// bytes = Ceiling( bits_used / 8)
-
+// In case the channels are packed into fewer than one byte each we calculate : bits_used = channels * bits_per_channel
 #define CV_ELEM_SIZE_BITS(type) ( CV_MAT_CN(type) * CV_DEPTH_BITS(type) )
-
+// then bytes = Ceiling( bits_used / 8)
 #define CV_ELEM_SIZE_BYTES(type) ((CV_ELEM_SIZE_BITS(type) >> 4) + ( (CV_ELEM_SIZE_BITS(type) & 15) ? 1 : 0 ))
 
-#define CV_ELEM_SIZE(type) CV_ELEM_SIZE_BYTES(type)
+#define CV_ELEM_SIZE CV_ELEM_SIZE_BYTES
 
-// #define CV_ELEM_SIZE(type) CV_MAT_CN(type)
-// (CV_MAT_CN(type) << ((((sizeof(size_t)/4+1)*16384|0x3a50) >> CV_MAT_DEPTH(type)*2) & 3))
 #define IPL2CV_DEPTH(depth) \
     ((((CV_8U)+(CV_16U<<4)+(CV_32F<<8)+(CV_64F<<16)+(CV_8S<<20)+ \
     (CV_16S<<24)+(CV_32S<<28)) >> ((((depth) & 0xF0) >> 2) + \

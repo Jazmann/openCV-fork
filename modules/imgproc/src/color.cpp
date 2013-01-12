@@ -2452,6 +2452,17 @@ void cv::cvtColor( InputArray _src, OutputArray _dst, int code, int dcn )
      //       inline size_t Mat::step1(int i) const { return step.p[i]/elemSize1(); }
      //       inline bool Mat::empty() const { return data == 0 || total() == 0; }
             
+            printf( " CV_2U   : CV_DEPTH_BITS(CV_2U)  = %d : CV_DEPTH_BYTES(CV_2U)  = %d\n",CV_DEPTH_BITS(CV_2U), CV_DEPTH_BYTES(CV_2U));
+            printf( " CV_4U   : CV_DEPTH_BITS(CV_4U)  = %d : CV_DEPTH_BYTES(CV_4U)  = %d\n",CV_DEPTH_BITS(CV_4U), CV_DEPTH_BYTES(CV_4U));
+            printf( " CV_8U   : CV_DEPTH_BITS(CV_8U)  = %d : CV_DEPTH_BYTES(CV_8U)  = %d\n",CV_DEPTH_BITS(CV_8U), CV_DEPTH_BYTES(CV_8U));
+            printf( " CV_8S   : CV_DEPTH_BITS(CV_8S)  = %d : CV_DEPTH_BYTES(CV_8S)  = %d\n",CV_DEPTH_BITS(CV_8S), CV_DEPTH_BYTES(CV_8S));
+            printf( " CV_16U  : CV_DEPTH_BITS(CV_16U) = %d : CV_DEPTH_BYTES(CV_16U) = %d\n",CV_DEPTH_BITS(CV_16U), CV_DEPTH_BYTES(CV_16U));
+            printf( " CV_16S  : CV_DEPTH_BITS(CV_16S) = %d : CV_DEPTH_BYTES(CV_16S) = %d\n",CV_DEPTH_BITS(CV_16S), CV_DEPTH_BYTES(CV_16S));
+            printf( " CV_32U  : CV_DEPTH_BITS(CV_32U) = %d : CV_DEPTH_BYTES(CV_32U) = %d\n",CV_DEPTH_BITS(CV_32U), CV_DEPTH_BYTES(CV_32U));
+            printf( " CV_32S  : CV_DEPTH_BITS(CV_32S) = %d : CV_DEPTH_BYTES(CV_32S) = %d\n",CV_DEPTH_BITS(CV_32S), CV_DEPTH_BYTES(CV_32S));
+            printf( " CV_32F  : CV_DEPTH_BITS(CV_32F) = %d : CV_DEPTH_BYTES(CV_32F) = %d\n",CV_DEPTH_BITS(CV_32F), CV_DEPTH_BYTES(CV_32F));
+            printf( " CV_64F  : CV_DEPTH_BITS(CV_64F) = %d : CV_DEPTH_BYTES(CV_64F) = %d\n",CV_DEPTH_BITS(CV_64F), CV_DEPTH_BYTES(CV_64F));
+            
             printf("Mat : dst :  rows = %d, cols = %d \n", dst.rows, dst.rows);
             printf("Mat : dst :  elemSize = %lu     \n", dst.elemSize());
             printf("Mat : dst :  elemSize = %lu     \n", dst.elemSize());
@@ -2610,6 +2621,26 @@ void cv::cvtColor( InputArray _src, OutputArray _dst, int code, int dcn )
 
             _dst.create(sz, CV_MAKETYPE(depth, 3));
             dst = _dst.getMat();
+                
+                printf( " CV_2U   : CV_DEPTH_BITS(CV_2U)  = %d : CV_DEPTH_BYTES(CV_2U)  = %d\n",CV_DEPTH_BITS(CV_2U), CV_DEPTH_BYTES(CV_2U));
+                printf( " CV_4U   : CV_DEPTH_BITS(CV_4U)  = %d : CV_DEPTH_BYTES(CV_4U)  = %d\n",CV_DEPTH_BITS(CV_4U), CV_DEPTH_BYTES(CV_4U));
+                printf( " CV_8U   : CV_DEPTH_BITS(CV_8U)  = %d : CV_DEPTH_BYTES(CV_8U)  = %d\n",CV_DEPTH_BITS(CV_8U), CV_DEPTH_BYTES(CV_8U));
+                printf( " CV_8S   : CV_DEPTH_BITS(CV_8S)  = %d : CV_DEPTH_BYTES(CV_8S)  = %d\n",CV_DEPTH_BITS(CV_8S), CV_DEPTH_BYTES(CV_8S));
+                printf( " CV_16U  : CV_DEPTH_BITS(CV_16U) = %d : CV_DEPTH_BYTES(CV_16U) = %d\n",CV_DEPTH_BITS(CV_16U), CV_DEPTH_BYTES(CV_16U));
+                printf( " CV_16S  : CV_DEPTH_BITS(CV_16S) = %d : CV_DEPTH_BYTES(CV_16S) = %d\n",CV_DEPTH_BITS(CV_16S), CV_DEPTH_BYTES(CV_16S));
+                printf( " CV_32U  : CV_DEPTH_BITS(CV_32U) = %d : CV_DEPTH_BYTES(CV_32U) = %d\n",CV_DEPTH_BITS(CV_32U), CV_DEPTH_BYTES(CV_32U));
+                printf( " CV_32S  : CV_DEPTH_BITS(CV_32S) = %d : CV_DEPTH_BYTES(CV_32S) = %d\n",CV_DEPTH_BITS(CV_32S), CV_DEPTH_BYTES(CV_32S));
+                printf( " CV_32F  : CV_DEPTH_BITS(CV_32F) = %d : CV_DEPTH_BYTES(CV_32F) = %d\n",CV_DEPTH_BITS(CV_32F), CV_DEPTH_BYTES(CV_32F));
+                printf( " CV_64F  : CV_DEPTH_BITS(CV_64F) = %d : CV_DEPTH_BYTES(CV_64F) = %d\n",CV_DEPTH_BITS(CV_64F), CV_DEPTH_BYTES(CV_64F));
+                
+                printf("Mat : dst :  rows = %d, cols = %d \n", dst.rows, dst.rows);
+                printf("Mat : dst :  elemSize = %lu     \n", dst.elemSize());
+                printf("Mat : dst :  elemSize = %lu     \n", dst.elemSize());
+                printf("Mat : dst :  elemSize1() = %lu  \n", dst.elemSize1());
+                printf("Mat : dst :  type() = %d  \n", dst.type());
+                printf("Mat : dst :  depth() = %d  \n", dst.depth());
+                printf("Mat : dst :  channels() = %d  \n", dst.channels());
+                printf("Mat : dst :  step1(0) = %lu  \n", dst.step1(0));
 
             if( code == CV_BGR2HSV || code == CV_RGB2HSV ||
                 code == CV_BGR2HSV_FULL || code == CV_RGB2HSV_FULL )
