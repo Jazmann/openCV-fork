@@ -2335,7 +2335,7 @@ struct mRGBA2RGBA
         }
     };*/
     
-    template<typename _Tp> struct RGB2Rot
+ /*   template<typename _Tp> struct RGB2Rot
     {
         typedef _Tp channel_type;
         
@@ -2354,11 +2354,67 @@ struct mRGBA2RGBA
     
         void operator()(const _Tp* src, _Tp* dst, int n) const
         {
-            cv::transform(*src, *dst, Ms3d3);
+     //       cv::transform(*src, dst, Ms3d3);
+        }
+    };
+  */
+    
+    
+    template<typename _Tp> struct RGB2Rot
+    {
+        typedef _Tp channel_type;
+        const int targetScale = ( 1 << (sizeof(channel_type) * 8) ) - 1; // Range for the target type
+        int srccn;
+        Matx<float, 3, 4> Ms3d3;
+        int M[3][4], TRange[3], TMin[3];
+        int redScale, greenScale, blueScale;
+        
+        // The transform to the new color space is (T vec - 255 TMin)/TRange. 255 is the range of 8bit RGB and can be replaced directly with a different range for 16 and 32 bit RGB spaces. The division by TRange is the direct element wise division and can safely be rounded to recast in the required bit depth.
+        
+        RGB2Rot(int _srccn, int blueIdx, Matx<int, 3, 3>& T, Vec<int, 3>& _TRange, Vec<int,3>& _TMin): srccn(_srccn) // NOTE: MatX constructor should be able to be constructed using the {} notation using C++11 features
+        {
+            int   redIdx    = (blueIdx + 1) % 3; // redIdx = blueIdx + 1 Mod 3. The order must be a cyclic permutation of RGB.
+            int greenIdx    = (blueIdx + 2) % 3;
+            int   redIdxOut = (blueIdx + 1) % 3; // redIdx = blueIdx + 1 Mod 3. The order must be a cyclic permutation of RGB.
+            int greenIdxOut = (blueIdx + 2) % 3;
+            int  blueIdxOut =  blueIdx;
+            
+            M = { T(  redIdxOut, redIdx), T(  redIdxOut, greenIdx), T(  redIdxOut, blueIdx), TMin[  redIdxOut], \
+                  T(greenIdxOut, redIdx), T(greenIdxOut, greenIdx), T(greenIdxOut, blueIdx), TMin[greenIdxOut], \
+                  T( blueIdxOut, redIdx), T( blueIdxOut, greenIdx), T( blueIdxOut, blueIdx), TMin[ blueIdxOut] };
+            TRange = {_TRange[redIdxOut], _TRange[greenIdxOut], _TRange[blueIdxOut]};
+            TMin   = {_TMin[  redIdxOut], _TMin[  greenIdxOut], _TMin[  blueIdxOut]};
+            
+            
+              redScale = TRange[0] / targetScale;
+            greenScale = TRange[1] / targetScale;
+             blueScale = TRange[2] / targetScale;
+                        
+            Ms3d3 = {\
+                ((float)M(0, 0)/(float)TRange[0]), ((float)M(0, 1)/(float)TRange[0]), ((float)M(0, 2)/(float)TRange[0]), ((float)TMin[0]/(float)TRange[0]), \
+                ((float)M(1, 0)/(float)TRange[1]), ((float)M(1, 1)/(float)TRange[1]), ((float)M(1, 2)/(float)TRange[1]), ((float)TMin[1]/(float)TRange[1]), \
+                ((float)M(2, 0)/(float)TRange[2]), ((float)M(2, 1)/(float)TRange[2]), ((float)M(2, 2)/(float)TRange[2]), ((float)TMin[2]/(float)TRange[2])
+            };
+        };
+        void operator()(const _Tp* src, _Tp* dst, int n) const
+        {
+            int scn = srccn;
+
+            n *= 3;
+            for(int i = 0; i < n; i += 3, src += scn)
+            {
+                int X = src[0]*M[0][0] + src[1]*M[0][1] + src[2]*M[0][2] + TMin[0]; // CV_DESCALE(x,n) = (((x) + (1 << ((n)-1))) >> (n))
+                int Y = src[0]*M[1][0] + src[1]*M[1][1] + src[2]*M[1][2] + TMin[1]; // could be used in place of * scale
+                int Z = src[0]*M[2][0] + src[1]*M[2][1] + src[2]*M[2][2] + TMin[2]; // Find shift which fits TRange into the desired bit depth.
+                dst[i  ] = saturate_cast<_Tp>(X /   redScale);
+                dst[i+1] = saturate_cast<_Tp>(Y / greenScale);
+                dst[i+2] = saturate_cast<_Tp>(Z /  blueScale);
+            }
         }
     };
 
-    template<typename _Tp> struct RGBA2Rot
+
+ /*   template<typename _Tp> struct RGBA2Rot
     {
         typedef _Tp channel_type;
         
@@ -2377,10 +2433,10 @@ struct mRGBA2RGBA
         
         void operator()(const _Tp* src, _Tp* dst, int n) const
         {
-            cv::transform(*src, *dst, Ms4d3);
+    //        cv::transform(*src, *dst, Ms4d3);
         }
     };
-    
+    */
 
 
 }//end namespace cv
@@ -2969,25 +3025,7 @@ void cv::cvtColor( InputArray _src, OutputArray _dst, int code, int dcn )
             cv::Vec<int,3>   TMin(0,0,0);
             if( depth == CV_8U )
             {
-                CvtColorLoop(src, dst, RGB2Rot<uchar>(M, TRange, TMin));
-            } else {
-                CV_Error( CV_StsBadArg, "Unsupported image depth" );
-            }
-        }
-            break;
-        case CV_RGBA2Rot:
-        {
-            if (dcn <= 0) dcn = 3;
-            CV_Assert( scn == 4 && dcn == 3 );
-            
-            _dst.create(sz, CV_MAKETYPE(depth, dcn));
-            dst = _dst.getMat();
-            cv::Matx<int, 3, 3> M(0,1,0,1,0,0,0,0,1);
-            cv::Vec<int, 3>  TRange(255,255,255);
-            cv::Vec<int,3>   TMin(0,0,0);
-            if( depth == CV_8U )
-            {
-                CvtColorLoop(src, dst, RGBA2Rot<uchar>(M, TRange, TMin));
+                CvtColorLoop(src, dst, RGB2Rot<uchar>(scn, 0, M, TRange, TMin));
             } else {
                 CV_Error( CV_StsBadArg, "Unsupported image depth" );
             }
