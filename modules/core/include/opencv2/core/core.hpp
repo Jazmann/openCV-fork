@@ -447,8 +447,8 @@ public:
     Matx();
     Matx(std::initializer_list<_Tp> initList)
     {
-        CV_Assert(m*n == val.size()); // Generate error if initList.size() != m*n
-        uninitialized_copy(initList.begin(), initList.end(), val);
+     //   CV_Assert(m*n == val.size()); // Generate error if initList.size() != m*n
+        std::uninitialized_copy(initList.begin(), initList.end(), val);
     }
 
     Matx(_Tp v0); //!< 1x1 matrix

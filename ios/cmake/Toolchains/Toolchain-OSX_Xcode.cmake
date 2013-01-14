@@ -2,7 +2,7 @@ message (STATUS "Setting up iPhoneOS toolchain")
 set (IPHONEOS TRUE)
 
 # Standard settings
-set (CMAKE_SYSTEM_NAME iOS)
+set (CMAKE_SYSTEM_NAME OSX)
 # Include extra modules for the iOS platform files
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/ios/cmake/Modules")
 

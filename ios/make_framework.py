@@ -74,14 +74,14 @@ def put_framework_together( dstroot):
    # make universal static lib
     wlist = " "
     for t in targetlist:
-    	if os.path.isfile(os.path.join(currdir, "build", t, "lib/Debug/libopencv_world.a")) :
-    		wlist = wlist + " " + currdir + "/build/" + t + "/lib/Debug/libopencv_world.a"
+    	if os.path.isfile(os.path.join(dstroot, "build", t, "lib/Debug/libopencv_world.a")) :
+    		wlist = wlist + " " + dstroot + "/build/" + t + "/lib/Debug/libopencv_world.a"
     		print("Linked Debug for target %s\n" % (t))
-    	elif os.path.isfile(os.path.join(currdir, "build", t, "lib/Release/libopencv_world.a")) :
-    		wlist = wlist + " " + currdir + "/build/" + t + "/lib/Release/libopencv_world.a"
+    	elif os.path.isfile(os.path.join(dstroot, "build", t, "lib/Release/libopencv_world.a")) :
+    		wlist = wlist + " " + dstroot + "/build/" + t + "/lib/Release/libopencv_world.a"
     		print("Linked Release for target %s\n" % (t))
     	else : 
-    		print("Error : libopencv_world.a not found for target %s\n" % (t))
+    		print("Error : libopencv_world.a not found for target %s\n Looked in %s" % (t, dstroot + "/build/" + t + "/lib/Release"))
     		
     print("wlist : %s\n" % (wlist))
     		
