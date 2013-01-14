@@ -2351,15 +2351,13 @@ struct mRGBA2RGBA
                 ((float)T(2, 0)/(float)TRange[0]), ((float)T(2, 1)/(float)TRange[1]), ((float)T(2, 2)/(float)TRange[2]), ((float)TMin[2]/(float)TRange[2])
                 };
         };
-
-        }
-        
+    
         void operator()(const _Tp* src, _Tp* dst, int n) const
         {
-            transform(*src, *dst, Ms3d3);
+            cv::transform(*src, *dst, Ms3d3);
         }
     };
-    
+
     template<typename _Tp> struct RGBA2Rot
     {
         typedef _Tp channel_type;
@@ -2375,12 +2373,11 @@ struct mRGBA2RGBA
              ((float)T(1, 0)/(float)TRange[0]), ((float)T(1, 1)/(float)TRange[1]), ((float)T(1, 2)/(float)TRange[2]), 1.0, ((float)TMin[1]/(float)TRange[1]), \
              ((float)T(2, 0)/(float)TRange[0]), ((float)T(2, 1)/(float)TRange[1]), ((float)T(2, 2)/(float)TRange[2]), 1.0, ((float)TMin[2]/(float)TRange[2])
             };
-            
         }
         
         void operator()(const _Tp* src, _Tp* dst, int n) const
         {
-            transform(*src, *dst, Ms4d3);
+            cv::transform(*src, *dst, Ms4d3);
         }
     };
     
@@ -2978,6 +2975,25 @@ void cv::cvtColor( InputArray _src, OutputArray _dst, int code, int dcn )
             }
         }
             break;
+        case CV_RGBA2Rot:
+        {
+            if (dcn <= 0) dcn = 3;
+            CV_Assert( scn == 4 && dcn == 3 );
+            
+            _dst.create(sz, CV_MAKETYPE(depth, dcn));
+            dst = _dst.getMat();
+            cv::Matx<int, 3, 3> M(0,1,0,1,0,0,0,0,1);
+            cv::Vec<int, 3>  TRange(255,255,255);
+            cv::Vec<int,3>   TMin(0,0,0);
+            if( depth == CV_8U )
+            {
+                CvtColorLoop(src, dst, RGBA2Rot<uchar>(M, TRange, TMin));
+            } else {
+                CV_Error( CV_StsBadArg, "Unsupported image depth" );
+            }
+        }
+            break;
+
         default:
             CV_Error( CV_StsBadFlag, "Unknown/unsupported color conversion code" );
     }
