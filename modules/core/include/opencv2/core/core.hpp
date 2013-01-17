@@ -596,6 +596,11 @@ public:
 
     //! default constructor
     Vec();
+    Vec(std::initializer_list<_Tp> initList)
+    {
+        std::uninitialized_copy(initList.begin(), initList.end(), this->val);
+    }
+
 
     Vec(_Tp v0); //!< 1-element vector constructor
     Vec(_Tp v0, _Tp v1); //!< 2-element vector constructor
@@ -621,7 +626,6 @@ public:
 
     /*!
       cross product of the two 3D vectors.
-
       For other dimensionalities the exception is raised
     */
     Vec cross(const Vec& v) const;
