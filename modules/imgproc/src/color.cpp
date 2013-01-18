@@ -3297,7 +3297,8 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
     }
 
     
-ColorSpace(Vec3i sp0, Vec3i sp1, Vec3i sp2){
+    struct ColorSpace{
+        ColorSpace(Vec3i sp0, Vec3i sp1, Vec3i sp2){
         
         sVec<int, 3> v1(1.0, sp1 - sp0);
         sVec<int, 3> v2(1.0, sp2 - sp0);
@@ -3352,8 +3353,10 @@ ColorSpace(Vec3i sp0, Vec3i sp1, Vec3i sp2){
             
         }
         // Setup internal data
-        Ti = Matx<int, 3, 3>([0],a1[1],a1[2],a2[0],a2[1],a2[2],a3[0],a3[1],a3[2]);
-        
+        Matx<int, 3, 3> Ti;
+        Ti = Matx<int, 3, 3>(a1[0],a1[1],a1[2],a2[0],a2[1],a2[2],a3[0],a3[1],a3[2]);
+        sVec<int, 3> TMin;
+        sVec<int, 3> TRange;
         const int tempBox[] = {0, 1, 0, 0, 0, 1, 1, 1,
                                0, 0, 1, 0, 1, 0, 1, 1,
                                0, 0, 0, 1, 1, 1, 0, 1};
@@ -3373,6 +3376,7 @@ ColorSpace(Vec3i sp0, Vec3i sp1, Vec3i sp2){
         TRange[0] = RGBCubeRange.at<int>(0,0); TRange[1] = RGBCubeRange.at<int>(1,0); TRange[2] = RGBCubeRange.at<int>(2,0);
         
     }
+    };
 
 
 }//end namespace cv
