@@ -1497,6 +1497,904 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
     CV_DbgAssert( this->idx == cn );
     return *this->dst;
 }
+//////////////////////////////// sVec /////////////////////////////////
+    
+    template<typename _Tp> _Tp gcd(_Tp* b, unsigned int size_b){
+        switch (size_b) {
+            case 0:
+                // error
+                break;
+            case 1:
+                b[0];
+                break;
+            case 2:
+                gcd(b[0],b[1]);
+                break;
+            case 3:
+                gcd(gcd(b[0],b[1]),b[2]);
+                break;
+            case 4:
+                gcd(gcd(b[0],b[1]), gcd(b[2],b[3]));
+                break;
+            default:
+                gcd(gcd(b,size_b/2), gcd(b+(size_b+1)/2,(size_b+1)/2));
+                break;
+        }
+        if (size_b > 0){
+            return gcd(b[0], b++, size_b-1);
+        }
+        else {
+            return b[0];
+        }
+    };
+    
+    template<typename _Tp> _Tp gcd(_Tp a, _Tp* b, unsigned int size_b){
+        if (size_b >= 2){
+            return gcd(gcd(a, b[0]), b++, size_b-1);
+        }
+        else if(size_b == 1) {
+            return gcd(a, b[0]);
+        }
+        else {
+            return a;
+        }
+    };
+    
+    template<typename _Tp> _Tp gcd(_Tp& a, _Tp& b, _Tp& c){
+        return gcd(gcd(a, b), c);
+    };
+    
+    template<typename _Tp> _Tp gcd(_Tp& u, _Tp& v) {
+        if (v)
+            return gcd(v, u % v);
+        else
+            return u < 0 ? -u : u; /* abs(u) */
+    };
+    
+    unsigned NUM_BITS_U = ((sizeof(unsigned) << 3) - 1);
+    
+#if CV_SSE2
+#define POS_OF_HIGHESTBITclz(a) (NUM_BITS_U - __builtin_clz(a)) /* only works for a != 0 */
+#define NUM_OF_HIGHESTBITclz(a) ((a) ? (1U << POS_OF_HIGHESTBITclz(a)) : 0)
+#endif
+    
+    template<typename _Tp> unsigned int mostSignificantBit(_Tp x)
+    {
+        static const unsigned int bval[] = {0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4};
+        unsigned int r = 0;
+        switch (sizeof(_Tp)) {
+            case 8:
+                if (x & 0xFFFFFFFF00000000) { r += 32/1; x >>= 32/1; }
+            case 4:
+                if (x & 0x00000000FFFF0000) { r += 32/2; x >>= 32/2; }
+            case 2:
+                if (x & 0x000000000000FF00) { r += 32/4; x >>= 32/4; }
+            case 1:
+                if (x & 0x00000000000000F0) { r += 32/8; x >>= 32/8; }
+        }
+        return r + bval[x];
+    }
+    template<> unsigned int mostSignificantBit<uint64_t>(uint64_t x)
+    {
+        static const unsigned int bval[] = {0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4};
+        unsigned int r = 0;
+        if (x & 0xFFFFFFFF00000000) { r += 32/1; x >>= 32/1; }
+        if (x & 0x00000000FFFF0000) { r += 32/2; x >>= 32/2; }
+        if (x & 0x000000000000FF00) { r += 32/4; x >>= 32/4; }
+        if (x & 0x00000000000000F0) { r += 32/8; x >>= 32/8; }
+        return r + bval[x];
+    }
+    template<> unsigned int mostSignificantBit<uint32_t>(uint32_t x)
+    {
+        static const unsigned int bval[] = {0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4};
+        unsigned int r = 0;
+        if (x & 0xFFFF0000) { r += 16/1; x >>= 16/1; }
+        if (x & 0x0000FF00) { r += 16/2; x >>= 16/2; }
+        if (x & 0x000000F0) { r += 16/4; x >>= 16/4; }
+        return r + bval[x];
+    }
+    
+    template<> unsigned int mostSignificantBit<uint16_t>(uint16_t x)
+    {
+        static const unsigned int bval[] = {0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4};
+        unsigned int r = 0;
+        if (x & 0xFF00) { r += 8/1; x >>= 8/1; }
+        if (x & 0x00F0) { r += 8/2; x >>= 8/2; }
+        return r + bval[x];
+    }
+    
+    template<> unsigned int mostSignificantBit<uint8_t>(uint8_t x)
+    {
+        static const unsigned int bval[] = {0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4};
+        unsigned int r = 0;
+        if (x & 0xF0) { r += 4/1; x >>= 4/1; }
+        return r + bval[x];
+    }
+    
+    template<> unsigned int mostSignificantBit<int64_t>(int64_t x)
+    {
+        static const unsigned int bval[] = {0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4};
+        unsigned int r = 0;
+        if (x & 0x7FFFFFFF00000000) { r += 32/1; x >>= 32/1; }
+        if (x & 0x00000000FFFF0000) { r += 32/2; x >>= 32/2; }
+        if (x & 0x000000000000FF00) { r += 32/4; x >>= 32/4; }
+        if (x & 0x00000000000000F0) { r += 32/8; x >>= 32/8; }
+        return r + bval[x];
+    }
+    template<> unsigned int mostSignificantBit<int32_t>(int32_t x)
+    {
+        static const unsigned int bval[] = {0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4};
+        unsigned int r = 0;
+        if (x & 0x7FFF0000) { r += 16/1; x >>= 16/1; }
+        if (x & 0x0000FF00) { r += 16/2; x >>= 16/2; }
+        if (x & 0x000000F0) { r += 16/4; x >>= 16/4; }
+        return r + bval[x];
+    }
+    
+    template<> unsigned int mostSignificantBit<int16_t>(int16_t x)
+    {
+        static const unsigned int bval[] = {0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4};
+        unsigned int r = 0;
+        if (x & 0x7F00) { r += 8/1; x >>= 8/1; }
+        if (x & 0x00F0) { r += 8/2; x >>= 8/2; }
+        return r + bval[x];
+    }
+    
+    template<> unsigned int mostSignificantBit<int8_t>(int8_t x)
+    {
+        static const unsigned int bval[] = {0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4};
+        unsigned int r = 0;
+        if (x & 0x70) { r += 4/1; x >>= 4/1; }
+        return r + bval[x];
+    }
+    
+    
+    // A data structure which allows a vector to be expressed as a float scalar times an integer vector.
+    // _Tp must be an integer type char, short, long, long long - signed or unsigned.
+    
+    template<typename _Tp, int cn> class CV_EXPORTS sVec : public Matx<_Tp, cn, 1>
+    {
+    public:
+        typedef _Tp value_type;
+        enum { depth = DataDepth<_Tp>::value, channels = cn, type = CV_MAKETYPE(depth, channels) };
+        float scale;
+        
+        //! default constructor
+        sVec();
+        sVec(float _scale, _Tp v0); //!< 1-element vector constructor
+        sVec(float _scale, _Tp v0, _Tp v1); //!< 2-element vector constructor
+        sVec(float _scale, _Tp v0, _Tp v1, _Tp v2); //!< 3-element vector constructor
+        sVec(float _scale, _Tp v0, _Tp v1, _Tp v2, _Tp v3); //!< 4-element vector constructor
+        sVec(float _scale, _Tp v0, _Tp v1, _Tp v2, _Tp v3, _Tp v4); //!< 5-element vector constructor
+        sVec(float _scale, _Tp v0, _Tp v1, _Tp v2, _Tp v3, _Tp v4, _Tp v5); //!< 6-element vector constructor
+        sVec(float _scale, _Tp v0, _Tp v1, _Tp v2, _Tp v3, _Tp v4, _Tp v5, _Tp v6); //!< 7-element vector constructor
+        sVec(float _scale, _Tp v0, _Tp v1, _Tp v2, _Tp v3, _Tp v4, _Tp v5, _Tp v6, _Tp v7); //!< 8-element vector constructor
+        sVec(float _scale, _Tp v0, _Tp v1, _Tp v2, _Tp v3, _Tp v4, _Tp v5, _Tp v6, _Tp v7, _Tp v8); //!< 9-element vector constructor
+        sVec(float _scale, _Tp v0, _Tp v1, _Tp v2, _Tp v3, _Tp v4, _Tp v5, _Tp v6, _Tp v7, _Tp v8, _Tp v9); //!< 10-element vector constructor
+        explicit sVec(float _scale, const _Tp* values);
+        
+        sVec(const sVec<_Tp, cn>& v);
+        sVec(const Matx<float, cn, 1>& m); // Constructors -- sVec from a float Matx
+        static sVec all(_Tp alpha);
+        
+        sVec(float _scale, Vec< _Tp, cn> _vec   ) : Matx<_Tp, cn, 1>(_vec.val), scale(_scale){};
+        sVec(float _scale, Matx<_Tp, cn, 1> _vec) : Matx<_Tp, cn, 1>(_vec.val), scale(_scale){};
+        sVec(float _scale, std::initializer_list<_Tp> initList): scale(_scale), Matx<_Tp, cn, 1>(initList){}
+        
+        // Conjugation (makes sense for complex numbers and quaternions)
+        sVec conj() const;
+        // Cross product of the two 3D vectors. For other dimensionalities the exception is raised
+        sVec cross(const sVec& v) const;
+        // Convertion to another data type
+        // Type conversion - sVec -> sVec
+        template<typename T2> operator sVec<T2, cn>() const;
+        // Type conversion - sVec -> Matx
+        operator Matx<float, cn, 1>() const;
+        // Type conversion - sVec -> 4-element CvScalar.
+        operator CvScalar() const;
+        
+        
+        // Element Access
+        
+        const  _Tp& operator [](int i) const;        // Element Access - Access Rvalue - Vector element type _Tp
+        _Tp& operator [](int i);              // Element Access - Access Lvalue - Vector element type _Tp
+        const float operator ()(int i) const;
+        
+        
+        
+        // Operator Overloading - Matx_AddOp
+        sVec(const Matx<_Tp, cn, 1>& a, const Matx<_Tp, cn, 1>& b, Matx_AddOp op);
+        sVec(const sVec<_Tp, cn   >& a, const Matx<_Tp, cn, 1>& b, Matx_AddOp op);
+        sVec(const Matx<_Tp, cn, 1>& a, const sVec<_Tp, cn   >& b, Matx_AddOp op);
+        sVec(const sVec<_Tp, cn   >& a, const sVec<_Tp, cn   >& b, Matx_AddOp op);
+        
+        // Operator Overloading - Matx_SubOp
+        sVec(const Matx<_Tp, cn, 1>& a, const Matx<_Tp, cn, 1>& b, Matx_SubOp op);
+        sVec(const sVec<_Tp, cn   >& a, const Matx<_Tp, cn, 1>& b, Matx_SubOp op);
+        sVec(const Matx<_Tp, cn, 1>& a, const sVec<_Tp, cn   >& b, Matx_SubOp op);
+        sVec(const sVec<_Tp, cn   >& a, const sVec<_Tp, cn   >& b, Matx_SubOp op);
+        
+        // Operator Overloading - Matx_ScaleOp
+        
+        template<typename _T2> sVec(const Matx<_Tp, cn, 1>& a, _T2 alpha, Matx_ScaleOp op);
+        template<typename _T2> sVec(const sVec<_Tp, cn>& a, _T2 alpha, Matx_ScaleOp op);
+        
+        
+        // Direct product with a Vec or sVec.
+        
+        sVec<_Tp, cn> mul(const  Vec<_Tp, cn>& v) const;
+        sVec<_Tp, cn> mul(const sVec<_Tp, cn>& v) const;
+        
+        // The dotProduct
+        sVec<_Tp, 1> dotProd(const sVec<_Tp, cn>& v) const;
+        
+        // Methods
+        
+        void factor(){
+            // Test for all negative.
+            if (this->allNegative()) {
+                for (int i=0; i<cn; i++) {this->val[i] *= -1;}
+                scale = -1.0 * scale;
+            }
+            int common = gcd(this->val[0],this->val[1],this->val[2]);
+            if (common>1){
+                for (int i=0; i<cn; i++) {this->val[i] /= common;}
+                scale = scale*common;
+            };
+        };
+        
+        bool allNegative(){
+            for(int i=0;i<cn;i++)
+            {
+                if(this->val[i] > 0) return false;
+            }
+            return true;
+        }
+        // max and min return the max and min values in the vector part of the type.
+        _Tp max(){
+            _Tp maxVal = this->val[0];
+            for (int i=1; i<cn; i++) { if (this->val[i] > maxVal) maxVal=this->val[i];}
+            return maxVal;
+        }
+        
+        _Tp min(){
+            _Tp minVal = this->val[0];
+            for (int i=1; i<cn; i++) { if (this->val[i] > minVal) minVal=this->val[i];}
+            return minVal;
+        }
+        
+        
+    };
+    
+    
+    /////////////////////////// short scaled vector (sVec) /////////////////////////////
+    
+    template<typename _Tp, int cn> inline sVec<_Tp, cn>::sVec()
+    {}
+    
+    template<typename _Tp, int cn> inline sVec<_Tp, cn>::sVec(float _scale, _Tp v0)
+    : scale(_scale), Matx<_Tp, cn, 1>(v0)
+    {}
+    
+    template<typename _Tp, int cn> inline sVec<_Tp, cn>::sVec(float _scale, _Tp v0, _Tp v1)
+    : scale(_scale), Matx<_Tp, cn, 1>(v0, v1)
+    {}
+    
+    template<typename _Tp, int cn> inline sVec<_Tp, cn>::sVec(float _scale, _Tp v0, _Tp v1, _Tp v2)
+    : scale(_scale), Matx<_Tp, cn, 1>(v0, v1, v2)
+    {}
+    
+    template<typename _Tp, int cn> inline sVec<_Tp, cn>::sVec(float _scale, _Tp v0, _Tp v1, _Tp v2, _Tp v3)
+    : scale(_scale), Matx<_Tp, cn, 1>(v0, v1, v2, v3)
+    {}
+    
+    template<typename _Tp, int cn> inline sVec<_Tp, cn>::sVec(float _scale, _Tp v0, _Tp v1, _Tp v2, _Tp v3, _Tp v4)
+    : scale(_scale), Matx<_Tp, cn, 1>(v0, v1, v2, v3, v4)
+    {}
+    
+    template<typename _Tp, int cn> inline sVec<_Tp, cn>::sVec(float _scale, _Tp v0, _Tp v1, _Tp v2, _Tp v3, _Tp v4, _Tp v5)
+    : scale(_scale), Matx<_Tp, cn, 1>(v0, v1, v2, v3, v4, v5)
+    {}
+    
+    template<typename _Tp, int cn> inline sVec<_Tp, cn>::sVec(float _scale, _Tp v0, _Tp v1, _Tp v2, _Tp v3, _Tp v4, _Tp v5, _Tp v6)
+    : scale(_scale), Matx<_Tp, cn, 1>(v0, v1, v2, v3, v4, v5, v6)
+    {}
+    
+    template<typename _Tp, int cn> inline sVec<_Tp, cn>::sVec(float _scale, _Tp v0, _Tp v1, _Tp v2, _Tp v3, _Tp v4, _Tp v5, _Tp v6, _Tp v7)
+    : scale(_scale), Matx<_Tp, cn, 1>(v0, v1, v2, v3, v4, v5, v6, v7)
+    {}
+    
+    template<typename _Tp, int cn> inline sVec<_Tp, cn>::sVec(float _scale, _Tp v0, _Tp v1, _Tp v2, _Tp v3, _Tp v4, _Tp v5, _Tp v6, _Tp v7, _Tp v8)
+    : scale(_scale), Matx<_Tp, cn, 1>(v0, v1, v2, v3, v4, v5, v6, v7, v8)
+    {}
+    
+    template<typename _Tp, int cn> inline sVec<_Tp, cn>::sVec(float _scale, _Tp v0, _Tp v1, _Tp v2, _Tp v3, _Tp v4, _Tp v5, _Tp v6, _Tp v7, _Tp v8, _Tp v9)
+    : scale(_scale), Matx<_Tp, cn, 1>(v0, v1, v2, v3, v4, v5, v6, v7, v8, v9)
+    {}
+    
+    template<typename _Tp, int cn> inline sVec<_Tp, cn>::sVec(float _scale, const _Tp* values)
+    : scale(_scale), Matx<_Tp, cn, 1>(values)
+    {}
+    
+    // Constructors -- sVec from an sVec
+    template<typename _Tp, int cn> inline sVec<_Tp, cn>::sVec(const sVec<_Tp, cn>& m)
+    : Matx<_Tp, cn, 1>(m.val), scale(m.scale)
+    {}
+    // Constructors -- sVec from a float Matx
+    template<typename _Tp, int cn> inline sVec<_Tp, cn>::sVec(const Matx<float, cn, 1>& m)
+    {
+        const unsigned long long int saturateType = (1 << (sizeof(_Tp) << 3))-1;
+        float maxVal = m(0,0);
+        for (int i=1; i<cn; i++) { if (m(i,0) > maxVal) maxVal = m(i,0);}
+        return sVec<_Tp, cn>(maxVal/saturateType, Matx<_Tp,cn,1>(m, saturateType/maxVal, Matx_ScaleOp()));
+    }
+    
+    // Operator Overloading - Matx_AddOp
+    
+    template<typename _Tp, int cn> inline
+    sVec<_Tp, cn>::sVec(const Matx<_Tp, cn, 1>& a, const Matx<_Tp, cn, 1>& b, Matx_AddOp op)
+    : sVec<_Tp, cn>(1.0, Matx<_Tp, cn, 1>(a, b, op)){}
+    
+    template<typename _Tp, int cn> inline
+    sVec<_Tp, cn>::sVec(const sVec<_Tp, cn>& a, const Matx<_Tp, cn, 1>& b, Matx_AddOp op)
+    : sVec<_Tp, cn>(Matx<float, cn, 1>((Matx<float, cn, 1>) a, b, op)){}
+    
+    
+    template<typename _Tp, int cn> inline
+    sVec<_Tp, cn>::sVec(const Matx<_Tp, cn, 1>& a, const sVec<_Tp, cn>& b, Matx_AddOp op)
+    : sVec<_Tp, cn>(Matx<float, cn, 1>(a, (Matx<float, cn, 1>) b, op)){}
+    
+    template<typename _Tp, int cn> inline
+    sVec<_Tp, cn>::sVec(const sVec<_Tp, cn>& a, const sVec<_Tp, cn>& b, Matx_AddOp op)
+    : sVec<_Tp, cn>(Matx<float, cn, 1>( (Matx<float, cn, 1>) a, (Matx<float, cn, 1>) b, op)){}
+    
+    
+    // Operator Overloading - Matx_SubOp
+    
+    template<typename _Tp, int cn> inline
+    sVec<_Tp, cn>::sVec(const Matx<_Tp, cn, 1>& a, const Matx<_Tp, cn, 1>& b, Matx_SubOp op)
+    : sVec<_Tp, cn>(1.0, Matx<_Tp, cn, 1>(a, b, op)){}
+    
+    template<typename _Tp, int cn> inline
+    sVec<_Tp, cn>::sVec(const sVec<_Tp, cn>& a, const Matx<_Tp, cn, 1>& b, Matx_SubOp op)
+    : sVec<_Tp, cn>(Matx<float, cn, 1>((Matx<float, cn, 1>) a, b, op)){}
+    
+    
+    template<typename _Tp, int cn> inline
+    sVec<_Tp, cn>::sVec(const Matx<_Tp, cn, 1>& a, const sVec<_Tp, cn>& b, Matx_SubOp op)
+    : sVec<_Tp, cn>(Matx<float, cn, 1>(a, (Matx<float, cn, 1>) b, op)){}
+    
+    template<typename _Tp, int cn> inline
+    sVec<_Tp, cn>::sVec(const sVec<_Tp, cn>& a, const sVec<_Tp, cn>& b, Matx_SubOp op)
+    : sVec<_Tp, cn>(Matx<float, cn, 1>( (Matx<float, cn, 1>) a, (Matx<float, cn, 1>) b, op)){}
+    
+    // Operator Overloading - Matx_ScaleOp
+    
+    template<typename _Tp, int cn> template<typename _T2> inline
+    sVec<_Tp, cn>::sVec(const Matx<_Tp, cn, 1>& a, _T2 alpha, Matx_ScaleOp op)
+    : scale(alpha), Matx<_Tp, cn, 1>(a)
+    {}
+    
+    template<typename _Tp, int cn> template<typename _T2> inline
+    sVec<_Tp, cn>::sVec(const sVec<_Tp, cn>& a, _T2 alpha, Matx_ScaleOp op)
+    : scale(alpha * a.scale), Matx<_Tp, cn, 1>(a.val)
+    {}
+    
+    // Set all values to alpha
+    
+    template<typename _Tp, int cn> inline sVec<_Tp, cn> sVec<_Tp, cn>::all(_Tp alpha)
+    {
+        sVec v;
+        v.scale = (float) alpha;
+        for( int i = 0; i < cn; i++ ) v.val[i] = 1;
+        return v;
+    }
+    
+    // Direct product with a Vec or sVec.
+    
+    template<typename _Tp, int cn> inline sVec<_Tp, cn> sVec<_Tp, cn>::mul(const Vec<_Tp, cn>& v) const
+    {
+        Vec<_Tp, cn> w;
+        w.scale = this->scale;
+        for( int i = 0; i < cn; i++ ) w.val[i] = saturate_cast<_Tp>(this->val[i]*v.val[i]);
+        return w;
+    }
+    
+    template<typename _Tp, int cn> inline sVec<_Tp, cn> sVec<_Tp, cn>::mul(const sVec<_Tp, cn>& v) const
+    {
+        Vec<_Tp, cn> w;
+        w.scale = this->scale * v.scale;
+        for( int i = 0; i < cn; i++ ) w.val[i] = saturate_cast<_Tp>(this->val[i]*v.val[i]);
+        return w;
+    }
+    
+    // Conjugate sVec.
+    
+    template<typename _Tp> sVec<_Tp, 2> conjugate(const sVec<_Tp, 2>& v)
+    {
+        return sVec<_Tp, 2>(v.scale, Matx<_Tp, 2, 1>(v[0], -v[1]));
+    }
+    
+    template<typename _Tp> sVec<_Tp, 4> conjugate(const sVec<_Tp, 4>& v)
+    {
+        return sVec<_Tp, 4>(v.scale, Matx<_Tp, 4, 1>(v[0], -v[1], -v[2], -v[3]));
+    }
+    
+    template<> inline sVec<float, 2> sVec<float, 2>::conj() const
+    {
+        return conjugate(*this);
+    }
+    
+    template<> inline sVec<double, 2> sVec<double, 2>::conj() const
+    {
+        return conjugate(*this);
+    }
+    
+    template<> inline sVec<float, 4> sVec<float, 4>::conj() const
+    {
+        return conjugate(*this);
+    }
+    
+    template<> inline sVec<double, 4> sVec<double, 4>::conj() const
+    {
+        return conjugate(*this);
+    }
+    // Type conversion - sVec -> sVec
+    template<typename _Tp, int cn> template<typename T2>
+    inline sVec<_Tp, cn>::operator sVec<T2, cn>() const
+    {
+        sVec<T2, cn> v;
+        if (sizeof(T2)>sizeof(_Tp)){
+            v.scale = this->scale;
+            for( int i = 0; i < cn; i++ ) v.val[i] = saturate_cast<T2>(this->val[i]);
+        }
+        else{
+            _Tp max = this->max(); // The largest value in the vector.
+            int bitPos = mostSignificantBit<_Tp>(max);
+            int bitShift = bitPos - ((sizeof(T2) << 3)-1); // the number of bits which will not fit into T2.
+            if (bitShift <= 0) {
+                v.scale = this->scale;
+                for( int i = 0; i < cn; i++ ) v.val[i] = saturate_cast<T2>(this->val[i]);
+            } else {
+                int bitScale = 1<<bitShift;
+                v.scale = bitScale * this->scale;
+                for( int i = 0; i < cn; i++ ) v.val[i] = saturate_cast<T2>(this->val[i]/bitScale);
+            }
+        }
+        return v;
+    }
+    // Type conversion - sVec -> Matx
+    template<typename _Tp, int cn> inline sVec<_Tp, cn>::operator Matx<float, cn, 1>() const
+    {
+        return Matx<float, cn, 1>(Matx<_Tp, cn, 1>(this->val), this->scale, Matx_ScaleOp());
+    }
+    
+    template<typename _Tp, int cn> inline sVec<_Tp, cn>::operator CvScalar() const
+    {
+        CvScalar s = {{0,0,0,0}};
+        int i;
+        for( i = 0; i < std::min(cn, 4); i++ ) s.val[i] = this->scale * this->val[i];
+        for( ; i < 4; i++ ) s.val[i] = 0;
+        return s;
+    }
+    
+    // Element Access
+    // Element Access - Access Rvalue - Vector element
+    template<typename _Tp, int cn> inline const _Tp& sVec<_Tp, cn>::operator [](int i) const
+    {
+        CV_DbgAssert( (unsigned)i < (unsigned)cn );
+        return this->val[i];
+    }
+    
+    // Element Access - Access Lvalue - Vector element
+    template<typename _Tp, int cn> inline _Tp& sVec<_Tp, cn>::operator [](int i)
+    {
+        CV_DbgAssert( (unsigned)i < (unsigned)cn );
+        return this->val[i];
+    }
+    // Element Access - Access Rvalue - Scaled Vector element
+    template<typename _Tp, int cn> inline const float sVec<_Tp, cn>::operator ()(int i) const
+    {
+        CV_DbgAssert( (unsigned)i < (unsigned)cn );
+        return this->scale * this->val[i];
+    }
+    
+    template<typename _Tp1, typename _Tp2, int cn> static inline sVec<_Tp1, cn>&
+    operator += (sVec<_Tp1, cn>& a, const sVec<_Tp2, cn>& b)
+    {
+        a = sVec<_Tp1, cn>( (Matx<float, cn, 1>) a + (Matx<float, cn, 1>) b);
+        return a;
+    }
+    
+    template<typename _Tp1, typename _Tp2, int cn> static inline sVec<_Tp1, cn>&
+    operator -= (sVec<_Tp1, cn>& a, const sVec<_Tp2, cn>& b)
+    {
+        a = sVec<_Tp1, cn>( (Matx<float, cn, 1>) a - (Matx<float, cn, 1>) b);
+        return a;
+    }
+    
+    template<typename _Tp, int cn> static inline sVec<_Tp, cn>
+    operator + (const sVec<_Tp, cn>& a, const sVec<_Tp, cn>& b)
+    {
+        return sVec<_Tp, cn>(a, b, Matx_AddOp());
+    }
+    
+    template<typename _Tp, int cn> static inline sVec<_Tp, cn>
+    operator - (const sVec<_Tp, cn>& a, const sVec<_Tp, cn>& b)
+    {
+        return sVec<_Tp, cn>(a, b, Matx_SubOp());
+    }
+    
+    template<typename _Tp, int cn> static inline
+    sVec<_Tp, cn>& operator *= (sVec<_Tp, cn>& a, int alpha)
+    {
+        a.scale *= alpha;
+        return a;
+    }
+    
+    template<typename _Tp, int cn> static inline
+    sVec<_Tp, cn>& operator *= (sVec<_Tp, cn>& a, float alpha)
+    {
+        a.scale *= alpha;
+        return a;
+    }
+    
+    template<typename _Tp, int cn> static inline
+    sVec<_Tp, cn>& operator *= (sVec<_Tp, cn>& a, double alpha)
+    {
+        a.scale *= alpha;
+        return a;
+    }
+    
+    template<typename _Tp, int cn> static inline
+    sVec<_Tp, cn>& operator /= (sVec<_Tp, cn>& a, int alpha)
+    {
+        a.scale /= alpha;
+        return a;
+    }
+    
+    template<typename _Tp, int cn> static inline
+    sVec<_Tp, cn>& operator /= (sVec<_Tp, cn>& a, float alpha)
+    {
+        a.scale /= alpha;
+        return a;
+    }
+    
+    template<typename _Tp, int cn> static inline
+    sVec<_Tp, cn>& operator /= (sVec<_Tp, cn>& a, double alpha)
+    {
+        a.scale /= alpha;
+        return a;
+    }
+    
+    // Operators -  sVec = num * sVec
+    
+    template<typename _Tp, int n> static inline
+    sVec<_Tp, n> operator * (const sVec<_Tp, n>& b, const float a){
+        return sVec<_Tp, n>(a * b.scale, Matx<_Tp, n, 1>(b.val));
+    };
+    
+    template<typename _Tp, int n> static inline
+    sVec<_Tp, n> operator * (const float a, const sVec<_Tp, n>& b){
+        return sVec<_Tp, n>(a * b.scale, Matx<_Tp, n, 1>(b.val));
+    };
+    
+    template<typename _Tp, int n> static inline
+    sVec<_Tp, n> operator * (const int a, const sVec<_Tp, n>& b){
+        return sVec<_Tp, n>(a * b.scale, Matx<_Tp, n, 1>(b.val));
+    };
+    
+    template<typename _Tp, int n> static inline
+    sVec<_Tp, n> operator * (const sVec<_Tp, n>& b, const int a){
+        return sVec<_Tp, n>(a * b.scale, Matx<_Tp, n, 1>(b.val));
+    };
+    
+    
+    
+    // Operators -  sVec = Matx * sVec
+    
+    template<typename _Tp, int m, int n> static inline
+    sVec<_Tp, m> operator * (const Matx<_Tp, m, n>& a, const sVec<_Tp, n>& b)
+    {
+        Matx<_Tp, m, 1> c(a, b, Matx_MatMulOp());
+        return new sVec<_Tp, m>(b.scale, c);
+    }
+    
+    // Operators -  sVec = Vec * sVec
+    template<typename _Tp, int n> static inline
+    sVec<_Tp, n> operator * (const Matx<_Tp, n, 1>& a, const sVec<_Tp, n>& b)
+    {
+        return b.mul(a);
+    }
+    // Operators -  sVec = sVec * Vec
+    template<typename _Tp, int n> static inline
+    sVec<_Tp, n> operator * (const sVec<_Tp, n>& a, const Matx<_Tp, n, 1>& b)
+    {
+        return a.mul(b);
+    }
+    
+    
+    // Direct product with a Vec or sVec.
+    /*
+     template<typename _Tp, int cn> template<typename out_t>  static inline out_t dotProd<out_t>(const Vec<_Tp, cn>& a, const Vec<_Tp, cn>& b)
+     {
+     out_t dotProd = 0;
+     for (int i=0; i < cn; i++) {
+     dotProd += a.val[i] * b.val[i];
+     }
+     return dotProd;
+     }
+     
+     template<typename _Tp, int cn> template<> static inline float dotProd<float>(const Vec<_Tp, cn>& a, const Vec<_Tp, cn>& b)
+     {
+     float dotProd = 0;
+     for (int i=0; i < cn; i++) {
+     dotProd += a.val[i] * b.val[i];
+     }
+     return a.scale * b.scale * dotProd;
+     }
+     */
+    template<typename _Tp, int cn> inline sVec<_Tp, 1> sVec<_Tp, cn>::dotProd(const sVec<_Tp, cn>& v) const
+    {
+        _Tp accum = 0;
+        for (int i=0; i < cn; i++) {
+            accum += this->val[i] * v.val[i];
+        }
+        return sVec<_Tp, 1>(this->scale * v.scale, accum);
+    }
+    
+    // Operators -  int = sVec * Vec
+    template<typename _Tp, int n> static inline
+    _Tp operator * (const sVec<_Tp, n>& a, const Matx<_Tp, n, 1>& b)
+    {
+        _Tp dotProd = 0;
+        for (int i=0; i < n; i++) {
+            dotProd += a.val[i] * b[i];
+        }
+        return dotProd;
+    }
+    
+    // Operators -  int = Vec * sVec
+    template<typename _Tp, int n> static inline
+    _Tp operator * ( const Matx<_Tp, n, 1>& b, const sVec<_Tp, n>& a)
+    {
+        _Tp dotProd = 0;
+        for (int i=0; i < n; i++) {
+            dotProd += a.val[i] * b[i];
+        }
+        return dotProd;
+    }
+    
+    // Operators -  int = sVec * sVec
+    template<typename _Tp, int n> static inline
+    _Tp operator * (const sVec<_Tp, n>& a, const sVec<_Tp, n>& b)
+    {
+        _Tp dotProd = 0;
+        for (int i=0; i < n; i++) {
+            dotProd += a.val[i] * b.val[i];
+        }
+        return dotProd;
+    }
+    
+    // Operators -  float = sVec * Vec
+    template<typename _Tp, int n> static inline
+    float operator * (const sVec<_Tp, n>& a, const Matx<_Tp, n, 1>& b)
+    {
+        float dotProd = 0;
+        for (int i=0; i < n; i++) {
+            dotProd += (float) a.val[i] * (float) b[i];
+        }
+        return a.scale * dotProd;
+    }
+    
+    // Operators -  float = Vec * sVec
+    template<typename _Tp, int n> static inline
+    float operator * ( const Matx<_Tp, n, 1>& b, const sVec<_Tp, n>& a)
+    {
+        float dotProd = 0;
+        for (int i=0; i < n; i++) {
+            dotProd += (float) a.val[i] * (float) b[i];
+        }
+        return a.scale * dotProd;
+    }
+    
+    // Operators -  float = sVec * sVec
+    template<typename _Tp, int n> static inline
+    float operator * (const sVec<_Tp, n>& a, const sVec<_Tp, n>& b)
+    {
+        float dotProd = 0;
+        for (int i=0; i < n; i++) {
+            dotProd += (float) a.val[i] * (float) b.val[i];
+        }
+        return a.scale * b.scale * dotProd;
+    }
+    
+    template<typename _Tp, int cn> static inline sVec<_Tp, cn>
+    operator * (const sVec<_Tp, cn>& a, double alpha)
+    {
+        return sVec<_Tp, cn>(a.scale * alpha, Matx<_Tp, cn,1>(a.val));
+    }
+    
+    template<typename _Tp, int cn> static inline sVec<_Tp, cn>
+    operator * (double alpha, const sVec<_Tp, cn>& a)
+    {
+        return sVec<_Tp, cn>(a.scale * alpha, Matx<_Tp, cn,1>(a.val));
+    }
+    
+    // Operators -  sVec / number
+    
+    template<typename _Tp, int cn> static inline sVec<_Tp, cn>
+    operator / (const sVec<_Tp, cn>& a, int alpha)
+    {
+        return sVec<_Tp, cn>(a.scale / alpha, Matx<_Tp, cn,1>(a.val));
+    }
+    
+    template<typename _Tp, int cn> static inline sVec<_Tp, cn>
+    operator / (const sVec<_Tp, cn>& a, float alpha)
+    {
+        return sVec<_Tp, cn>(a.scale / alpha, Matx<_Tp, cn,1>(a.val));
+    }
+    
+    template<typename _Tp, int cn> static inline sVec<_Tp, cn>
+    operator / (const sVec<_Tp, cn>& a, double alpha)
+    {
+        return sVec<_Tp, cn>(a.scale / alpha, Matx<_Tp, cn,1>(a.val));
+    }
+    
+    // Operators -  -sVec
+    
+    template<typename _Tp, int cn> static inline sVec<_Tp, cn>
+    operator - (const sVec<_Tp, cn>& a)
+    {
+        return sVec<_Tp, cn>(-a.scale, Matx<_Tp, cn,1>(a.val));
+    }
+    /*
+     template<typename _Tp> inline Vec<_Tp, 4> operator * (const Vec<_Tp, 4>& v1, const Vec<_Tp, 4>& v2)
+     {
+     return Vec<_Tp, 4>(saturate_cast<_Tp>(v1[0]*v2[0] - v1[1]*v2[1] - v1[2]*v2[2] - v1[3]*v2[3]),
+     saturate_cast<_Tp>(v1[0]*v2[1] + v1[1]*v2[0] + v1[2]*v2[3] - v1[3]*v2[2]),
+     saturate_cast<_Tp>(v1[0]*v2[2] - v1[1]*v2[3] + v1[2]*v2[0] + v1[3]*v2[1]),
+     saturate_cast<_Tp>(v1[0]*v2[3] + v1[1]*v2[2] - v1[2]*v2[1] + v1[3]*v2[0]));
+     }
+     
+     template<typename _Tp> inline Vec<_Tp, 4>& operator *= (Vec<_Tp, 4>& v1, const Vec<_Tp, 4>& v2)
+     {
+     v1 = v1 * v2;
+     return v1;
+     }
+     */
+    
+    template<typename _Tp, int cn> inline sVec<_Tp, cn> sVec<_Tp, cn>::cross(const sVec<_Tp, cn>&) const
+    {
+        CV_Error(CV_StsError, "for arbitrary-size vector there is no cross-product defined");
+        return sVec<_Tp, cn>();
+    }
+    
+    template<> inline sVec<int, 3> sVec<int, 3>::cross(const sVec<int, 3>& v) const
+    {
+        return sVec<int, 3>(this->scale * v.scale,
+                            Matx<int, 3, 1>(
+                                            saturate_cast<int>(val[1]*v.val[2] - val[2]*v.val[1]),
+                                            saturate_cast<int>(val[2]*v.val[0] - val[0]*v.val[2]),
+                                            saturate_cast<int>(val[0]*v.val[1] - val[1]*v.val[0]) )
+                            );
+    }
+    
+    template<typename _Tp> static inline sVec<_Tp, 3> cross(const sVec<_Tp, 3>& a, const sVec<_Tp, 3>& b)
+    {
+        return sVec<_Tp, 3>(a.scale * b.scale,
+                            Matx<_Tp, 3, 1>(
+                                            saturate_cast<_Tp>(a.val[1]*b.val[2] - a.val[2]*b.val[1]),
+                                            saturate_cast<_Tp>(a.val[2]*b.val[0] - a.val[0]*b.val[2]),
+                                            saturate_cast<_Tp>(a.val[0]*b.val[1] - a.val[1]*b.val[0]) )
+                            );
+    }
+    /*
+     template<typename _Tp> inline sVec<_Tp, 3> sVec<_Tp, 3>::cross(const sVec<_Tp, 3>& v) const
+     {
+     return sVec<_Tp, 3>(this->scale * v.scale,
+     Matx<_Tp, 3, 1>(
+     saturate_cast<_Tp>(val[1]*v.val[2] - val[2]*v.val[1]),
+     saturate_cast<_Tp>(val[2]*v.val[0] - val[0]*v.val[2]),
+     saturate_cast<_Tp>(val[0]*v.val[1] - val[1]*v.val[0]) )
+     );
+     }
+     */
+    
+    template<typename _Tp, int cn> inline sVec<_Tp, cn> normalize(const sVec<_Tp, cn>& v)
+    {
+        float nv = norm(v);
+        return sVec<_Tp, cn>((nv ? 1./nv : 0.), Matx<_Tp, cn, 1>(v.val));
+    }
+    /*
+     template<typename _Tp, typename _T2, int cn> static inline
+     VecCommaInitializer<_Tp, cn> operator << (const Vec<_Tp, cn>& vec, _T2 val)
+     {
+     VecCommaInitializer<_Tp, cn> commaInitializer((Vec<_Tp, cn>*)&vec);
+     return (commaInitializer, val);
+     }
+     
+     template<typename _Tp, int cn> inline
+     VecCommaInitializer<_Tp, cn>::VecCommaInitializer(Vec<_Tp, cn>* _vec)
+     : MatxCommaInitializer<_Tp, cn, 1>(_vec)
+     {}
+     
+     template<typename _Tp, int cn> template<typename _T2> inline
+     VecCommaInitializer<_Tp, cn>& VecCommaInitializer<_Tp, cn>::operator , (_T2 value)
+     {
+     CV_DbgAssert( this->idx < cn );
+     this->dst->val[this->idx++] = saturate_cast<_Tp>(value);
+     return *this;
+     }
+     
+     template<typename _Tp, int cn> inline
+     Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
+     {
+     CV_DbgAssert( this->idx == cn );
+     return *this->dst;
+     }
+     */
+    
+    /*   template<typename _Tp> struct RGBA2Rot
+     {
+     typedef _Tp channel_type;
+     
+     Matx<float, 3, 5> Ms4d3;
+     
+     // The transform to the new color space is (T vec - 255 TMin)/TRange. 255 is the range of 8bit RGB and can be replaced directly with a different range for 16 and 32 bit RGB spaces. The division by TRange is the direct element wise division and can safely be rounded to recast in the required bit depth.
+     
+     RGBA2Rot(Matx<int, 3, 3>& T, Vec<int, 3>&  TRange, Vec<int,3>& TMin)// NOTE: MatX constructor should be able to be constructed using the {} notation using C++11 features
+     {
+     Ms4d3 = \
+     {((float)T(0, 0)/(float)TRange[0]), ((float)T(0, 1)/(float)TRange[1]), ((float)T(0, 2)/(float)TRange[2]), 1.0, ((float)TMin[0]/(float)TRange[0]), \
+     ((float)T(1, 0)/(float)TRange[0]), ((float)T(1, 1)/(float)TRange[1]), ((float)T(1, 2)/(float)TRange[2]), 1.0, ((float)TMin[1]/(float)TRange[1]), \
+     ((float)T(2, 0)/(float)TRange[0]), ((float)T(2, 1)/(float)TRange[1]), ((float)T(2, 2)/(float)TRange[2]), 1.0, ((float)TMin[2]/(float)TRange[2])
+     };
+     }
+     
+     void operator()(const _Tp* src, _Tp* dst, int n) const
+     {
+     //        cv::transform(*src, *dst, Ms4d3);
+     }
+     };
+     */
+    
+    
+    template <typename T> void MaxInRow(InputArray _src, OutputArray _dst){
+        Mat src = _src.getMat();
+        _dst.create(src.rows, 1, src.type());
+        Mat dst = _dst.getMat();
+        dst = src.col(0);
+        
+        for( int i = 0; i < src.rows; i++ ){
+            const T* srcRow = src.ptr<T>(i);
+            for( int j = 1; j < src.cols; j++ )
+            {
+                dst.at<T>(i,0) = std::max(dst.at<T>(i,0),srcRow[j]);
+            }
+        }
+        
+    }
+    
+    template <typename T> void MinInRow(InputArray _src, OutputArray _dst){
+        Mat src = _src.getMat();
+        _dst.create(src.rows, 1, src.type());
+        Mat dst = _dst.getMat();
+        dst = src.col(0);
+        
+        for( int i = 0; i < src.rows; i++ ){
+            const T* srcRow = src.ptr<T>(i);
+            for( int j = 1; j < src.cols; j++ )
+            {
+                dst.at<T>(i,0) = std::min(dst.at<T>(i,0),srcRow[j]);
+            }
+        }
+        
+    }
+    
+    
+
+    
 
 //////////////////////////////// Complex //////////////////////////////
 
