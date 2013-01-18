@@ -2402,13 +2402,53 @@ struct mRGBA2RGBA
         }
 
     };
-
     
-    int gcd(int a, int b, int c){
+    template<typename _Tp> _Tp gcd(_Tp* b, unsigned int size_b){
+        switch (size_b) {
+            case 0:
+                // error
+                break;
+            case 1:
+                b[0];
+                break;
+            case 2:
+                gcd(b[0],b[1]);
+                break;
+            case 3:
+                gcd(gcd(b[0],b[1]),b[2]);
+                break;
+            case 4:
+                gcd(gcd(b[0],b[1]), gcd(b[2],b[3]));
+                break;
+            default:
+                gcd(gcd(b,size_b/2), gcd(b+(size_b+1)/2,(size_b+1)/2));
+                break;
+        }
+        if (size_b > 0){
+            return gcd(b[0], b++, size_b-1);
+        }
+        else {
+            return b[0];
+        }
+    };
+    
+     template<typename _Tp> _Tp gcd(_Tp a, _Tp* b, unsigned int size_b){
+        if (size_b >= 2){
+            return gcd(gcd(a, b[0]), b++, size_b-1);
+        }
+        else if(size_b == 1) {
+            return gcd(a, b[0]);
+        }
+        else {
+            return a;
+        }
+    };
+
+     template<typename _Tp> _Tp gcd(_Tp& a, _Tp& b, _Tp& c){
         return gcd(gcd(a, b), c);
     };
     
-    int gcd(int u, int v) {
+     template<typename _Tp> _Tp gcd(_Tp& u, _Tp& v) {
         if (v)
             return gcd(v, u % v);
         else
@@ -2593,24 +2633,37 @@ struct mRGBA2RGBA
         
         void factor(){
             // Test for all negative.
-            if (vec[0]<0 && vec[1]<0 && vec[2] < 0) {
-                vec   = -1   * vec;
+            if (this->allNegative()) {
+                for (int i=0; i<cn; i++) {this->val[i] *= -1;}
                 scale = -1.0 * scale;
             }
             int common = gcd(this->vec[0],this->vec[1],this->vec[2]);
             if (common>1){
-                Vec3i vecTemp(this->vec[0]/common,this->vec[1]/common,this->vec[2]/common);
-                vec = vecTemp;
+                for (int i=0; i<cn; i++) {this->val[i] /= common;}
                 scale = scale*common;
             };
         };
         
-        int max(){
-            return std::max(std::max(vec[0],vec[1]),vec[2]);
-        };
-        int min(){
-            return std::min(std::min(vec[0],vec[1]),vec[2]);
-        };
+        bool allNegative(){
+            for(int i=0;i<cn;i++)
+                {
+                    if(this->val[i] > 0) return false;
+                }
+                return true;
+        }
+        // max and min return the max and min values in the vector part of the type.
+        _Tp max(){
+            _Tp maxVal = this->val[0];
+            for (int i=1; i<cn; i++) { if (this->val[i] > maxVal) maxVal=this->val[i];}
+            return maxVal;
+        }
+        
+        _Tp min(){
+            _Tp minVal = this->val[0];
+            for (int i=1; i<cn; i++) { if (this->val[i] > minVal) minVal=this->val[i];}
+            return minVal;
+        }
+
 
     };
         
@@ -2803,7 +2856,7 @@ inline sVec<_Tp, cn>::operator sVec<T2, cn>() const
         for( int i = 0; i < cn; i++ ) v.val[i] = saturate_cast<T2>(this->val[i]);
     }
     else{
-        _Tp max = this.max(); // The largest value in the vector.
+        _Tp max = this->max(); // The largest value in the vector.
         int bitPos = mostSignificantBit<_Tp>(max);
         int bitShift = bitPos - ((sizeof(T2) << 3)-1); // the number of bits which will not fit into T2.
         if (bitShift <= 0) {
@@ -2823,7 +2876,7 @@ template<typename _Tp, int cn> inline sVec<_Tp, cn>::operator Matx<float, cn, 1>
     return Matx<float, cn, 1>(Matx<_Tp, cn, 1>(this->val), this->scale, Matx_ScaleOp());
 }
 
-template<typename _Tp, int cn> inline Vec<_Tp, cn>::operator CvScalar() const
+template<typename _Tp, int cn> inline sVec<_Tp, cn>::operator CvScalar() const
 {
     CvScalar s = {{0,0,0,0}};
     int i;
@@ -3035,7 +3088,7 @@ float operator * (const sVec<_Tp, n>& a, const Matx<_Tp, n, 1>& b)
     
 // Operators -  sVec * number 
 template<typename _Tp, int cn> static inline sVec<_Tp, cn>
-    sVec<_Tp, cn>::operator * (const sVec<_Tp, cn>& a, int alpha)
+    operator * (const sVec<_Tp, cn>& a, int alpha)
 {
     return sVec<_Tp, cn>(a.scale * alpha, Matx<_Tp, cn,1>(a.val));
 }
