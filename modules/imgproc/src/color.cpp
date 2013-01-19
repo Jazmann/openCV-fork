@@ -3080,7 +3080,7 @@ void cv::cvtColor( InputArray _src, OutputArray _dst, int code, int dcn )
     }
 }
 
-void cv::cvtNewColor(InputArray _src, OutputArray _dst, RGB2Rot<uchar> _color_Conv)
+void cv::cvtNewColor(InputArray _src, OutputArray _dst, RGB2Rot<CV_8UC3,CV_4UC1> _color_Conv)
 {
     Mat src = _src.getMat(), dst;
     Size sz = src.size();
