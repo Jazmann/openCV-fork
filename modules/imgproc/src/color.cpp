@@ -3080,6 +3080,32 @@ void cv::cvtColor( InputArray _src, OutputArray _dst, int code, int dcn )
     }
 }
 
+void cv::cvtNewColor(InputArray _src, OutputArray _dst, RGB2Rot<uchar> _color_Conv)
+{
+    Mat src = _src.getMat(), dst;
+    Size sz = src.size();
+    int scn = src.channels(), depth = src.depth(), bidx;
+    
+    CV_Assert( depth == CV_8U || depth == CV_16U || depth == CV_32F );
+    
+            if (dcn <= 0) dcn = 3;
+            CV_Assert( scn >= 3 && dcn == 3 );
+            
+            _dst.create(sz, CV_MAKETYPE(depth, dcn));
+            dst = _dst.getMat();
+            cv::Matx<int, 3, 3> M(0,1,0,1,0,0,0,0,1);
+            cv::Vec<int, 3>  TRange(255,255,255);
+            cv::Vec<int,3>   TMin(0,0,0);
+            if( depth == CV_8U )
+            {
+                CvtColorLoop(src, dst, RGB2Rot<uchar>(scn, 0, M, TRange, TMin));
+            } else {
+                CV_Error( CV_StsBadArg, "Unsupported image depth" );
+            }
+
+}
+
+
 CV_IMPL void
 cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )
 {
