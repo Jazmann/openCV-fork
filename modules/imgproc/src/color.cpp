@@ -2388,14 +2388,11 @@ struct mRGBA2RGBA
         
         
         RGB2Rot(Vec<int, 3> sp0, Vec<int, 3> sp1, Vec<int, 3> sp2){
-            
-            sVec<int, 3> v1(1.0, sp1 - sp0);
-            sVec<int, 3> v2(1.0, sp2 - sp0);
-            v1.factor(); v1.scale=1.0;
-            v2.factor(); v2.scale=1.0;
-            
-            sVec<int, 1> v1Norm2 = v1.dotProd(v1); // (v1[0] * v1[0]) + (v1[1] * v1[1]) + (v1[2] * v1[2]);
-            sVec<int, 1> v2Norm2 = v2.dotProd(v2); // (v2[0] * v2[0]) + (v2[1] * v2[1]) + (v2[2] * v2[2]);
+            sVec<int, 3> v1(1.0, sp1 - sp0); v1.factor(); v1.scale=1.0;
+            sVec<int, 3> v2(1.0, sp2 - sp0); v2.factor(); v2.scale=1.0;
+
+            sVec<int, 1> v1Norm2 = v1.dotProd(v1); // v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2];
+            sVec<int, 1> v2Norm2 = v2.dotProd(v2); // v2[0] * v2[0] + v2[1] * v2[1] + v2[2] * v2[2];
             sVec<int, 1> v2DotV1 = v2.dotProd(v1); // v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
             float v1V2Sin = sqrtf(v1Norm2(0) * v2Norm2(0) - v2DotV1(0) * v2DotV1(0));
             
@@ -2405,56 +2402,42 @@ struct mRGBA2RGBA
             sVec<int, 3> a3 = v1.cross(v2);
             a3.scale = 1.0/v1V2Sin;
             // Remove common factors
-            a1.factor();
-            a2.factor();
-            a3.factor();
+            a1.factor(); a2.factor(); a3.factor();
             // Reorder as a rigt handed coordinate system with a1 in RGB. If a1 is in RGB the all components are positive.
-            if (! a1.allNegative()) {
-                
-                // Then a1.vec is in RGB. Do nothing.
-                if (a1.scale < 0.0) {
-                    // a1 is pointing in the wrong direction flip the sign and correct the product a1 x a2 = a3.
+            // a1 x a2 = a3, a2 x a3 = a1, a3 x a1 = a2 Cyclic permitations are allowed.
+            if (a1.allPositive) {     // Then a1.vec is in RGB. Do nothing.
+                if (a1.scale < 0.0) { // a1 is pointing in the wrong direction flip the sign and correct the product a1 x a2 = a3.
                     a1.scale *= -1.0;
-                    a3 *= -1;
+                    std::swap(a2, a3);
                 }
-                
-            } else if (! a2.allNegative()){
-                
-                // Then a2.vec is in RGB. Make a2 -> a1, a1 -> a2 and flip sign of a3 to preserve a1 x a2 = a3.
-                if (a2.scale < 0.0) {
-                    // a2 is pointing in the wrong direction flip the sign and correct the product a1 x a2 = a3.
+            } else if (a2.allPositive()){ // Then a2.vec is in RGB. Make a2 -> a1, a1 -> a2 and flip sign of a3 to preserve a1 x a2 = a3.
+                if (a2.scale < 0.0) { // a2 is pointing in the wrong direction flip the sign and correct the product a1 x a2 = a3.
                     a2.scale *= -1.0;
-                    a3 *= -1;
+                    std::swap(a1, a2); // Now : a2,a1,a3 As desired.
+                } else {
+                    std::swap(a1, a3);    // Now : a3,a2,a1
+                    std::swap(a1, a2);    // Now : a2,a3,a1 As desired.
                 }
-                std::swap(a1, a2);    // Make a2 -> a1, a1 -> a2.
                 a3 *= -1; // Flip sign of a3 to preserve a1 x a2 = a3.
                 
-            }else if (! a3.allNegative()){
-                
-                // Then a3.vec is in RGB. Perform cyclic permutation of the vectors. a3 -> a1, a1 -> a2, a2 -> a3.
-                if (a3.scale < 0.0) {
-                    // a3 is pointing in the wrong direction flip the sign and correct the product a1 x a2 = a3.
+            }else if (a3.allPositive()){ // Then a3.vec is in RGB. Perform cyclic permutation of the vectors. a3 -> a1, a1 -> a2, a2 -> a3.
+                if (a3.scale < 0.0) { // a3 is pointing in the wrong direction flip the sign and correct the product a1 x a2 = a3.
                     a3.scale *= -1.0;
-                    a2 *= -1; // a2 chosen arbitarily for sign reversal.
+                    std::swap(a1, a3);    // Now : a3,a2,a1
+                } else {
+                    std::swap(a1, a3);    // Now : a3,a2,a1
+                    std::swap(a2, a3);    // Now : a3,a1,a2 As desired.
                 }
-                std::swap(a1, a3);    // Now : a3,a2,a1
-                std::swap(a2, a3);    // Now : a3,a1,a2 As desired.
-                
             }
             // Setup internal data
             Matx<int, 3, 3> Ti = Matx<int, 3, 3>(a1[0],a1[1],a1[2],a2[0],a2[1],a2[2],a3[0],a3[1],a3[2]);
-            
             Matx<int, 3, 8> RGBBox({0, 1, 0, 0, 0, 1, 1, 1,
-                0, 0, 1, 0, 1, 0, 1, 1,
-                0, 0, 0, 1, 1, 1, 0, 1});
-            
+                                    0, 0, 1, 0, 1, 0, 1, 1,
+                                    0, 0, 0, 1, 1, 1, 0, 1});
             Matx<int, 3, 8> RGBBoxInNew = Ti * RGBBox;
-            
             Mat RGBCubeMax, RGBCubeMin;
-            
             MaxInRow<int>(RGBBoxInNew, RGBCubeMax);
             MinInRow<int>(RGBBoxInNew, RGBCubeMin);
-            
             Mat RGBCubeRange = RGBCubeMax - RGBCubeMin;
             M = Ti.val;
             TMin[0]   = RGBCubeMin.at<int>(0,0);   TMin[1]   = RGBCubeMin.at<int>(1,0);   TMin[2]   = RGBCubeMin.at<int>(2,0);

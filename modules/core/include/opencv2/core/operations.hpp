@@ -1750,6 +1750,15 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
             }
             return true;
         }
+        
+        bool allPositive(){
+            for(int i=0;i<cn;i++)
+            {
+                if(this->val[i] < 0) return false;
+            }
+            return true;
+        }
+
         // max and min return the max and min values in the vector part of the type.
         _Tp max(){
             _Tp maxVal = this->val[0];
@@ -2088,94 +2097,7 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
     sVec<_Tp, n> operator * (const sVec<_Tp, n>& b, const int a){
         return sVec<_Tp, n>(a * b.scale, Matx<_Tp, n, 1>(b.val));
     };
-    
-    
-    
-    // Operators -  sVec = Matx * sVec
-    
-    template<typename _Tp, int m, int n> static inline
-    sVec<_Tp, m> operator * (const Matx<_Tp, m, n>& a, const sVec<_Tp, n>& b)
-    {
-        Matx<_Tp, m, 1> c(a, b, Matx_MatMulOp());
-        return new sVec<_Tp, m>(b.scale, c);
-    }
-    
-    // Operators -  sVec = Vec * sVec
-    template<typename _Tp, int n> static inline
-    sVec<_Tp, n> operator * (const Matx<_Tp, n, 1>& a, const sVec<_Tp, n>& b)
-    {
-        return b.mul(a);
-    }
-    // Operators -  sVec = sVec * Vec
-    template<typename _Tp, int n> static inline
-    sVec<_Tp, n> operator * (const sVec<_Tp, n>& a, const Matx<_Tp, n, 1>& b)
-    {
-        return a.mul(b);
-    }
-    
-    
-    // Direct product with a Vec or sVec.
-    /*
-     template<typename _Tp, int cn> template<typename out_t>  static inline out_t dotProd<out_t>(const Vec<_Tp, cn>& a, const Vec<_Tp, cn>& b)
-     {
-     out_t dotProd = 0;
-     for (int i=0; i < cn; i++) {
-     dotProd += a.val[i] * b.val[i];
-     }
-     return dotProd;
-     }
-     
-     template<typename _Tp, int cn> template<> static inline float dotProd<float>(const Vec<_Tp, cn>& a, const Vec<_Tp, cn>& b)
-     {
-     float dotProd = 0;
-     for (int i=0; i < cn; i++) {
-     dotProd += a.val[i] * b.val[i];
-     }
-     return a.scale * b.scale * dotProd;
-     }
-     */
-    template<typename _Tp, int cn> inline sVec<_Tp, 1> sVec<_Tp, cn>::dotProd(const sVec<_Tp, cn>& v) const
-    {
-        _Tp accum = 0;
-        for (int i=0; i < cn; i++) {
-            accum += this->val[i] * v.val[i];
-        }
-        return sVec<_Tp, 1>(this->scale * v.scale, accum);
-    }
-    
-    // Operators -  int = sVec * Vec
-    template<typename _Tp, int n> static inline
-    _Tp operator * (const sVec<_Tp, n>& a, const Matx<_Tp, n, 1>& b)
-    {
-        _Tp dotProd = 0;
-        for (int i=0; i < n; i++) {
-            dotProd += a.val[i] * b[i];
-        }
-        return dotProd;
-    }
-    
-    // Operators -  int = Vec * sVec
-    template<typename _Tp, int n> static inline
-    _Tp operator * ( const Matx<_Tp, n, 1>& b, const sVec<_Tp, n>& a)
-    {
-        _Tp dotProd = 0;
-        for (int i=0; i < n; i++) {
-            dotProd += a.val[i] * b[i];
-        }
-        return dotProd;
-    }
-    
-    // Operators -  int = sVec * sVec
-    template<typename _Tp, int n> static inline
-    _Tp operator * (const sVec<_Tp, n>& a, const sVec<_Tp, n>& b)
-    {
-        _Tp dotProd = 0;
-        for (int i=0; i < n; i++) {
-            dotProd += a.val[i] * b.val[i];
-        }
-        return dotProd;
-    }
-    
+        
     // Operators -  float = sVec * Vec
     template<typename _Tp, int n> static inline
     float operator * (const sVec<_Tp, n>& a, const Matx<_Tp, n, 1>& b)
