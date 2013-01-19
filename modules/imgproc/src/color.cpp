@@ -2360,10 +2360,10 @@ struct mRGBA2RGBA
   */
     
     
-    template<typename _Tp> struct RGB2Rot
+    template<int src_t, int dst_t> struct RGB2Rot
     {
-        typedef _Tp channel_type;
-        const int targetScale = ( 1 << (sizeof(channel_type) * 8) ) - 1; // Range for the target type
+      //  typedef src_t channel_type;
+     //   const int targetScale = ( 1 << (sizeof(channel_type) * 8) ) - 1; // Range for the target type
         int srccn;
         int M[3][3];
         int TRange[3], TMin[3];
@@ -2381,9 +2381,9 @@ struct mRGBA2RGBA
                 TRange[i] = _TRange[idxDst[i]];
                 TMin[i]   = _TMin[  idxDst[i]];
             }
-               redScale = TRange[0] / targetScale;
-             greenScale = TRange[1] / targetScale;
-              blueScale = TRange[2] / targetScale;
+         //      redScale = TRange[0] / targetScale;
+         //    greenScale = TRange[1] / targetScale;
+         //     blueScale = TRange[2] / targetScale;
         };
         
         
@@ -2405,7 +2405,7 @@ struct mRGBA2RGBA
             a1.factor(); a2.factor(); a3.factor();
             // Reorder as a rigt handed coordinate system with a1 in RGB. If a1 is in RGB the all components are positive.
             // a1 x a2 = a3, a2 x a3 = a1, a3 x a1 = a2 Cyclic permitations are allowed.
-            if (a1.allPositive) {     // Then a1.vec is in RGB. Do nothing.
+            if (a1.allPositive()) {     // Then a1.vec is in RGB. Do nothing.
                 if (a1.scale < 0.0) { // a1 is pointing in the wrong direction flip the sign and correct the product a1 x a2 = a3.
                     a1.scale *= -1.0;
                     std::swap(a2, a3);
@@ -2445,7 +2445,7 @@ struct mRGBA2RGBA
             
         }
         
-        
+ /*
         
         void operator()(const _Tp* src, _Tp* dst, int n) const
         {
@@ -2462,7 +2462,7 @@ struct mRGBA2RGBA
                 dst[i+2] = saturate_cast<_Tp>(Z /  blueScale);
             }
         }
-
+*/
     };
 
 }//end namespace cv
@@ -3051,7 +3051,7 @@ void cv::cvtColor( InputArray _src, OutputArray _dst, int code, int dcn )
             cv::Vec<int,3>   TMin(0,0,0);
             if( depth == CV_8U )
             {
-                CvtColorLoop(src, dst, RGB2Rot<uchar>(scn, 0, M, TRange, TMin));
+                CvtColorLoop(src, dst, RGB2Rot<CV_8UC3,CV_8UC3>(scn, 0, M, TRange, TMin));
             } else {
                 CV_Error( CV_StsBadArg, "Unsupported image depth" );
             }
@@ -3063,7 +3063,7 @@ void cv::cvtColor( InputArray _src, OutputArray _dst, int code, int dcn )
     }
 }
 
-void cv::cvtNewColor(InputArray _src, OutputArray _dst, RGB2Rot<CV_8UC3,CV_4UC1> _color_Conv)
+template<int src_DataType, int dst_DataType> void cv::cvtNewColor(InputArray _src, OutputArray _dst, RGB2Rot<src_DataType, dst_DataType> _color_Conv)
 {
     Mat src = _src.getMat(), dst;
     Size sz = src.size();
