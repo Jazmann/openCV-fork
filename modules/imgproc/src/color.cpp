@@ -2360,7 +2360,7 @@ struct mRGBA2RGBA
   */
     class color_Space_Converter{
         public :
-            const int src_data_type=0, dst_data_type=0;
+            int src_data_type=0, dst_data_type=0;
     };
         
     template<int t> struct cv_Data_Type{
@@ -2399,28 +2399,26 @@ struct mRGBA2RGBA
 
     template<int cv_data_type> using cv_Type = typename cv_Data_Type<cv_data_type>::type;
     
-    template<int src_t, int dst_t> struct RGB2Rot : public color_Space_Converter
+    template<int src_t, int dst_t> struct RGB2Rot : public color_Space_Converter  
     {
-        int src_Bit_Depth  = CV_MAT_DEPTH_BITS(src_t);
-        int src_Byte_Depth = CV_MAT_DEPTH_BYTES(src_t);
-        int src_Channels   = CV_MAT_CN(src_t);
-        int dst_Bit_Depth  = CV_MAT_DEPTH_BITS(dst_t);
-        int dst_Byte_Depth = CV_MAT_DEPTH_BYTES(dst_t);
-        int dst_Channels   = CV_MAT_CN(dst_t);
-        using src_type     = cv_Type<CV_2U>;
-        src_type jasper;
+        constexpr static int src_Bit_Depth  = CV_MAT_DEPTH_BITS(src_t);
+        constexpr static int src_Byte_Depth = CV_MAT_DEPTH_BYTES(src_t);
+        constexpr static int src_Channels   = CV_MAT_CN(src_t);
+        constexpr static int dst_Bit_Depth  = CV_MAT_DEPTH_BITS(dst_t);
+        constexpr static int dst_Byte_Depth = CV_MAT_DEPTH_BYTES(dst_t);
+        constexpr static int dst_Channels   = CV_MAT_CN(dst_t);
+        using src_type     = cv_Type<src_t>;
+        using dst_type     = cv_Type<dst_t>;
         
-        cv_Type<CV_8U> charType;
-                //  typedef src_t channel_type;
-     //   const int targetScale = ( 1 << (sizeof(channel_type) * 8) ) - 1; // Range for the target type
-        int srccn;
-        int M[3][3];
-        int TRange[3], TMin[3];
+        const int targetScale = ( 1 << (sizeof(src_type) * 8) ) - 1; // Range for the target type
+        int M[dst_Channels][src_Channels];
+        int TRange[dst_Channels], TMin[dst_Channels];
         int redScale, greenScale, blueScale;
         // The transform to the new color space is (T vec - 255 TMin)/TRange. 255 is the range of 8bit RGB and can be replaced directly with a different range for 16 and 32 bit RGB spaces. The division by TRange is the direct element wise division and can safely be rounded to recast in the required bit depth.
         
-        RGB2Rot(int _srccn,const int blueIdx, Matx<int, 3, 3>& T, Vec<int, 3>& _TRange, Vec<int,3>& _TMin): srccn(_srccn) // NOTE: MatX constructor should be able to be constructed using the {} notation using C++11 features
+        RGB2Rot(const int blueIdx, Matx<int, 3, 3>& T, Vec<int, 3>& _TRange, Vec<int,3>& _TMin) // NOTE: MatX constructor should be able to be constructed using the {} notation using C++11 features
         {
+            this->src_data_type = src_t; this->dst_data_type = dst_t;
             const int idxSrc[3] = {(blueIdx+2)%4,1,blueIdx}; // (blueIdx+2)%4 = 2 if blueIdx = 0
             const int idxDst[3] = {(blueIdx+2)%4,1,blueIdx}; //                 0 if blueIdx = 2
             for(int i=0;i<3;i++){
@@ -2437,6 +2435,7 @@ struct mRGBA2RGBA
         
         
         RGB2Rot(Vec<int, 3> sp0, Vec<int, 3> sp1, Vec<int, 3> sp2){
+            this->src_data_type = src_t; this->dst_data_type = dst_t;
             sVec<int, 3> v1(1.0, sp1 - sp0); v1.factor(); v1.scale=1.0;
             sVec<int, 3> v2(1.0, sp2 - sp0); v2.factor(); v2.scale=1.0;
 
@@ -2494,9 +2493,9 @@ struct mRGBA2RGBA
             
         }
         
-        void operator()(const _Tp* src, _Tp* dst, int n) const
+        void operator()(const src_type* src, dst_type* dst, int n) const
         {
-            int scn = srccn;
+            int scn = src_Channels;
 
             n *= 3;
             for(int i = 0; i < n; i += 3, src += scn)
@@ -2504,9 +2503,9 @@ struct mRGBA2RGBA
                 int X = src[0]*M[0][0] + src[1]*M[0][1] + src[2]*M[0][2] + TMin[0]; // CV_DESCALE(x,n) = (((x) + (1 << ((n)-1))) >> (n))
                 int Y = src[0]*M[1][0] + src[1]*M[1][1] + src[2]*M[1][2] + TMin[1]; // could be used in place of * scale
                 int Z = src[0]*M[2][0] + src[1]*M[2][1] + src[2]*M[2][2] + TMin[2]; // Find shift which fits TRange into the desired bit depth.
-                dst[i  ] = saturate_cast<_Tp>(X /   redScale);
-                dst[i+1] = saturate_cast<_Tp>(Y / greenScale);
-                dst[i+2] = saturate_cast<_Tp>(Z /  blueScale);
+                dst[i  ] = saturate_cast<dst_type>(X /   redScale);
+                dst[i+1] = saturate_cast<dst_type>(Y / greenScale);
+                dst[i+2] = saturate_cast<dst_type>(Z /  blueScale);
             }
         }
     };
@@ -3097,7 +3096,7 @@ void cv::cvtColor( InputArray _src, OutputArray _dst, int code, int dcn )
             cv::Vec<int,3>   TMin(0,0,0);
             if( depth == CV_8U )
             {
-                CvtColorLoop(src, dst, RGB2Rot<CV_8UC3,CV_8UC3>(scn, 0, M, TRange, TMin));
+                CvtColorLoop(src, dst, RGB2Rot<CV_8UC3,CV_8UC3>(0, M, TRange, TMin));
             } else {
                 CV_Error( CV_StsBadArg, "Unsupported image depth" );
             }
@@ -3127,7 +3126,7 @@ template<typename _Tp> void cv::cvtNewColor(InputArray _src, OutputArray _dst, _
             cv::Vec<int,3>   TMin(0,0,0);
             if( depth == CV_8U )
             {
-                CvtColorLoop(src, dst, RGB2Rot<uchar>(scn, 0, M, TRange, TMin));
+                CvtColorLoop(src, dst, RGB2Rot<CV_8UC3,CV_8UC3>(0, M, TRange, TMin));
             } else {
                 CV_Error( CV_StsBadArg, "Unsupported image depth" );
             }
