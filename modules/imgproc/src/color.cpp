@@ -2351,18 +2351,67 @@ struct mRGBA2RGBA
                 ((float)T(2, 0)/(float)TRange[0]), ((float)T(2, 1)/(float)TRange[1]), ((float)T(2, 2)/(float)TRange[2]), ((float)TMin[2]/(float)TRange[2])
                 };
         };
-    
+  
         void operator()(const _Tp* src, _Tp* dst, int n) const
         {
      //       cv::transform(*src, dst, Ms3d3);
         }
     };
   */
+    class color_Space_Converter{
+        public :
+            const int src_data_type=0, dst_data_type=0;
+    };
+        
+    template<int t> struct cv_Data_Type{
+        using type = unsigned char;
+    };
+    template<> struct cv_Data_Type<CV_2U>{
+        using type = unsigned char;
+    };
+    template<> struct cv_Data_Type<CV_4U>{
+        using type = unsigned char;
+    };
+    template<> struct cv_Data_Type<CV_8U>{
+        using type = unsigned char;
+    };
+    template<> struct cv_Data_Type<CV_8S>{
+        using type = signed char;
+    };
+    template<> struct cv_Data_Type<CV_16U>{
+        using type = unsigned short;
+    };
+    template<> struct cv_Data_Type<CV_16S>{
+        using type = signed short;
+    };
+    template<> struct cv_Data_Type<CV_32U>{
+        using type = unsigned long;
+    };
+    template<> struct cv_Data_Type<CV_32S>{
+        using type = signed long;
+    };
+    template<> struct cv_Data_Type<CV_32F>{
+        using type = float;
+    };
+    template<> struct cv_Data_Type<CV_64F>{
+        using type = double;
+    };
+
+    template<int cv_data_type> using cv_Type = typename cv_Data_Type<cv_data_type>::type;
     
-    
-    template<int src_t, int dst_t> struct RGB2Rot
+    template<int src_t, int dst_t> struct RGB2Rot : public color_Space_Converter
     {
-      //  typedef src_t channel_type;
+        int src_Bit_Depth  = CV_MAT_DEPTH_BITS(src_t);
+        int src_Byte_Depth = CV_MAT_DEPTH_BYTES(src_t);
+        int src_Channels   = CV_MAT_CN(src_t);
+        int dst_Bit_Depth  = CV_MAT_DEPTH_BITS(dst_t);
+        int dst_Byte_Depth = CV_MAT_DEPTH_BYTES(dst_t);
+        int dst_Channels   = CV_MAT_CN(dst_t);
+        using src_type     = cv_Type<CV_2U>;
+        src_type jasper;
+        
+        cv_Type<CV_8U> charType;
+                //  typedef src_t channel_type;
      //   const int targetScale = ( 1 << (sizeof(channel_type) * 8) ) - 1; // Range for the target type
         int srccn;
         int M[3][3];
@@ -2445,8 +2494,6 @@ struct mRGBA2RGBA
             
         }
         
- /*
-        
         void operator()(const _Tp* src, _Tp* dst, int n) const
         {
             int scn = srccn;
@@ -2462,7 +2509,6 @@ struct mRGBA2RGBA
                 dst[i+2] = saturate_cast<_Tp>(Z /  blueScale);
             }
         }
-*/
     };
 
 }//end namespace cv
@@ -3063,7 +3109,7 @@ void cv::cvtColor( InputArray _src, OutputArray _dst, int code, int dcn )
     }
 }
 
-template<int src_DataType, int dst_DataType> void cv::cvtNewColor(InputArray _src, OutputArray _dst, RGB2Rot<src_DataType, dst_DataType> _color_Conv)
+template<typename _Tp> void cv::cvtNewColor(InputArray _src, OutputArray _dst, _Tp& _color_Conv)
 {
     Mat src = _src.getMat(), dst;
     Size sz = src.size();

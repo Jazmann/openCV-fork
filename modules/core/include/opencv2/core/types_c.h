@@ -631,15 +631,12 @@ IplConvKernelFP;
 
 #define CV_DEPTH_BITS(type) (1 << ( (CV_DEPTH_BITS_MAGIC >> (type*3)) & 7) )
 
-
-
-
-
-
 // CV_MAT_DEPTH_MASK bit mask which keeps only the right-most CV_CN_SHIFT bits. Keeps the user from screwing up when using CV_MAKETYPE.
 #define CV_MAT_DEPTH_MASK       (CV_DEPTH_MAX - 1)
 // CV_MAT_DEPTH(flags) applies the mask to the bits in flags.
 #define CV_MAT_DEPTH(flags)     ((flags) & CV_MAT_DEPTH_MASK)
+#define CV_MAT_DEPTH_BITS(flags)      CV_DEPTH_BITS(((flags) & CV_MAT_DEPTH_MASK))
+#define CV_MAT_DEPTH_BYTES(flags)     CV_DEPTH_BYTES(((flags) & CV_MAT_DEPTH_MASK))
 // CV_MAKETYPE(depth,cn) generated an integer using the right-most CV_CN_SHIFT bits for the depth and the rest for the channels.
 #define CV_MAKETYPE(depth,cn) (CV_MAT_DEPTH(depth) + (((cn)-1) << CV_CN_SHIFT))
 #define CV_MAKE_TYPE CV_MAKETYPE
@@ -703,6 +700,18 @@ IplConvKernelFP;
 #define CV_64FC3 CV_MAKETYPE(CV_64F,3)
 #define CV_64FC4 CV_MAKETYPE(CV_64F,4)
 #define CV_64FC(n) CV_MAKETYPE(CV_64F,(n))
+
+// To get back the information put into CV_MAKETYPE( depth_Type, cn) use
+// int depth_Type = CV_MAT_DEPTH(CV_##tC#)
+// int cn = CV_MAT_CN(CV_##tC#)
+// To get info on the type itself use
+// int bit_Depth  = CV_MAT_DEPTH_BITS(CV_##tC#)
+// int byte_Depth = CV_MAT_DEPTH_BYTES(CV_##tC#)
+// int channels = CV_MAT_CN(CV_##tC#)
+
+
+#define CV_MAT_DEPTH_BITS(flags)      CV_DEPTH_BITS(((flags) & CV_MAT_DEPTH_MASK))
+#define CV_MAT_DEPTH_BYTES(flags)     CV_DEPTH_BYTES(((flags) & CV_MAT_DEPTH_MASK))
 
 #define CV_AUTO_STEP  0x7fffffff
 #define CV_WHOLE_ARR  cvSlice( 0, 0x3fffffff )

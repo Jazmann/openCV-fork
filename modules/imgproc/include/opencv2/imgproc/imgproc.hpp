@@ -1069,7 +1069,7 @@ enum
 //! converts image from one color space to another
     CV_EXPORTS_W void cvtColor( InputArray src, OutputArray dst, int code, int dstCn=0 );
     template <typename Cvt> CV_EXPORTS_W void CvtColorLoop(const Mat& src, Mat& dst, const Cvt& cvt);
-    
+    template<typename _Tp> void cvtNewColor(InputArray _src, OutputArray _dst, _Tp _color_Conv);
 
 //! raster image moments
 class CV_EXPORTS_W_MAP Moments
