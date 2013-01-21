@@ -2360,10 +2360,10 @@ struct mRGBA2RGBA
         }
     };
   */
-    class color_Space_Converter{
+/*    class color_Space_Converter{
         public :
             int src_data_type=0, dst_data_type=0;
-    };
+    }; */ // Now defined in hpp
         
     template<int t> struct cv_Data_Type{
         using type = unsigned char;
@@ -2401,7 +2401,7 @@ struct mRGBA2RGBA
 
     template<int cv_data_type> using cv_Type = typename cv_Data_Type<cv_data_type>::type;
     
-    template<int src_t, int dst_t> struct RGB2Rot : public color_Space_Converter  
+    template<int src_t, int dst_t> struct RGB2Rot : public color_Space_Converter
     {
         constexpr static int src_Bit_Depth  = CV_MAT_DEPTH_BITS(src_t);
         constexpr static int src_Byte_Depth = CV_MAT_DEPTH_BYTES(src_t);
@@ -3110,7 +3110,7 @@ void cv::cvtColor( InputArray _src, OutputArray _dst, int code, int dcn )
     }
 }
 
- void cv::cvtNewColor(InputArray _src, OutputArray _dst, color_Space_Converter& _color_Conv)
+ void cv::cvtColor(InputArray _src, OutputArray _dst, color_Space_Converter& _color_Conv)
 {
     Mat src = _src.getMat(), dst;
     Size sz = src.size();
