@@ -3108,12 +3108,12 @@ void cv::cvtColor( InputArray _src, OutputArray _dst, int code, int dcn )
     }
 }
 
-template<typename _Tp> void cv::cvtNewColor(InputArray _src, OutputArray _dst, _Tp& _color_Conv)
+ void cv::cvtNewColor(InputArray _src, OutputArray _dst, color_Space_Converter& _color_Conv)
 {
     Mat src = _src.getMat(), dst;
     Size sz = src.size();
     int scn = src.channels(), depth = src.depth(), bidx;
-    
+    int dcn = 3;
     CV_Assert( depth == CV_8U || depth == CV_16U || depth == CV_32F );
     
             if (dcn <= 0) dcn = 3;
