@@ -49,7 +49,7 @@
 #  endif
 #endif
 
-#include <cstdio>
+// #include <cstdio>
 
 #ifndef SKIP_INCLUDES
 
@@ -671,7 +671,6 @@ IplConvKernelFP;
 
 template<int t> struct cv_Data_Type{
     using type = unsigned char;
-    
 };
 template<> struct cv_Data_Type<CV_2U>{
     using type = CV_2U_TYPE;
@@ -846,7 +845,7 @@ template<int cv_data_type> using cv_Type = typename cv_Data_Type<cv_data_type>::
 #define CV_MAT_MAGIC_VAL    0x42420000
 #define CV_TYPE_NAME_MAT    "opencv-matrix"
 
-void cv_Print_Data_Type(int type){
+/* void cv_Print_Data_Type(int type){
     printf("%llu",CV_DEPTH_BITS_MAGIC);
     printf("To get back the information put into CV_MAKETYPE( depth_Type, cn) use");
     printf("int depth_Type = %u", CV_MAT_DEPTH(type));
@@ -857,7 +856,7 @@ void cv_Print_Data_Type(int type){
     printf("int channels = %u",  CV_MAT_CN(type));
 }
 
-
+*/
 
 /* Size of each channel item,
  0x124489 = 1000 0100 0100 0010 0010 0001 0001 ~ array of sizeof(arr_type_elem) */

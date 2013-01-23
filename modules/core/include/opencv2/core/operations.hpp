@@ -1550,15 +1550,15 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
         else
             return u < 0 ? -u : u; /* abs(u) */
     };
+//
+//    unsigned NUM_BITS_U = ((sizeof(unsigned) << 3) - 1);
+//
+//#if CV_SSE2
+//#define POS_OF_HIGHESTBITclz(a) (NUM_BITS_U - __builtin_clz(a)) /* only works for a != 0 */
+//#define NUM_OF_HIGHESTBITclz(a) ((a) ? (1U << POS_OF_HIGHESTBITclz(a)) : 0)
+//#endif
     
-    unsigned NUM_BITS_U = ((sizeof(unsigned) << 3) - 1);
-    
-#if CV_SSE2
-#define POS_OF_HIGHESTBITclz(a) (NUM_BITS_U - __builtin_clz(a)) /* only works for a != 0 */
-#define NUM_OF_HIGHESTBITclz(a) ((a) ? (1U << POS_OF_HIGHESTBITclz(a)) : 0)
-#endif
-    
-    template<typename _Tp> unsigned int mostSignificantBit(_Tp x)
+ /*   template<typename _Tp> unsigned int mostSignificantBit(_Tp x)
     {
         static const unsigned int bval[] = {0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4};
         unsigned int r = 0;
@@ -1574,7 +1574,8 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
         }
         return r + bval[x];
     }
-    template<> unsigned int mostSignificantBit<uint64_t>(uint64_t x)
+  */
+    unsigned int CV_INLINE mostSignificantBit(uint64_t x)
     {
         static const unsigned int bval[] = {0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4};
         unsigned int r = 0;
@@ -1584,7 +1585,7 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
         if (x & 0x00000000000000F0) { r += 32/8; x >>= 32/8; }
         return r + bval[x];
     }
-    template<> unsigned int mostSignificantBit<uint32_t>(uint32_t x)
+    unsigned int CV_INLINE  mostSignificantBit(uint32_t x)
     {
         static const unsigned int bval[] = {0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4};
         unsigned int r = 0;
@@ -1594,7 +1595,7 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
         return r + bval[x];
     }
     
-    template<> unsigned int mostSignificantBit<uint16_t>(uint16_t x)
+    unsigned int CV_INLINE  mostSignificantBit(uint16_t x)
     {
         static const unsigned int bval[] = {0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4};
         unsigned int r = 0;
@@ -1603,7 +1604,7 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
         return r + bval[x];
     }
     
-    template<> unsigned int mostSignificantBit<uint8_t>(uint8_t x)
+    unsigned int CV_INLINE  mostSignificantBit(uint8_t x)
     {
         static const unsigned int bval[] = {0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4};
         unsigned int r = 0;
@@ -1611,7 +1612,7 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
         return r + bval[x];
     }
     
-    template<> unsigned int mostSignificantBit<int64_t>(int64_t x)
+    unsigned int CV_INLINE  mostSignificantBit(int64_t x)
     {
         static const unsigned int bval[] = {0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4};
         unsigned int r = 0;
@@ -1621,7 +1622,7 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
         if (x & 0x00000000000000F0) { r += 32/8; x >>= 32/8; }
         return r + bval[x];
     }
-    template<> unsigned int mostSignificantBit<int32_t>(int32_t x)
+    unsigned int CV_INLINE  mostSignificantBit(int32_t x)
     {
         static const unsigned int bval[] = {0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4};
         unsigned int r = 0;
@@ -1631,7 +1632,7 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
         return r + bval[x];
     }
     
-    template<> unsigned int mostSignificantBit<int16_t>(int16_t x)
+    unsigned int CV_INLINE  mostSignificantBit(int16_t x)
     {
         static const unsigned int bval[] = {0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4};
         unsigned int r = 0;
@@ -1640,7 +1641,7 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
         return r + bval[x];
     }
     
-    template<> unsigned int mostSignificantBit<int8_t>(int8_t x)
+    unsigned int CV_INLINE  mostSignificantBit(int8_t x)
     {
         static const unsigned int bval[] = {0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4};
         unsigned int r = 0;
@@ -1959,7 +1960,7 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
         }
         else{
             _Tp max = this->max(); // The largest value in the vector.
-            int bitPos = mostSignificantBit<_Tp>(max);
+            int bitPos = mostSignificantBit(max);
             int bitShift = bitPos - ((sizeof(T2) << 3)-1); // the number of bits which will not fit into T2.
             if (bitShift <= 0) {
                 v.scale = this->scale;
