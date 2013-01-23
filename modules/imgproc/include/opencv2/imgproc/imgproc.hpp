@@ -1073,10 +1073,10 @@ enum
 
     CV_EXPORTS_W     template<int src_t, int dst_t> struct RGB2Rot : public color_Space_Converter
     {
-        constexpr static uint64_t src_Bit_Depth  = CV_MAT_DEPTH_BITS(src_t);
+        constexpr static int src_Bit_Depth  = CV_MAT_DEPTH_BITS(src_t);
         constexpr static int src_Byte_Depth = CV_MAT_DEPTH_BYTES(src_t);
         constexpr static int src_Channels   = CV_MAT_CN(src_t);
-        constexpr static uint64_t dst_Bit_Depth  = CV_MAT_DEPTH_BITS(dst_t);
+        constexpr static int dst_Bit_Depth  = CV_MAT_DEPTH_BITS(dst_t);
         constexpr static int dst_Byte_Depth = CV_MAT_DEPTH_BYTES(dst_t);
         constexpr static int dst_Channels   = CV_MAT_CN(dst_t);
         using src_channel_type     = cv_Type<src_t>;

@@ -1528,7 +1528,7 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
         }
     };
     
-    template<typename _Tp> _Tp gcd(_Tp a, _Tp* b, unsigned int size_b){
+    template<typename _Tp> _Tp gcd(_Tp& a, _Tp* b, unsigned int size_b){
         if (size_b >= 2){
             return gcd(gcd(a, b[0]), b++, size_b-1);
         }
