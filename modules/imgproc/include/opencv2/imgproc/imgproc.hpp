@@ -1065,12 +1065,123 @@ enum
     COLOR_COLORCVT_MAX  = 132
 };
 
-//! converts image from one color space to another
-    CV_EXPORTS_W template<int src_t, int dst_t> struct RGB2Rot;
+    //! converts image from one color space to another
     CV_EXPORTS_W class color_Space_Converter{
         public :
         int src_data_type=0, dst_data_type=0;
     };
+
+    CV_EXPORTS_W     template<int src_t, int dst_t> struct RGB2Rot : public color_Space_Converter
+    {
+        constexpr static uint64_t src_Bit_Depth  = CV_MAT_DEPTH_BITS(src_t);
+        constexpr static int src_Byte_Depth = CV_MAT_DEPTH_BYTES(src_t);
+        constexpr static int src_Channels   = CV_MAT_CN(src_t);
+        constexpr static uint64_t dst_Bit_Depth  = CV_MAT_DEPTH_BITS(dst_t);
+        constexpr static int dst_Byte_Depth = CV_MAT_DEPTH_BYTES(dst_t);
+        constexpr static int dst_Channels   = CV_MAT_CN(dst_t);
+        using src_channel_type     = cv_Type<src_t>;
+        using dst_channel_type     = cv_Type<dst_t>;
+        
+        const int targetScale = ( 1 << (sizeof(dst_channel_type) * 8) ) - 1; // Range for the target type
+        int M[dst_Channels][src_Channels];
+        int TRange[dst_Channels], TMin[dst_Channels];
+        int redScale, greenScale, blueScale;
+        // The transform to the new color space is (T vec - 255 TMin)/TRange. 255 is the range of 8bit RGB and can be replaced directly with a different range for 16 and 32 bit RGB spaces. The division by TRange is the direct element wise division and can safely be rounded to recast in the required bit depth.
+        
+        RGB2Rot(const int blueIdx, Matx<int, 3, 3>& T, Vec<int, 3>& _TRange, Vec<int,3>& _TMin) // NOTE: MatX constructor should be able to be constructed using the {} notation using C++11 features
+        {
+            this->src_data_type = src_t; this->dst_data_type = dst_t;
+            const int idxSrc[3] = {(blueIdx+2)%4,1,blueIdx}; // (blueIdx+2)%4 = 2 if blueIdx = 0
+            const int idxDst[3] = {(blueIdx+2)%4,1,blueIdx}; //                 0 if blueIdx = 2
+            for(int i=0;i<3;i++){
+                for(int j=0;j<3;j++){
+                    M[i][j] = T(idxDst[i], idxSrc[j]);
+                }
+                TRange[i] = _TRange[idxDst[i]];
+                TMin[i]   = _TMin[  idxDst[i]];
+            }
+                  redScale = TRange[0] / targetScale;
+                greenScale = TRange[1] / targetScale;
+                 blueScale = TRange[2] / targetScale;
+        };
+        
+        
+        RGB2Rot(Vec<int, 3> sp0, Vec<int, 3> sp1, Vec<int, 3> sp2){
+            this->src_data_type = src_t; this->dst_data_type = dst_t;
+            sVec<int, 3> v1(1.0, sp1 - sp0); v1.factor(); v1.scale=1.0;
+            sVec<int, 3> v2(1.0, sp2 - sp0); v2.factor(); v2.scale=1.0;
+            
+            sVec<int, 1> v1Norm2 = v1.dotProd(v1); // v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2];
+            sVec<int, 1> v2Norm2 = v2.dotProd(v2); // v2[0] * v2[0] + v2[1] * v2[1] + v2[2] * v2[2];
+            sVec<int, 1> v2DotV1 = v2.dotProd(v1); // v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
+            float v1V2Sin = sqrtf(v1Norm2(0) * v2Norm2(0) - v2DotV1(0) * v2DotV1(0));
+            
+            sVec<int, 3> a1 = v1;
+            v1.scale = 1.0 / sqrtf(v1Norm2(0));
+            sVec<int, 3> a2(1.0 / (v1Norm2(0) * v1V2Sin), v1Norm2(0) * v2 - v2DotV1(0) * v1);
+            sVec<int, 3> a3 = v1.cross(v2);
+            a3.scale = 1.0/v1V2Sin;
+            // Remove common factors
+            a1.factor(); a2.factor(); a3.factor();
+            // Reorder as a rigt handed coordinate system with a1 in RGB. If a1 is in RGB the all components are positive.
+            // a1 x a2 = a3, a2 x a3 = a1, a3 x a1 = a2 Cyclic permitations are allowed.
+            if (a1.allPositive()) {     // Then a1.vec is in RGB. Do nothing.
+                if (a1.scale < 0.0) { // a1 is pointing in the wrong direction flip the sign and correct the product a1 x a2 = a3.
+                    a1.scale *= -1.0;
+                    std::swap(a2, a3);
+                }
+            } else if (a2.allPositive()){ // Then a2.vec is in RGB. Make a2 -> a1, a1 -> a2 and flip sign of a3 to preserve a1 x a2 = a3.
+                if (a2.scale < 0.0) { // a2 is pointing in the wrong direction flip the sign and correct the product a1 x a2 = a3.
+                    a2.scale *= -1.0;
+                    std::swap(a1, a2); // Now : a2,a1,a3 As desired.
+                } else {
+                    std::swap(a1, a3);    // Now : a3,a2,a1
+                    std::swap(a1, a2);    // Now : a2,a3,a1 As desired.
+                }
+                a3 *= -1; // Flip sign of a3 to preserve a1 x a2 = a3.
+                
+            }else if (a3.allPositive()){ // Then a3.vec is in RGB. Perform cyclic permutation of the vectors. a3 -> a1, a1 -> a2, a2 -> a3.
+                if (a3.scale < 0.0) { // a3 is pointing in the wrong direction flip the sign and correct the product a1 x a2 = a3.
+                    a3.scale *= -1.0;
+                    std::swap(a1, a3);    // Now : a3,a2,a1
+                } else {
+                    std::swap(a1, a3);    // Now : a3,a2,a1
+                    std::swap(a2, a3);    // Now : a3,a1,a2 As desired.
+                }
+            }
+            // Setup internal data
+            Matx<int, 3, 3> Ti = Matx<int, 3, 3>(a1[0],a1[1],a1[2],a2[0],a2[1],a2[2],a3[0],a3[1],a3[2]);
+            Matx<int, 3, 8> RGBBox({0, 1, 0, 0, 0, 1, 1, 1,
+                0, 0, 1, 0, 1, 0, 1, 1,
+                0, 0, 0, 1, 1, 1, 0, 1});
+            Matx<int, 3, 8> RGBBoxInNew = Ti * RGBBox;
+            Mat RGBCubeMax, RGBCubeMin;
+            MaxInRow<int>(RGBBoxInNew, RGBCubeMax);
+            MinInRow<int>(RGBBoxInNew, RGBCubeMin);
+            Mat RGBCubeRange = RGBCubeMax - RGBCubeMin;
+            M = Ti.val;
+            TMin[0]   = RGBCubeMin.at<int>(0,0);   TMin[1]   = RGBCubeMin.at<int>(1,0);   TMin[2]   = RGBCubeMin.at<int>(2,0);
+            TRange[0] = RGBCubeRange.at<int>(0,0); TRange[1] = RGBCubeRange.at<int>(1,0); TRange[2] = RGBCubeRange.at<int>(2,0);
+            
+        }
+        
+        void operator()(const src_channel_type* src, dst_channel_type* dst, int n) const
+        {
+            int scn = src_Channels;
+            
+            n *= 3;
+            for(int i = 0; i < n; i += 3, src += scn)
+            {
+                int X = src[0]*M[0][0] + src[1]*M[0][1] + src[2]*M[0][2] + TMin[0]; // CV_DESCALE(x,n) = (((x) + (1 << ((n)-1))) >> (n))
+                int Y = src[0]*M[1][0] + src[1]*M[1][1] + src[2]*M[1][2] + TMin[1]; // could be used in place of * scale
+                int Z = src[0]*M[2][0] + src[1]*M[2][1] + src[2]*M[2][2] + TMin[2]; // Find shift which fits TRange into the desired bit depth.
+                dst[i  ] = saturate_cast<dst_channel_type>(X /   redScale);
+                dst[i+1] = saturate_cast<dst_channel_type>(Y / greenScale);
+                dst[i+2] = saturate_cast<dst_channel_type>(Z /  blueScale);
+            }
+        }
+    };
+;
     CV_EXPORTS_W void cvtColor( InputArray src, OutputArray dst, int code, int dstCn=0 );
     CV_EXPORTS_W void cvtColor(InputArray _src, OutputArray _dst, color_Space_Converter& _color_Conv);
     template <typename Cvt> CV_EXPORTS_W void CvtColorLoop(const Mat& src, Mat& dst, const Cvt& cvt);

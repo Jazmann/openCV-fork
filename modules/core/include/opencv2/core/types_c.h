@@ -49,9 +49,12 @@
 #  endif
 #endif
 
+#include <cstdio>
 
 #ifndef SKIP_INCLUDES
 
+#include <cstdint>
+#include <cfloat>
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -578,56 +581,156 @@ IplConvKernelFP;
 #define CV_2U   0
 #define CV_DEPTH_BITS_2U_LOG2   1
 #define CV_DEPTH_BYTES_2U_LOG2   0
+#define CV_TYPE_2U   std::uint8_t
+#define CV_MAX_2U   0xf
+#define CV_MIN_2U   0x0
+
+
 #define CV_4U   1
 #define CV_DEPTH_BITS_4U_LOG2 2
 #define CV_DEPTH_BYTES_4U_LOG2 0
+#define CV_TYPE_4U   std::uint8_t
+#define CV_MAX_4U   0xff
+#define CV_MIN_4U   0x00
+
 #define CV_8U   2
 #define CV_DEPTH_BITS_8U_LOG2 3
 #define CV_DEPTH_BYTES_8U_LOG2 0
+#define CV_TYPE_8U  std::uint8_t
+#define CV_MAX_8U   std::UINT8_MAX
+#define CV_MIN_8U   std::UINT8_MIN
+
 #define CV_8S   3
 #define CV_DEPTH_BITS_8S_LOG2 3
 #define CV_DEPTH_BYTES_8S_LOG2 0
+#define CV_TYPE_8S  std::int8_t
+#define CV_MAX_8S   std::INT8_MAX
+#define CV_MIN_8S   std::INT8_MIN
+
 #define CV_16U  4
 #define CV_DEPTH_BITS_16U_LOG2 4
 #define CV_DEPTH_BYTES_16U_LOG2 1
+#define CV_TYPE_16U  std::uint16_t
+#define CV_MAX_16U   std::UINT16_MAX
+#define CV_MIN_16U   std::UINT16_MIN
+
 #define CV_16S  5
 #define CV_DEPTH_BITS_16S_LOG2 4
 #define CV_DEPTH_BYTES_16S_LOG2 1
+#define CV_TYPE_16S  std::int16_t
+#define CV_MAX_16S   std::INT16_MAX
+#define CV_MIN_16S   std::INT16_MIN
+
 #define CV_32U  6
 #define CV_DEPTH_BITS_32U_LOG2 5
 #define CV_DEPTH_BYTES_32U_LOG2 2
+#define CV_TYPE_32U  std::uint32_t
+#define CV_MAX_32U   std::UINT32_MAX
+#define CV_MIN_32U   std::UINT32_MIN
+
 #define CV_32S  7
 #define CV_DEPTH_BITS_32S_LOG2 5
 #define CV_DEPTH_BYTES_32S_LOG2 2
-#define CV_32F  8
+#define CV_TYPE_32S  std::int32_t
+#define CV_MAX_32S   std::INT32_MAX
+#define CV_MIN_32S   std::INT32_MIN
+
+#define CV_64U  8
+#define CV_DEPTH_BITS_64U_LOG2 6
+#define CV_DEPTH_BYTES_64U_LOG2 3
+#define CV_TYPE_64U  std::uint64_t
+#define CV_MAX_64U   std::UINT64_MAX
+#define CV_MIN_64U   std::UINT64_MIN
+
+#define CV_64S  9
+#define CV_DEPTH_BITS_64S_LOG2 6
+#define CV_DEPTH_BYTES_64S_LOG2 3
+#define CV_TYPE_64S  std::int64_t
+#define CV_MAX_64S   std::INT64_MAX
+#define CV_MIN_64S   std::INT64_MIN
+
+#define CV_32F  10
 #define CV_DEPTH_BITS_32F_LOG2 5
 #define CV_DEPTH_BYTES_32F_LOG2 2
-#define CV_64F  9
+#define CV_TYPE_32F  float
+#define CV_MAX_32F   FLT_MAX
+#define CV_MIN_32F   FLT_MIN
+
+#define CV_64F  11
 #define CV_DEPTH_BITS_64F_LOG2 6
 #define CV_DEPTH_BYTES_64F_LOG2 3
-#define CV_USRTYPE1 10
-#define CV_USRTYPE2 11
-#define CV_USRTYPE3 12
-#define CV_USRTYPE4 13
-#define CV_USRTYPE5 14
-#define CV_USRTYPE6 15
+#define CV_TYPE_64F  double
+#define CV_MAX_64F   DBL_MAX
+#define CV_MIN_64F   DBL_MIN
+
+#define CV_USRTYPE1 12
+#define CV_USRTYPE2 13
+#define CV_USRTYPE3 14
+#define CV_USRTYPE4 15
+
+
+template<int t> struct cv_Data_Type{
+    using type = unsigned char;
+    
+};
+template<> struct cv_Data_Type<CV_2U>{
+    using type = CV_TYPE_2U;
+};
+template<> struct cv_Data_Type<CV_4U>{
+    using type = CV_TYPE_4U;
+};
+template<> struct cv_Data_Type<CV_8U>{
+    using type = CV_TYPE_8U;
+};
+template<> struct cv_Data_Type<CV_8S>{
+    using type = CV_TYPE_8S;
+};
+template<> struct cv_Data_Type<CV_16U>{
+    using type = CV_TYPE_16U;
+};
+template<> struct cv_Data_Type<CV_16S>{
+    using type = CV_TYPE_16S;
+};
+template<> struct cv_Data_Type<CV_32U>{
+    using type = CV_TYPE_32U;
+};
+template<> struct cv_Data_Type<CV_32S>{
+    using type = CV_TYPE_32S;
+};
+template<> struct cv_Data_Type<CV_64U>{
+    using type = CV_TYPE_64U;
+};
+template<> struct cv_Data_Type<CV_64S>{
+    using type = CV_TYPE_64S;
+};
+template<> struct cv_Data_Type<CV_32F>{
+    using type = CV_TYPE_32F;
+};
+template<> struct cv_Data_Type<CV_64F>{
+    using type = CV_TYPE_64F;
+};
+
+template<int cv_data_type> using cv_Type = typename cv_Data_Type<cv_data_type>::type;
+
 
 #define CV_DEPTH_BYTES_MAGIC ( \
-(CV_DEPTH_BYTES_64F_LOG2 << CV_64F *2)|(CV_DEPTH_BYTES_32F_LOG2 << CV_32F *2)|\
-(CV_DEPTH_BYTES_32S_LOG2 << CV_32S *2)|(CV_DEPTH_BYTES_32U_LOG2 << CV_32U *2)|\
-(CV_DEPTH_BYTES_16S_LOG2 << CV_16S *2)|(CV_DEPTH_BYTES_16U_LOG2 << CV_16U *2)|\
-(CV_DEPTH_BYTES_8S_LOG2  << CV_8S  *2)|(CV_DEPTH_BYTES_8U_LOG2  << CV_8U  *2)|\
-(CV_DEPTH_BYTES_4U_LOG2  << CV_4U  *2)|(CV_DEPTH_BYTES_2U_LOG2  << CV_2U  *2) )
+(CV_DEPTH_BYTES_64F_LOG2 << (CV_64F *2))|(CV_DEPTH_BYTES_32F_LOG2 << (CV_32F *2))|\
+(CV_DEPTH_BYTES_64S_LOG2 << (CV_64S *2))|(CV_DEPTH_BYTES_64U_LOG2 << (CV_64U *2))|\
+(CV_DEPTH_BYTES_32S_LOG2 << (CV_32S *2))|(CV_DEPTH_BYTES_32U_LOG2 << (CV_32U *2))|\
+(CV_DEPTH_BYTES_16S_LOG2 << (CV_16S *2))|(CV_DEPTH_BYTES_16U_LOG2 << (CV_16U *2))|\
+(CV_DEPTH_BYTES_8S_LOG2  << (CV_8S  *2))|(CV_DEPTH_BYTES_8U_LOG2  << (CV_8U  *2))|\
+(CV_DEPTH_BYTES_4U_LOG2  << (CV_4U  *2))|(CV_DEPTH_BYTES_2U_LOG2  << (CV_2U  *2)) )
 
 #define CV_DEPTH_BYTES(type) (1 << ( (CV_DEPTH_BYTES_MAGIC >> (type*2)) &3) )
 
 
 #define CV_DEPTH_BITS_MAGIC ( \
-(CV_DEPTH_BITS_64F_LOG2 << CV_64F *3)|(CV_DEPTH_BITS_32F_LOG2 << CV_32F *3)|\
-(CV_DEPTH_BITS_32S_LOG2 << CV_32S *3)|(CV_DEPTH_BITS_32U_LOG2 << CV_32U *3)|\
-(CV_DEPTH_BITS_16S_LOG2 << CV_16S *3)|(CV_DEPTH_BITS_16U_LOG2 << CV_16U *3)|\
-(CV_DEPTH_BITS_8S_LOG2  << CV_8S  *3)|(CV_DEPTH_BITS_8U_LOG2  << CV_8U  *3)|\
-(CV_DEPTH_BITS_4U_LOG2  << CV_4U  *3)|(CV_DEPTH_BITS_2U_LOG2  << CV_2U  *3) )
+(uint64_t(CV_DEPTH_BITS_64F_LOG2) << (CV_64F *3))|(uint64_t(CV_DEPTH_BITS_32F_LOG2) << (CV_32F *3))|\
+(uint64_t(CV_DEPTH_BITS_64S_LOG2) << (CV_64S *3))|(uint64_t(CV_DEPTH_BITS_64U_LOG2) << (CV_64U *3))|\
+(uint64_t(CV_DEPTH_BITS_32S_LOG2) << (CV_32S *3))|(uint64_t(CV_DEPTH_BITS_32U_LOG2) << (CV_32U *3))|\
+(uint64_t(CV_DEPTH_BITS_16S_LOG2) << (CV_16S *3))|(uint64_t(CV_DEPTH_BITS_16U_LOG2) << (CV_16U *3))|\
+(uint64_t(CV_DEPTH_BITS_8S_LOG2)  << (CV_8S  *3))|(uint64_t(CV_DEPTH_BITS_8U_LOG2)  << (CV_8U  *3))|\
+(uint64_t(CV_DEPTH_BITS_4U_LOG2)  << (CV_4U  *3))|(uint64_t(CV_DEPTH_BITS_2U_LOG2)  << (CV_2U  *3)) )
 
 #define CV_DEPTH_BITS(type) (1 << ( (CV_DEPTH_BITS_MAGIC >> (type*3)) & 7) )
 
@@ -677,11 +780,11 @@ IplConvKernelFP;
 #define CV_16SC4 CV_MAKETYPE(CV_16S,4)
 #define CV_16SC(n) CV_MAKETYPE(CV_16S,(n))
 
-#define CV_32UC1 CV_MAKETYPE(CV_32S,1)
-#define CV_32UC2 CV_MAKETYPE(CV_32S,2)
-#define CV_32UC3 CV_MAKETYPE(CV_32S,3)
-#define CV_32UC4 CV_MAKETYPE(CV_32S,4)
-#define CV_32UC(n) CV_MAKETYPE(CV_32S,(n))
+#define CV_32UC1 CV_MAKETYPE(CV_32U,1)
+#define CV_32UC2 CV_MAKETYPE(CV_32U,2)
+#define CV_32UC3 CV_MAKETYPE(CV_32U,3)
+#define CV_32UC4 CV_MAKETYPE(CV_32U,4)
+#define CV_32UC(n) CV_MAKETYPE(CV_32U,(n))
 
 #define CV_32SC1 CV_MAKETYPE(CV_32S,1)
 #define CV_32SC2 CV_MAKETYPE(CV_32S,2)
@@ -709,7 +812,6 @@ IplConvKernelFP;
 // int byte_Depth = CV_MAT_DEPTH_BYTES(CV_##tC#)
 // int channels = CV_MAT_CN(CV_##tC#)
 
-
 #define CV_MAT_DEPTH_BITS(flags)      CV_DEPTH_BITS(((flags) & CV_MAT_DEPTH_MASK))
 #define CV_MAT_DEPTH_BYTES(flags)     CV_DEPTH_BYTES(((flags) & CV_MAT_DEPTH_MASK))
 
@@ -731,6 +833,19 @@ IplConvKernelFP;
 #define CV_MAGIC_MASK       0xFFFF0000
 #define CV_MAT_MAGIC_VAL    0x42420000
 #define CV_TYPE_NAME_MAT    "opencv-matrix"
+
+void cv_Print_Data_Type(int type){
+    printf("%llu",CV_DEPTH_BITS_MAGIC);
+    printf("To get back the information put into CV_MAKETYPE( depth_Type, cn) use");
+    printf("int depth_Type = %u", CV_MAT_DEPTH(type));
+    printf("int cn = %u", CV_MAT_CN(type));
+    printf("To get info on the type itself use");
+    printf("int bit_Depth  = %u",   CV_MAT_DEPTH_BITS(type));
+    printf("int byte_Depth = %u", CV_MAT_DEPTH_BYTES(type));
+    printf("int channels = %u",  CV_MAT_CN(type));
+}
+
+
 
 /* Size of each channel item,
  0x124489 = 1000 0100 0100 0010 0010 0001 0001 ~ array of sizeof(arr_type_elem) */
