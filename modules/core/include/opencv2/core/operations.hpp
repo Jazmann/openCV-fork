@@ -1499,57 +1499,56 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
 }
 //////////////////////////////// sVec /////////////////////////////////
     
-    template<typename _Tp> _Tp gcd(_Tp* b, unsigned int size_b){
-        switch (size_b) {
-            case 0:
-                // error
-                break;
-            case 1:
-                b[0];
-                break;
-            case 2:
-                gcd(b[0],b[1]);
-                break;
-            case 3:
-                gcd(gcd(b[0],b[1]),b[2]);
-                break;
-            case 4:
-                gcd(gcd(b[0],b[1]), gcd(b[2],b[3]));
-                break;
-            default:
-                gcd(gcd(b,size_b/2), gcd(b+(size_b+1)/2,(size_b+1)/2));
-                break;
-        }
-        if (size_b > 0){
-            return gcd(b[0], b++, size_b-1);
-        }
-        else {
-            return b[0];
-        }
+    template<typename _Tp> _Tp gComDivisor(_Tp u, _Tp v) {
+        if (v)
+            return gComDivisor<_Tp>(v, u % v);
+        else
+            return u < 0 ? -u : u; /* abs(u) */
     };
     
-    template<typename _Tp> _Tp gcd(_Tp& a, _Tp* b, unsigned int size_b){
+    template<typename _Tp> _Tp gComDivisor(_Tp a, _Tp b, _Tp c){
+        return gComDivisor<_Tp>(gComDivisor<_Tp>(a, b), c);
+    };
+    
+    
+    template<typename _Tp> _Tp gComDivisor(_Tp a, _Tp* b, unsigned int size_b){
         if (size_b >= 2){
-            return gcd(gcd(a, b[0]), b++, size_b-1);
+            gComDivisor<_Tp>(a, b[0]);
+            return gComDivisor<_Tp>(gComDivisor<_Tp>(a, b[0]), b++, size_b-1);
         }
         else if(size_b == 1) {
-            return gcd(a, b[0]);
+            return gComDivisor<_Tp>(a, b[0]);
         }
         else {
             return a;
         }
     };
     
-    template<typename _Tp> _Tp gcd(_Tp& a, _Tp& b, _Tp& c){
-        return gcd(gcd(a, b), c);
+    template<typename _Tp> _Tp gComDivisor(_Tp* b, unsigned int size_b){
+        //  std::cout << "b[0] = " << b[0] << " b[size_b-1] = " << b[size_b-1]<< " size_b = " << size_b << "\n";
+        switch (size_b) {
+            case 0:
+                return _Tp();
+                break;
+            case 1:
+                return b[0];
+                break;
+            case 2:
+                return gComDivisor<_Tp>(b[0],b[1]);
+                break;
+            case 3:
+                return gComDivisor<_Tp>(gComDivisor<_Tp>(b[0],b[1]),b[2]);
+                break;
+            case 4:
+                return gComDivisor<_Tp>(gComDivisor<_Tp>(b[0],b[1]), gComDivisor<_Tp>(b[2],b[3]));
+                break;
+            default:
+                //    std::cout << "gComDivisor<_Tp>(gComDivisor<_Tp>("<< b << ", " << size_b/2 << "), gComDivisor<_Tp>( b + " << (size_b)/2 << ", " << (size_b+1)/2 << "))\n" ;
+                return gComDivisor<_Tp>(gComDivisor<_Tp>(b,size_b/2), gComDivisor<_Tp>(b+(size_b)/2,(size_b+1)/2));
+                break;
+        }
     };
-    
-    template<typename _Tp> _Tp gcd(_Tp& u, _Tp& v) {
-        if (v)
-            return gcd(v, u % v);
-        else
-            return u < 0 ? -u : u; /* abs(u) */
-    };
+
 //
 //    unsigned NUM_BITS_U = ((sizeof(unsigned) << 3) - 1);
 //
@@ -1727,7 +1726,7 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
         sVec<_Tp, cn> mul(const sVec<_Tp, cn>& v) const;
         
         // The dotProduct
-        sVec<_Tp, 1> dotProd(const sVec<_Tp, cn>& v) const;
+        sVec<_Tp, 1> dotProd(const sVec<_Tp, cn> v) const;
         
         // Methods
         
@@ -1737,7 +1736,7 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
                 for (int i=0; i<cn; i++) {this->val[i] *= -1;}
                 scale = -1.0 * scale;
             }
-            int common = gcd(this->val[0],this->val[1],this->val[2]);
+            int common = gComDivisor<_Tp>(this->val[0],this->val[1],this->val[2]);
             if (common>1){
                 for (int i=0; i<cn; i++) {this->val[i] /= common;}
                 scale = scale*common;
@@ -1836,7 +1835,7 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
         const unsigned long long int saturateType = (1 << (sizeof(_Tp) << 3))-1;
         float maxVal = m(0,0);
         for (int i=1; i<cn; i++) { if (m(i,0) > maxVal) maxVal = m(i,0);}
-        return sVec<_Tp, cn>(maxVal/saturateType, Matx<_Tp,cn,1>(m, saturateType/maxVal, Matx_ScaleOp()));
+        sVec<_Tp, cn>(maxVal/saturateType, Matx<_Tp,cn,1>(m, saturateType/maxVal, Matx_ScaleOp()));
     }
     
     // Operator Overloading - Matx_AddOp
@@ -1950,25 +1949,25 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
         return conjugate(*this);
     }
     // Type conversion - sVec -> sVec
-    template<typename _Tp, int cn> template<typename T2>
-    inline sVec<_Tp, cn>::operator sVec<T2, cn>() const
+    template<typename _Tp, int cn> template<typename _T2>
+    inline sVec<_Tp, cn>::operator sVec<_T2, cn>() const
     {
-        sVec<T2, cn> v;
-        if (sizeof(T2)>sizeof(_Tp)){
+        sVec<_T2, cn> v;
+        if (sizeof(_T2)>sizeof(_Tp)){
             v.scale = this->scale;
-            for( int i = 0; i < cn; i++ ) v.val[i] = saturate_cast<T2>(this->val[i]);
+            for( int i = 0; i < cn; i++ ) v.val[i] = saturate_cast<_T2>(this->val[i]);
         }
         else{
             _Tp max = this->max(); // The largest value in the vector.
             int bitPos = mostSignificantBit(max);
-            int bitShift = bitPos - ((sizeof(T2) << 3)-1); // the number of bits which will not fit into T2.
+            int bitShift = bitPos - ((sizeof(_T2) << 3)-1); // the number of bits which will not fit into T2.
             if (bitShift <= 0) {
                 v.scale = this->scale;
-                for( int i = 0; i < cn; i++ ) v.val[i] = saturate_cast<T2>(this->val[i]);
+                for( int i = 0; i < cn; i++ ) v.val[i] = saturate_cast<_T2>(this->val[i]);
             } else {
                 int bitScale = 1<<bitShift;
                 v.scale = bitScale * this->scale;
-                for( int i = 0; i < cn; i++ ) v.val[i] = saturate_cast<T2>(this->val[i]/bitScale);
+                for( int i = 0; i < cn; i++ ) v.val[i] = saturate_cast<_T2>(this->val[i]/bitScale);
             }
         }
         return v;
@@ -2079,6 +2078,19 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
     
     // Operators -  sVec = num * sVec
     
+    
+    template<typename _Tp, int cn> static inline sVec<_Tp, cn>
+    operator * (const sVec<_Tp, cn>& a, double alpha)
+    {
+        return sVec<_Tp, cn>(a.scale * alpha, Matx<_Tp, cn,1>(a.val));
+    }
+    
+    template<typename _Tp, int cn> static inline sVec<_Tp, cn>
+    operator * (double alpha, const sVec<_Tp, cn>& a)
+    {
+        return sVec<_Tp, cn>(a.scale * alpha, Matx<_Tp, cn,1>(a.val));
+    }
+
     template<typename _Tp, int n> static inline
     sVec<_Tp, n> operator * (const sVec<_Tp, n>& b, const float a){
         return sVec<_Tp, n>(a * b.scale, Matx<_Tp, n, 1>(b.val));
@@ -2099,51 +2111,38 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
         return sVec<_Tp, n>(a * b.scale, Matx<_Tp, n, 1>(b.val));
     };
         
-    // Operators -  float = sVec * Vec
+    // Operators -  sVec = sVec * Vec
     template<typename _Tp, int n> static inline
-    float operator * (const sVec<_Tp, n>& a, const Matx<_Tp, n, 1>& b)
+    sVec<_Tp, 1> operator * (const sVec<_Tp, n>& a, const Matx<_Tp, n, 1>& b)
     {
-        float dotProd = 0;
+        _Tp dotProd = 0;
         for (int i=0; i < n; i++) {
-            dotProd += (float) a.val[i] * (float) b[i];
+            dotProd += a.val[i] * b[i];
         }
-        return a.scale * dotProd;
+        return sVec<_Tp, 1>(a.scale, dotProd);
     }
     
-    // Operators -  float = Vec * sVec
+    // Operators -  sVec = Vec * sVec
     template<typename _Tp, int n> static inline
-    float operator * ( const Matx<_Tp, n, 1>& b, const sVec<_Tp, n>& a)
+    sVec<_Tp, 1> operator * ( const Matx<_Tp, n, 1>& b, const sVec<_Tp, n>& a)
     {
-        float dotProd = 0;
+        _Tp dotProd = 0;
         for (int i=0; i < n; i++) {
-            dotProd += (float) a.val[i] * (float) b[i];
+            dotProd += a.val[i] * b[i];
         }
-        return a.scale * dotProd;
+        return sVec<_Tp, 1>(a.scale, dotProd);
     }
     
-    // Operators -  float = sVec * sVec
+    // Operators -  sVec = sVec * sVec
     template<typename _Tp, int n> static inline
-    float operator * (const sVec<_Tp, n>& a, const sVec<_Tp, n>& b)
+    sVec<_Tp, 1> operator * (const sVec<_Tp, n>& a, const sVec<_Tp, n>& b)
     {
-        float dotProd = 0;
+        _Tp dotProd = 0;
         for (int i=0; i < n; i++) {
-            dotProd += (float) a.val[i] * (float) b.val[i];
+            dotProd += a.val[i] * b[i];
         }
-        return a.scale * b.scale * dotProd;
-    }
-    
-    template<typename _Tp, int cn> static inline sVec<_Tp, cn>
-    operator * (const sVec<_Tp, cn>& a, double alpha)
-    {
-        return sVec<_Tp, cn>(a.scale * alpha, Matx<_Tp, cn,1>(a.val));
-    }
-    
-    template<typename _Tp, int cn> static inline sVec<_Tp, cn>
-    operator * (double alpha, const sVec<_Tp, cn>& a)
-    {
-        return sVec<_Tp, cn>(a.scale * alpha, Matx<_Tp, cn,1>(a.val));
-    }
-    
+        return sVec<_Tp, 1>(a.scale * b.scale, dotProd);
+    }    
     // Operators -  sVec / number
     
     template<typename _Tp, int cn> static inline sVec<_Tp, cn>

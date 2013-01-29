@@ -1111,9 +1111,9 @@ enum
             sVec<int, 3> v1(1.0, sp1 - sp0); v1.factor(); v1.scale=1.0;
             sVec<int, 3> v2(1.0, sp2 - sp0); v2.factor(); v2.scale=1.0;
             
-            sVec<int, 1> v1Norm2 = v1.dotProd(v1); // v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2];
-            sVec<int, 1> v2Norm2 = v2.dotProd(v2); // v2[0] * v2[0] + v2[1] * v2[1] + v2[2] * v2[2];
-            sVec<int, 1> v2DotV1 = v2.dotProd(v1); // v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
+            sVec<int, 1> v1Norm2 = v1 * v1; // v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2];
+            sVec<int, 1> v2Norm2 = v2 * v2; // v2[0] * v2[0] + v2[1] * v2[1] + v2[2] * v2[2];
+            sVec<int, 1> v2DotV1 = v2 * v1; // v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
             float v1V2Sin = sqrtf(v1Norm2(0) * v2Norm2(0) - v2DotV1(0) * v2DotV1(0));
             
             sVec<int, 3> a1 = v1;
@@ -1159,7 +1159,11 @@ enum
             MaxInRow<int>(RGBBoxInNew, RGBCubeMax);
             MinInRow<int>(RGBBoxInNew, RGBCubeMin);
             Mat RGBCubeRange = RGBCubeMax - RGBCubeMin;
-            M = Ti.val;
+            for(int i = 0; i < dst_Channels - 1; i++){
+                for(int j = 0; j < src_Channels - 1; j++){
+                    M[i][j] = Ti.val[i][j];
+                }
+            }
             TMin[0]   = RGBCubeMin.at<int>(0,0);   TMin[1]   = RGBCubeMin.at<int>(1,0);   TMin[2]   = RGBCubeMin.at<int>(2,0);
             TRange[0] = RGBCubeRange.at<int>(0,0); TRange[1] = RGBCubeRange.at<int>(1,0); TRange[2] = RGBCubeRange.at<int>(2,0);
             
