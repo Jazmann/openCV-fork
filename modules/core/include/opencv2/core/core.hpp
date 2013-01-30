@@ -397,16 +397,38 @@ template<> class DataDepth<bool> { public: enum { value = CV_8U, fmt=(int)'u' };
 template<> class DataDepth<u2bit> { public: enum { value = CV_2U, fmt=(int)'u' }; };
 template<> class DataDepth<u4bit> { public: enum { value = CV_4U, fmt=(int)'u' }; };
      */
-template<> class DataDepth<uchar> { public: enum { value = CV_8U, fmt=(int)'u' }; };
-template<> class DataDepth<schar> { public: enum { value = CV_8S, fmt=(int)'c' }; };
-template<> class DataDepth<char> { public: enum { value = CV_8S, fmt=(int)'c' }; };
-template<> class DataDepth<ushort> { public: enum { value = CV_16U, fmt=(int)'w' }; };
-template<> class DataDepth<short> { public: enum { value = CV_16S, fmt=(int)'s' }; };
-template<> class DataDepth<int> { public: enum { value = CV_32S, fmt=(int)'i' }; };
-template<> class DataDepth<unsigned> { public: enum { value = CV_32U, fmt=(int)'i' }; };
-template<> class DataDepth<float> { public: enum { value = CV_32F, fmt=(int)'f' }; };
-template<> class DataDepth<double> { public: enum { value = CV_64F, fmt=(int)'d' }; };
-template<typename _Tp> class DataDepth<_Tp*> { public: enum { value = CV_USRTYPE1, fmt=(int)'r' }; };
+    template<> class DataDepth<uchar> { public: enum { value = CV_8U, fmt=(int)'u' }; };
+    template<> class DataDepth<schar> { public: enum { value = CV_8S, fmt=(int)'c' }; };
+    template<> class DataDepth< char> { public: enum { value = CV_8S, fmt=(int)'c' }; };
+    template<> class DataDepth<ushort> { public: enum { value = CV_16U, fmt=(int)'w' }; };
+    template<> class DataDepth< short> { public: enum { value = CV_16S, fmt=(int)'s' }; };
+    template<> class DataDepth<unsigned> { public: enum { value = CV_32U, fmt=(int)'i' }; };
+    template<> class DataDepth< int> { public: enum { value = CV_32S, fmt=(int)'i' }; };
+    template<> class DataDepth<unsigned long long int> { public: enum { value = CV_64U, fmt=(int)'i' }; };
+    template<> class DataDepth<  signed long long int> { public: enum { value = CV_64S, fmt=(int)'i' }; };
+    
+    
+    template<> class DataDepth<unsigned char> { public: enum { value = CV_8U, fmt=(int)'u' }; };
+    template<> class DataDepth<  signed char> { public: enum { value = CV_8S, fmt=(int)'c' }; };
+    template<> class DataDepth<unsigned short int> { public: enum { value = CV_16U, fmt=(int)'w' }; };
+    template<> class DataDepth<  signed short int> { public: enum { value = CV_16S, fmt=(int)'s' }; };
+    template<> class DataDepth<unsigned long int> { public: enum { value = CV_32U, fmt=(int)'i' }; };
+    template<> class DataDepth<  signed long int> { public: enum { value = CV_32S, fmt=(int)'i' }; };
+    template<> class DataDepth<unsigned long long int> { public: enum { value = CV_64U, fmt=(int)'i' }; };
+    template<> class DataDepth<  signed long long int> { public: enum { value = CV_64S, fmt=(int)'i' }; };
+    
+    template<> class DataDepth<uint8_t>  { public: enum { value = CV_8U,  fmt=(int)'u' }; };
+    template<> class DataDepth< int8_t>  { public: enum { value = CV_8S,  fmt=(int)'c' }; };
+    template<> class DataDepth<uint16_t> { public: enum { value = CV_16U, fmt=(int)'w' }; };
+    template<> class DataDepth< int16_t> { public: enum { value = CV_16S, fmt=(int)'s' }; };
+    template<> class DataDepth<uint32_t> { public: enum { value = CV_32U, fmt=(int)'i' }; };
+    template<> class DataDepth< int32_t> { public: enum { value = CV_32S, fmt=(int)'i' }; };
+    template<> class DataDepth<uint64_t> { public: enum { value = CV_64U, fmt=(int)'i' }; };
+    template<> class DataDepth< int64_t> { public: enum { value = CV_64S, fmt=(int)'i' }; };
+    
+    template<> class DataDepth<float> { public: enum { value = CV_32F, fmt=(int)'f' }; };
+    template<> class DataDepth<double> { public: enum { value = CV_64F, fmt=(int)'d' }; };
+    template<typename _Tp> class DataDepth<_Tp*> { public: enum { value = CV_USRTYPE1, fmt=(int)'r' }; };
 
 
 ////////////////////////////// Small Matrix ///////////////////////////

@@ -1772,6 +1772,7 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
             return minVal;
         }
         
+        void print();
         
     };
     
@@ -1835,7 +1836,8 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
         const unsigned long long int saturateType = (1 << (sizeof(_Tp) << 3))-1;
         float maxVal = m(0,0);
         for (int i=1; i<cn; i++) { if (m(i,0) > maxVal) maxVal = m(i,0);}
-        sVec<_Tp, cn>(maxVal/saturateType, Matx<_Tp,cn,1>(m, saturateType/maxVal, Matx_ScaleOp()));
+        scale = maxVal/saturateType;
+        Matx<_Tp,cn,1>(m, saturateType/maxVal, Matx_ScaleOp());
     }
     
     // Operator Overloading - Matx_AddOp
@@ -1986,6 +1988,16 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
         for( ; i < 4; i++ ) s.val[i] = 0;
         return s;
     }
+    
+    template<typename _Tp, int cn>  void sVec<_Tp, cn>::print(){
+        printf("Test sVec \n");
+        printf("    / %s \\  / %s \\ \n",std::to_string(this->val[0]),std::to_string(this->val[0]*scale));
+        for (int i=1; i<cn-1; i++) {
+            printf("%s| %s |= | %s | \n",std::to_string(scale),std::to_string(this->val[1]),std::to_string(this->val[1]*scale));
+        }
+        printf("    \\ %s /  \\ %s / \n",std::to_string(this->val[2]),std::to_string(this->val[2]*scale));
+    }
+
     
     // Element Access
     // Element Access - Access Rvalue - Vector element
