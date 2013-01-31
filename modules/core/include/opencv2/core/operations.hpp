@@ -187,8 +187,8 @@ template<> inline int saturate_cast<int>(float v) { return cvRound(v); }
 template<> inline int saturate_cast<int>(double v) { return cvRound(v); }
 
 // we intentionally do not clip negative numbers, to make -1 become 0xffffffff etc.
-template<> inline unsigned saturate_cast<unsigned>(float v){ return cvRound(v); }
-template<> inline unsigned saturate_cast<unsigned>(double v) { return cvRound(v); }
+template<> inline unsigned saturate_cast<unsigned>(float  v){ return cvRound(v); }
+template<> inline unsigned saturate_cast<unsigned>(double v){ return cvRound(v); }
 
 inline int fast_abs(uchar v) { return v; }
 inline int fast_abs(schar v) { return std::abs((int)v); }
@@ -1649,6 +1649,19 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
     }
     
     
+    cv::Matx<int64_t, 3, 2> rational_decomposition(cv::Matx<float, 3, 1> vec, int64_t max_denom){
+        cv::Matx<int64_t, 3, 2> output;
+        int64_t out_num, out_denom;
+        double float_in;
+        for (int i=0; i<3; i++) {
+            float_in = (double) vec(i);
+            rat_approx(float_in, max_denom, &out_num, &out_denom );
+            output(i,0) = out_num;
+            output(i,1) = out_denom;
+        }
+        return output;
+    }
+    
     // A data structure which allows a vector to be expressed as a float scalar times an integer vector.
     // _Tp must be an integer type char, short, long, long long - signed or unsigned.
     
@@ -1674,7 +1687,8 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
         explicit sVec(float _scale, const _Tp* values);
         
         sVec(const sVec<_Tp, cn>& v);
-        sVec(const Matx<float, cn, 1>& m); // Constructors -- sVec from a float Matx
+       // sVec(const Matx<float, cn, 1>& m); // Constructors -- sVec from a float Matx
+        sVec(const Matx<float, cn, 1>& vec, int64_t max_denom = 255); // Constructors -- sVec from a float Matx
         static sVec all(_Tp alpha);
         
         sVec(float _scale, Vec< _Tp, cn> _vec   ) : Matx<_Tp, cn, 1>(_vec.val), scale(_scale){};
@@ -1736,7 +1750,7 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
                 for (int i=0; i<cn; i++) {this->val[i] *= -1;}
                 scale = -1.0 * scale;
             }
-            int common = gComDivisor<_Tp>(this->val[0],this->val[1],this->val[2]);
+            int common = gComDivisor<_Tp>(this->val, cn);
             if (common>1){
                 for (int i=0; i<cn; i++) {this->val[i] /= common;}
                 scale = scale*common;
@@ -1831,7 +1845,40 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
     : Matx<_Tp, cn, 1>(m.val), scale(m.scale)
     {}
     // Constructors -- sVec from a float Matx
-    template<typename _Tp, int cn> inline sVec<_Tp, cn>::sVec(const Matx<float, cn, 1>& m)
+    template<typename _Tp, int cn> inline cv::sVec<_Tp, cn>::sVec(const Matx<float, cn, 1>& vec, int64_t max_denom = 255)
+    {
+        cv::sVec<int64_t, cn> output_num;
+        cv::sVec<int64_t, cn> output_den;
+        int64_t out_num, out_den;
+        double float_in;
+        for (int i=0; i<cn; i++) {
+            float_in = (double) vec(i);
+            rat_approx(float_in, max_denom, &out_num, &out_den );
+            output_num[i] = out_num;
+            output_den[i] = out_den;
+        }
+        output_num.factor();
+        output_den.factor();
+        int64_t den_prod = output_den[0];
+        for(int i=1;i<cn;i++){
+            den_prod *= output_den[i];
+        }
+        
+        for(int i=0;i<cn;i++){
+            output_num[i] *= den_prod/output_den[i];
+        }
+        output_num.scale *= 1.0/(output_den.scale * den_prod);
+        output_num.factor();
+        
+        const uint64_t saturateType = (((1 << ((sizeof(_Tp) << 3)-1)) -1 ) << 1) + 1;
+        int exposure = (int) (output_num.max() / saturateType);
+        scale = output_num.scale * (exposure + 1);
+        for(int i=0;i<cn;i++){
+            Matx<_Tp,cn,1>::val[i] = (_Tp) (output_num[i]/(exposure + 1)) ;
+        }    
+    }
+    
+   /* template<typename _Tp, int cn> inline sVec<_Tp, cn>::sVec(const Matx<float, cn, 1>& m)
     {
         const unsigned long long int saturateType = (1 << (sizeof(_Tp) << 3))-1;
         float maxVal = m(0,0);
@@ -1839,6 +1886,7 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
         scale = maxVal/saturateType;
         Matx<_Tp,cn,1>(m, saturateType/maxVal, Matx_ScaleOp());
     }
+    */
     
     // Operator Overloading - Matx_AddOp
     
