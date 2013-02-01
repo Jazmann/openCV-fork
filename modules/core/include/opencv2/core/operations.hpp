@@ -113,13 +113,13 @@ using std::sqrt;
 
 /////////////// saturate_cast (used in image & signal processing) ///////////////////
 
-template<typename _Tp> static inline _Tp saturate_cast(uchar v) { return _Tp(v); }
-template<typename _Tp> static inline _Tp saturate_cast(schar v) { return _Tp(v); }
+template<typename _Tp> static inline _Tp saturate_cast(uchar  v) { return _Tp(v); }
+template<typename _Tp> static inline _Tp saturate_cast(schar  v) { return _Tp(v); }
 template<typename _Tp> static inline _Tp saturate_cast(ushort v) { return _Tp(v); }
-template<typename _Tp> static inline _Tp saturate_cast(short v) { return _Tp(v); }
+template<typename _Tp> static inline _Tp saturate_cast(short  v) { return _Tp(v); }
 template<typename _Tp> static inline _Tp saturate_cast(unsigned v) { return _Tp(v); }
 template<typename _Tp> static inline _Tp saturate_cast(int v) { return _Tp(v); }
-template<typename _Tp> static inline _Tp saturate_cast(float v) { return _Tp(v); }
+template<typename _Tp> static inline _Tp saturate_cast(float  v) { return _Tp(v); }
 template<typename _Tp> static inline _Tp saturate_cast(double v) { return _Tp(v); }
 
 template<> inline uchar saturate_cast<uchar>(schar v)
@@ -1649,19 +1649,52 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
     }
     
     
-    cv::Matx<int64_t, 3, 2> rational_decomposition(cv::Matx<float, 3, 1> vec, int64_t max_denom){
-        cv::Matx<int64_t, 3, 2> output;
-        int64_t out_num, out_denom;
-        double float_in;
-        for (int i=0; i<3; i++) {
-            float_in = (double) vec(i);
-            rat_approx(float_in, max_denom, &out_num, &out_denom );
-            output(i,0) = out_num;
-            output(i,1) = out_denom;
+    /* f : number to convert.
+     * num, denom: returned parts of the rational.
+     * max_denom: max denominator value.  Note that machine floating point number
+     *     has a finite resolution (10e-16 ish for 64 bit double), so specifying
+     *     a "best match with minimal error" is often wrong, because one can
+     *     always just retrieve the significand and return that divided by
+     *     2**52, which is in a sense accurate, but generally not very useful:
+     *     1.0/7.0 would be "2573485501354569/18014398509481984", for example.
+     */
+    void CV_INLINE rat_approx(double f, int64_t max_denom, int64_t *num, int64_t *denom)
+    {
+        /*  a: continued fraction coefficients. */
+        int64_t a, h[3] = { 0, 1, 0 }, k[3] = { 1, 0, 0 };
+        int64_t x, d, n = 1;
+        int i, neg = 0;
+        
+        if (max_denom <= 1) { *denom = 1; *num = (int64_t) f; return; }
+        
+        if (f < 0) { neg = 1; f = -f; }
+        
+        while (f != floor(f)) { n <<= 1; f *= 2; }
+        d = f;
+        
+        /* continued fraction and check denominator each step */
+        for (i = 0; i < 64; i++) {
+            a = n ? d / n : 0;
+            if (i && !a) break;
+            
+            x = d; d = n; n = x % n;
+            
+            x = a;
+            if (k[1] * a + k[0] >= max_denom) {
+                x = (max_denom - k[0]) / k[1];
+                if (x * 2 >= a || k[1] >= max_denom)
+                    i = 65;
+                else
+                    break;
+            }
+            
+            h[2] = x * h[1] + h[0]; h[0] = h[1]; h[1] = h[2];
+            k[2] = x * k[1] + k[0]; k[0] = k[1]; k[1] = k[2];
         }
-        return output;
+        *denom = k[1];
+        *num = neg ? -h[1] : h[1];
     }
-    
+
     // A data structure which allows a vector to be expressed as a float scalar times an integer vector.
     // _Tp must be an integer type char, short, long, long long - signed or unsigned.
     
@@ -1786,6 +1819,15 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
             return minVal;
         }
         
+        std::string toString(){
+            std::string output = std::to_string(this->scale) + "  / " + std::to_string(this->val[0]) + " \\   / " + std::to_string(this(0)) + " \\ \n";
+            for (int i=1; i<cn-1; i++) {
+                output += "          | " + std::to_string(this->val[i]) + " | = | " + std::to_string(this(i)) + " | \n";
+            }
+            output += "          \\ " + std::to_string(this->val[cn-1]) + " /   \\ " + std::to_string(this(cn-1)) + " / \n";
+            return output;
+        }
+
         void print();
         
     };
@@ -1794,6 +1836,7 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
     /////////////////////////// short scaled vector (sVec) /////////////////////////////
     
     template<typename _Tp, int cn> inline sVec<_Tp, cn>::sVec()
+    :scale(1.0), Matx<_Tp, cn, 1>()
     {}
     
     template<typename _Tp, int cn> inline sVec<_Tp, cn>::sVec(float _scale, _Tp v0)
@@ -1845,7 +1888,7 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
     : Matx<_Tp, cn, 1>(m.val), scale(m.scale)
     {}
     // Constructors -- sVec from a float Matx
-    template<typename _Tp, int cn> inline cv::sVec<_Tp, cn>::sVec(const Matx<float, cn, 1>& vec, int64_t max_denom = 255)
+    template<typename _Tp, int cn> inline cv::sVec<_Tp, cn>::sVec(const Matx<float, cn, 1>& vec, int64_t max_denom)
     {
         cv::sVec<int64_t, cn> output_num;
         cv::sVec<int64_t, cn> output_den;

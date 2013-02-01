@@ -86,7 +86,9 @@ def build_framework(srcroot, dstroot):
         build_opencv(srcroot, os.path.join(dstroot, "build"), targets[i], archs[i])
     
     os.system("cp %s %s" % (os.path.join(srcroot,"ios/make_framework.py "), dstroot))
+    os.system("echo \"cp %s %s \" " % (os.path.join(srcroot,"ios/make_framework.py "), dstroot))
     os.chdir(dstroot)
+    os.system("pwd")
     import make_framework.py
 
 
