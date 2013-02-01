@@ -1154,18 +1154,18 @@ enum
             Matx<int, 3, 8> RGBBox({0, 1, 0, 0, 0, 1, 1, 1,
                                     0, 0, 1, 0, 1, 0, 1, 1,
                                     0, 0, 0, 1, 1, 1, 0, 1});
-            cv::Matx<int, 3, 8> RGBBoxInNew = Ti * RGBBox;
-            cv::Matx<int, 3, 1> RGBCubeMax = MaxInRow<int, 3, 8>(RGBBoxInNew);
-            cv::Matx<int, 3, 1> RGBCubeMin = MinInRow<int, 3, 8>(RGBBoxInNew);
-            cv::Matx<int, 3, 1> RGBCubeRange = RGBCubeMax - RGBCubeMin;
+            Matx<int, 3, 8> RGBBoxInNew = Ti * RGBBox;
+            Matx<int, 3, 1> RGBCubeMax = MaxInRow<int, 3, 8>(RGBBoxInNew);
+            Matx<int, 3, 1> RGBCubeMin = MinInRow<int, 3, 8>(RGBBoxInNew);
+            Matx<int, 3, 1> RGBCubeRange = RGBCubeMax - RGBCubeMin;
             for(int i = 0; i < dst_Channels; i++){
                 for(int j = 0; j < src_Channels; j++){
                     M[i][j] = Ti(i,j);
                 }
             }
-            TMin[0]   = RGBCubeMin.at<int>(0,0);   TMin[1]   = RGBCubeMin.at<int>(1,0);   TMin[2]   = RGBCubeMin.at<int>(2,0);
-            TRange[0] = RGBCubeRange.at<int>(0,0); TRange[1] = RGBCubeRange.at<int>(1,0); TRange[2] = RGBCubeRange.at<int>(2,0);
-            
+            TMin[0] = RGBCubeMin(0,0); TRange[0] = RGBCubeRange(0,0);
+            TMin[1] = RGBCubeMin(1,0); TRange[1] = RGBCubeRange(1,0);
+            TMin[2] = RGBCubeMin(2,0); TRange[2] = RGBCubeRange(2,0);
         }
         
         void operator()(const src_channel_type* src, dst_channel_type* dst, int n) const
