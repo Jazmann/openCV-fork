@@ -45,11 +45,11 @@ def build_opencv(srcroot, buildroot, target, arch):
     # for some reason, if you do not specify CMAKE_BUILD_TYPE, it puts libs to "RELEASE" rather than "Release"
     #           "-D CMAKE_BUILD_TYPE=Release " +
     if target=="OSX" : cmakeargs = ("-G Xcode " +
-                     "-D CMAKE_BUILD_TYPE=Release " +
+                     "-D CMAKE_BUILD_TYPE=Debug " +
                      "-D BUILD_opencv_world=ON " +
                      "-D CMAKE_INSTALL_PREFIX=install")
     else: cmakeargs = ("-G Xcode " +
-                     "-D CMAKE_BUILD_TYPE=Release " +
+                     "-D CMAKE_BUILD_TYPE=Debug " +
                      "-D CMAKE_TOOLCHAIN_FILE=%s/ios/cmake/Toolchains/Toolchain-%s_Xcode.cmake " +
                      "-D BUILD_opencv_world=ON " +
                      "-D CMAKE_INSTALL_PREFIX=install") % (srcroot, target)
@@ -88,6 +88,7 @@ def build_framework(srcroot, dstroot):
     os.system("cp %s %s" % (os.path.join(srcroot,"ios/make_framework.py "), dstroot))
     os.system("echo \"cp %s %s \" " % (os.path.join(srcroot,"ios/make_framework.py "), dstroot))
     os.chdir(dstroot)
+    os.system("echo \"*****  PWD  *******\" " )
     os.system("pwd")
     import make_framework.py
 
