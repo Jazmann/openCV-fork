@@ -1081,14 +1081,13 @@ enum
         constexpr static int dst_Channels   = CV_MAT_CN(dst_t);
         using src_channel_type     = cv_Type<src_t>;
         using dst_channel_type     = cv_Type<dst_t>;
-        
-        const int targetScale = ( 1 << (sizeof(dst_channel_type) * 8) ) - 1; // Range for the target type
+        const uint64_t targetScale = (((1 << ((sizeof(dst_channel_type) << 3)-1)) -1 ) << 1) + 1; // Range for the target type
         int M[dst_Channels][src_Channels];
         int TRange[dst_Channels], TMin[dst_Channels];
         int redScale, greenScale, blueScale;
         // The transform to the new color space is (T vec - 255 TMin)/TRange. 255 is the range of 8bit RGB and can be replaced directly with a different range for 16 and 32 bit RGB spaces. The division by TRange is the direct element wise division and can safely be rounded to recast in the required bit depth.
         
-        RGB2Rot(const int blueIdx, Matx<int, 3, 3>& T, Vec<int, 3>& _TRange, Vec<int,3>& _TMin) // NOTE: MatX constructor should be able to be constructed using the {} notation using C++11 features
+        RGB2Rot(const int blueIdx, Matx<int, 3, 3>& T, Vec<int, 3>& _TRange, Vec<int,3>& _TMin)
         {
             this->src_data_type = src_t; this->dst_data_type = dst_t;
             const int idxSrc[3] = {(blueIdx+2)%4,1,blueIdx}; // (blueIdx+2)%4 = 2 if blueIdx = 0
@@ -1166,6 +1165,9 @@ enum
             TMin[0] = RGBCubeMin(0,0); TRange[0] = RGBCubeRange(0,0);
             TMin[1] = RGBCubeMin(1,0); TRange[1] = RGBCubeRange(1,0);
             TMin[2] = RGBCubeMin(2,0); TRange[2] = RGBCubeRange(2,0);
+            redScale   = TRange[0] / targetScale;
+            greenScale = TRange[1] / targetScale;
+            blueScale  = TRange[2] / targetScale;
         }
         
         void operator()(const src_channel_type* src, dst_channel_type* dst, int n) const
