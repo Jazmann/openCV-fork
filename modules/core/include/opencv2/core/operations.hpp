@@ -704,6 +704,34 @@ Matx<_Tp, m, n> Matx<_Tp, m, n>::mul(const Matx<_Tp, m, n>& a) const
     return Matx<_Tp, m, n>(*this, a, Matx_MulOp());
 }
 
+template<typename _Tp, int m, int n> inline cv::Matx<_Tp, m, 1> MaxInRow(Matx<_Tp, m, n> src){
+    Matx<_Tp, m, 1> dst;
+    for( int i = 0; i < m; i++ ){
+        dst(i,0) = src(i,0);
+        for( int j = 1; j < n; j++ )
+        {
+            if (dst(i,0) < src(i,j)) {
+                dst(i,0) = src(i,j);
+            }
+        }
+    }
+    return dst;
+}
+
+
+template<typename _Tp, int m, int n> inline cv::Matx<_Tp, m, 1> MinInRow(Matx<_Tp, m, n> src){
+    Matx<_Tp, m, 1> dst;
+    for( int i = 0; i < m; i++ ){
+        dst(i,0) = src(i,0);
+        for( int j = 1; j < n; j++ )
+        {
+            if (dst(i,0) > src(i,j)) {
+                dst(i,0) = src(i,j);
+            }
+        }
+    }
+    return dst;
+}
 
 CV_EXPORTS int LU(float* A, size_t astep, int m, float* b, size_t bstep, int n);
 CV_EXPORTS int LU(double* A, size_t astep, int m, double* b, size_t bstep, int n);
@@ -2384,7 +2412,7 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
      };
      */
     
-    
+/*
     template <typename T> void MaxInRow(InputArray _src, OutputArray _dst){
         Mat src = _src.getMat();
         _dst.create(src.rows, 1, src.type());
@@ -2416,7 +2444,7 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
         }
         
     }
-    
+    */
     
 
     

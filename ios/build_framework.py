@@ -69,8 +69,8 @@ def build_opencv(srcroot, buildroot, target, arch):
     	os.system("xcodebuild -parallelizeTargets ARCHS=%s -jobs 8 -configuration Release -target ALL_BUILD" % (arch))
     	os.system("xcodebuild ARCHS=%s -configuration Release -target install install" % (arch))
     else:
-    	os.system("xcodebuild -parallelizeTargets ARCHS=%s -jobs 8 -sdk %s -configuration Release -target ALL_BUILD" % (arch, target.lower()))
-    	os.system("xcodebuild ARCHS=%s -sdk %s -configuration Release -target install install" % (arch, target.lower()))
+    	os.system("xcodebuild -parallelizeTargets ARCHS=%s -jobs 8 -sdk %s -configuration Debug -target ALL_BUILD" % (arch, target.lower()))
+    	os.system("xcodebuild ARCHS=%s -sdk %s -configuration Debug -target install install" % (arch, target.lower()))
     
     os.chdir(currdir)
 

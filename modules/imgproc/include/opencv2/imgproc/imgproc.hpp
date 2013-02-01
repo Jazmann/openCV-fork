@@ -1154,11 +1154,10 @@ enum
             Matx<int, 3, 8> RGBBox({0, 1, 0, 0, 0, 1, 1, 1,
                                     0, 0, 1, 0, 1, 0, 1, 1,
                                     0, 0, 0, 1, 1, 1, 0, 1});
-            Matx<int, 3, 8> RGBBoxInNew = Ti * RGBBox;
-            Mat RGBCubeMax, RGBCubeMin;
-            MaxInRow<int>(RGBBoxInNew, RGBCubeMax);
-            MinInRow<int>(RGBBoxInNew, RGBCubeMin);
-            Mat RGBCubeRange = RGBCubeMax - RGBCubeMin;
+            cv::Matx<int, 3, 8> RGBBoxInNew = Ti * RGBBox;
+            cv::Matx<int, 3, 1> RGBCubeMax = MaxInRow<int, 3, 8>(RGBBoxInNew);
+            cv::Matx<int, 3, 1> RGBCubeMin = MinInRow<int, 3, 8>(RGBBoxInNew);
+            cv::Matx<int, 3, 1> RGBCubeRange = RGBCubeMax - RGBCubeMin;
             for(int i = 0; i < dst_Channels; i++){
                 for(int j = 0; j < src_Channels; j++){
                     M[i][j] = Ti(i,j);
