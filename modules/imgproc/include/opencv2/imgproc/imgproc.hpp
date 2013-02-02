@@ -1165,9 +1165,9 @@ enum
             TMin[0] = RGBCubeMin(0,0); TRange[0] = RGBCubeRange(0,0);
             TMin[1] = RGBCubeMin(1,0); TRange[1] = RGBCubeRange(1,0);
             TMin[2] = RGBCubeMin(2,0); TRange[2] = RGBCubeRange(2,0);
-            redScale   = TRange[0] / targetScale;
-            greenScale = TRange[1] / targetScale;
-            blueScale  = TRange[2] / targetScale;
+            redScale   = (TRange[0] / targetScale)+1;
+            greenScale = (TRange[1] / targetScale)+1;
+            blueScale  = (TRange[2] / targetScale)+1;
         }
         
         void operator()(const src_channel_type* src, dst_channel_type* dst, int n) const
