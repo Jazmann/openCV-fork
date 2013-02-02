@@ -711,6 +711,9 @@ template<> struct cv_Data_Type<CV_64F>{
 
 template<int cv_data_type> using cv_Type = typename cv_Data_Type<cv_data_type>::type;
 
+// CV_MAT_DEPTH_MASK bit mask which keeps only the right-most CV_CN_SHIFT bits. Keeps the user from screwing up when using CV_MAKETYPE.
+#define CV_MAT_DEPTH_MASK     (CV_DEPTH_MAX - 1)
+#define CV_MAT_DEPTH(type)    ((type) & CV_MAT_DEPTH_MASK) // CV_MAT_DEPTH(flags) applies the mask to the bits in flags.
 
 #define CV_DEPTH_BYTES_MAGIC ( \
 (CV_64F_DEPTH_BYTES_LOG2 << (CV_64F *2))|(CV_32F_DEPTH_BYTES_LOG2 << (CV_32F *2))|\
@@ -720,8 +723,8 @@ template<int cv_data_type> using cv_Type = typename cv_Data_Type<cv_data_type>::
 (CV_8S_DEPTH_BYTES_LOG2  << (CV_8S  *2))|(CV_8U_DEPTH_BYTES_LOG2  << (CV_8U  *2))|\
 (CV_4U_DEPTH_BYTES_LOG2  << (CV_4U  *2))|(CV_2U_DEPTH_BYTES_LOG2  << (CV_2U  *2)) )
 
-#define CV_DEPTH_BYTES(type) (1 << ( (CV_DEPTH_BYTES_MAGIC >> (type*2)) &3) )
-
+#define CV_MAT_DEPTH_BYTES(type) (1 << ( (CV_DEPTH_BYTES_MAGIC >> (CV_MAT_DEPTH(type)*2)) &3) )
+#define CV_DEPTH_BYTES(type)     CV_MAT_DEPTH_BYTES(type) // Depreciated
 
 #define CV_DEPTH_BITS_MAGIC ( \
 (uint64_t(CV_64F_DEPTH_BITS_LOG2) << (CV_64F *3))|(uint64_t(CV_32F_DEPTH_BITS_LOG2) << (CV_32F *3))|\
@@ -731,14 +734,9 @@ template<int cv_data_type> using cv_Type = typename cv_Data_Type<cv_data_type>::
 (uint64_t(CV_8S_DEPTH_BITS_LOG2)  << (CV_8S  *3))|(uint64_t(CV_8U_DEPTH_BITS_LOG2)  << (CV_8U  *3))|\
 (uint64_t(CV_4U_DEPTH_BITS_LOG2)  << (CV_4U  *3))|(uint64_t(CV_2U_DEPTH_BITS_LOG2)  << (CV_2U  *3)) )
 
-#define CV_DEPTH_BITS(type) (1 << ( (CV_DEPTH_BITS_MAGIC >> (type*3)) & 7) )
+#define CV_MAT_DEPTH_BITS(type)   (1 << ( (CV_DEPTH_BITS_MAGIC >> ((CV_MAT_DEPTH(type))*3)) & 7) )
+#define CV_DEPTH_BITS(type)       CV_MAT_DEPTH_BITS(type) // Depreciated
 
-// CV_MAT_DEPTH_MASK bit mask which keeps only the right-most CV_CN_SHIFT bits. Keeps the user from screwing up when using CV_MAKETYPE.
-#define CV_MAT_DEPTH_MASK       (CV_DEPTH_MAX - 1)
-// CV_MAT_DEPTH(flags) applies the mask to the bits in flags.
-#define CV_MAT_DEPTH(flags)     ((flags) & CV_MAT_DEPTH_MASK)
-#define CV_MAT_DEPTH_BITS(flags)      CV_DEPTH_BITS(((flags) & CV_MAT_DEPTH_MASK))
-#define CV_MAT_DEPTH_BYTES(flags)     CV_DEPTH_BYTES(((flags) & CV_MAT_DEPTH_MASK))
 // CV_MAKETYPE(depth,cn) generated an integer using the right-most CV_CN_SHIFT bits for the depth and the rest for the channels.
 #define CV_MAKETYPE(depth,cn) (CV_MAT_DEPTH(depth) + (((cn)-1) << CV_CN_SHIFT))
 #define CV_MAKE_TYPE CV_MAKETYPE
@@ -823,8 +821,8 @@ template<int cv_data_type> using cv_Type = typename cv_Data_Type<cv_data_type>::
 // int byte_Depth = CV_MAT_DEPTH_BYTES(CV_##tC#)
 // int channels = CV_MAT_CN(CV_##tC#)
 
-#define CV_MAT_DEPTH_BITS(flags)      CV_DEPTH_BITS(((flags) & CV_MAT_DEPTH_MASK))
-#define CV_MAT_DEPTH_BYTES(flags)     CV_DEPTH_BYTES(((flags) & CV_MAT_DEPTH_MASK))
+// #define CV_MAT_DEPTH_BITS(flags)      CV_DEPTH_BITS(((flags) & CV_MAT_DEPTH_MASK))
+// #define CV_MAT_DEPTH_BYTES(flags)     CV_DEPTH_BYTES(((flags) & CV_MAT_DEPTH_MASK))
 
 #define CV_AUTO_STEP  0x7fffffff
 #define CV_WHOLE_ARR  cvSlice( 0, 0x3fffffff )
@@ -939,7 +937,7 @@ CvMat;
 #define CV_ELEM_SIZE1 CV_DEPTH_BYTES
 
 // In case the channels are packed into fewer than one byte each we calculate : bits_used = channels * bits_per_channel
-#define CV_ELEM_SIZE_BITS(type) ( CV_MAT_CN(type) * CV_DEPTH_BITS(type) )
+#define CV_ELEM_SIZE_BITS(type) ( CV_MAT_CN(type) * CV_MAT_DEPTH_BITS(type) )
 // then bytes = Ceiling( bits_used / 8)
 #define CV_ELEM_SIZE_BYTES(type) ((CV_ELEM_SIZE_BITS(type) >> 3) + ( (CV_ELEM_SIZE_BITS(type) & 7) ? 1 : 0 ))
 
