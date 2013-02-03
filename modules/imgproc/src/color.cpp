@@ -2989,21 +2989,20 @@ void cv::cvtColor( InputArray _src, OutputArray _dst, int code, int dcn )
             CV_Error( CV_StsBadFlag, "Unknown/unsupported color conversion code" );
     }
 }
-
- void cv::cvtColor(InputArray _src, OutputArray _dst, color_Space_Converter& colorConverter)
+template<int src_t, int dst_t> void cv::cvtColor(InputArray _src, OutputArray _dst, colorSpaceConverter<src_t, dst_t>& colorConverter)
 {
-    printf("constexpr static int src_Bit_Depth  = %i \n", colorConverter.src_Bit_Depth);
-    printf("constexpr static int src_Byte_Depth = %i \n", colorConverter.src_Byte_Depth);
-    printf("constexpr static int src_Channels   = %i \n", colorConverter.src_Channels);
-    printf("constexpr static int dst_Bit_Depth  = %i \n", colorConverter.dst_Bit_Depth);
-    printf("constexpr static int dst_Byte_Depth = %i \n", colorConverter.dst_Byte_Depth);
-    printf("constexpr static int dst_Channels   = %i \n", colorConverter.dst_Channels);
+    printf("constexpr static int src_Bit_Depth  = %i \n", colorConverter.srcType::bitDepth);
+    printf("constexpr static int src_Byte_Depth = %i \n", colorConverter.srcType::byteDepth);
+    printf("constexpr static int src_Channels   = %i \n", colorConverter.srcType::channels);
+    printf("constexpr static int dst_Bit_Depth  = %i \n", colorConverter.dstType::bitDepth);
+    printf("constexpr static int dst_Byte_Depth = %i \n", colorConverter.dstType::byteDepth);
+    printf("constexpr static int dst_Channels   = %i \n", colorConverter.dstType::channels);
 
     Mat src = _src.getMat(), dst;
     Size sz = src.size();
     int scn = src.channels(), depth = src.depth();
-    int dcn = colorConverter.dst_Channels;
-    CV_Assert( colorConverter.src_Channels == src.channels() );
+    int dcn = colorConverter.dstType::channels;
+    CV_Assert( colorConverter.srcType::channels == src.channels() );
     
             if (dcn <= 0) dcn = 3;
             CV_Assert( scn >= 3 && dcn == 3 );

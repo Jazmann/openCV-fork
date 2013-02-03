@@ -597,57 +597,57 @@ IplConvKernelFP;
 #define CV_8U_DEPTH_BITS_LOG2 3
 #define CV_8U_DEPTH_BYTES_LOG2 0
 #define CV_8U_TYPE  std::uint8_t
-#define CV_8U_MAX   std::UINT8_MAX
-#define CV_8U_MIN   std::UINT8_MIN
+#define CV_8U_MAX   UINT8_MAX
+#define CV_8U_MIN   0
 
 #define CV_8S   3
 #define CV_8S_DEPTH_BITS_LOG2 3
 #define CV_8S_DEPTH_BYTES_LOG2 0
 #define CV_8S_TYPE  std::int8_t
-#define CV_8S_MAX   std::INT8_MAX
-#define CV_8S_MIN   std::INT8_MIN
+#define CV_8S_MAX   INT8_MAX
+#define CV_8S_MIN   INT8_MIN
 
 #define CV_16U  4
 #define CV_16U_DEPTH_BITS_LOG2 4
 #define CV_16U_DEPTH_BYTES_LOG2 1
 #define CV_16U_TYPE  std::uint16_t
-#define CV_16U_MAX   std::UINT16_MAX
-#define CV_16U_MIN   std::UINT16_MIN
+#define CV_16U_MAX   UINT16_MAX
+#define CV_16U_MIN   0
 
 #define CV_16S  5
 #define CV_16S_DEPTH_BITS_LOG2 4
 #define CV_16S_DEPTH_BYTES_LOG2 1
 #define CV_16S_TYPE  std::int16_t
-#define CV_16S_MAX   std::INT16_MAX
-#define CV_16S_MIN   std::INT16_MIN
+#define CV_16S_MAX   INT16_MAX
+#define CV_16S_MIN   INT16_MIN
 
 #define CV_32U  6
 #define CV_32U_DEPTH_BITS_LOG2 5
 #define CV_32U_DEPTH_BYTES_LOG2 2
 #define CV_32U_TYPE  std::uint32_t
-#define CV_32U_MAX   std::UINT32_MAX
-#define CV_32U_MIN   std::UINT32_MIN
+#define CV_32U_MAX   UINT32_MAX
+#define CV_32U_MIN   0
 
 #define CV_32S  7
 #define CV_32S_DEPTH_BITS_LOG2 5
 #define CV_32S_DEPTH_BYTES_LOG2 2
 #define CV_32S_TYPE  std::int32_t
-#define CV_32S_MAX   std::INT32_MAX
-#define CV_32S_MIN   std::INT32_MIN
+#define CV_32S_MAX   INT32_MAX
+#define CV_32S_MIN   INT32_MIN
 
 #define CV_64U  8
 #define CV_64U_DEPTH_BITS_LOG2 6
 #define CV_64U_DEPTH_BYTES_LOG2 3
 #define CV_64U_TYPE  std::uint64_t
-#define CV_64U_MAX   std::UINT64_MAX
-#define CV_64U_MIN   std::UINT64_MIN
+#define CV_64U_MAX   UINT64_MAX
+#define CV_64U_MIN   0
 
 #define CV_64S  9
 #define CV_64S_DEPTH_BITS_LOG2 6
 #define CV_64S_DEPTH_BYTES_LOG2 3
 #define CV_64S_TYPE  std::int64_t
-#define CV_64S_MAX   std::INT64_MAX
-#define CV_64S_MIN   std::INT64_MIN
+#define CV_64S_MAX   INT64_MAX
+#define CV_64S_MIN   INT64_MIN
 
 #define CV_32F  10
 #define CV_32F_DEPTH_BITS_LOG2 5
@@ -669,47 +669,6 @@ IplConvKernelFP;
 #define CV_USRTYPE4 15
 
 
-template<int t> struct cv_Data_Type{
-    using type = unsigned char;
-};
-template<> struct cv_Data_Type<CV_2U>{
-    using type = CV_2U_TYPE;
-};
-template<> struct cv_Data_Type<CV_4U>{
-    using type = CV_4U_TYPE;
-};
-template<> struct cv_Data_Type<CV_8U>{
-    using type = CV_8U_TYPE;
-};
-template<> struct cv_Data_Type<CV_8S>{
-    using type = CV_8S_TYPE;
-};
-template<> struct cv_Data_Type<CV_16U>{
-    using type = CV_16U_TYPE;
-};
-template<> struct cv_Data_Type<CV_16S>{
-    using type = CV_16S_TYPE;
-};
-template<> struct cv_Data_Type<CV_32U>{
-    using type = CV_32U_TYPE;
-};
-template<> struct cv_Data_Type<CV_32S>{
-    using type = CV_32S_TYPE;
-};
-template<> struct cv_Data_Type<CV_64U>{
-    using type = CV_64U_TYPE;
-};
-template<> struct cv_Data_Type<CV_64S>{
-    using type = CV_64S_TYPE;
-};
-template<> struct cv_Data_Type<CV_32F>{
-    using type = CV_32F_TYPE;
-};
-template<> struct cv_Data_Type<CV_64F>{
-    using type = CV_64F_TYPE;
-};
-
-template<int cv_data_type> using cv_Type = typename cv_Data_Type<cv_data_type>::type;
 
 // CV_MAT_DEPTH_MASK bit mask which keeps only the right-most CV_CN_SHIFT bits. Keeps the user from screwing up when using CV_MAKETYPE.
 #define CV_MAT_DEPTH_MASK     (CV_DEPTH_MAX - 1)
@@ -843,6 +802,121 @@ template<int cv_data_type> using cv_Type = typename cv_Data_Type<cv_data_type>::
 #define CV_MAT_MAGIC_VAL    0x42420000
 #define CV_TYPE_NAME_MAT    "opencv-matrix"
 
+
+template<int t> struct cv_Data_Type{
+    using type = unsigned char;
+    const static int dataType = t;
+    constexpr static int bitDepth  = CV_MAT_DEPTH_BITS(t);
+    constexpr static int byteDepth = CV_MAT_DEPTH_BYTES(t);
+//    constexpr static type max  = CV_MAT_MAX(t);
+//    constexpr static type min  = CV_MAT_MIN(t);
+    
+};
+template<> struct cv_Data_Type<CV_2U>{
+    using type = CV_2U_TYPE;
+    const static int dataType = CV_2U;
+    constexpr static int bitDepth  = CV_MAT_DEPTH_BITS(CV_2U);
+    constexpr static int byteDepth = CV_MAT_DEPTH_BYTES(CV_2U);
+    constexpr static type max  = CV_2U_MAX;
+    constexpr static type min  = CV_2U_MIN;
+};
+template<> struct cv_Data_Type<CV_4U>{
+    using type = CV_4U_TYPE;
+    const static int dataType = CV_4U;
+    constexpr static int bitDepth  = CV_MAT_DEPTH_BITS(CV_4U);
+    constexpr static int byteDepth = CV_MAT_DEPTH_BYTES(CV_4U);
+    constexpr static type max  = CV_4U_MAX;
+    constexpr static type min  = CV_4U_MIN;
+};
+template<> struct cv_Data_Type<CV_8U>{
+    using type = CV_8U_TYPE;
+    const static int dataType = CV_8U;
+    constexpr static int bitDepth  = CV_MAT_DEPTH_BITS(CV_8U);
+    constexpr static int byteDepth = CV_MAT_DEPTH_BYTES(CV_8U);
+    constexpr static type max  = CV_8U_MAX;
+    constexpr static type min  = CV_8U_MIN;
+};
+template<> struct cv_Data_Type<CV_8S>{
+    using type = CV_8S_TYPE;
+    const static int dataType = CV_8S;
+    constexpr static int bitDepth  = CV_MAT_DEPTH_BITS(CV_8S);
+    constexpr static int byteDepth = CV_MAT_DEPTH_BYTES(CV_8S);
+    constexpr static type max  = CV_8S_MAX;
+    constexpr static type min  = CV_8S_MIN;
+};
+template<> struct cv_Data_Type<CV_16U>{
+    using type = CV_16U_TYPE;
+    const static int dataType = CV_16U;
+    constexpr static int bitDepth  = CV_MAT_DEPTH_BITS(CV_16U);
+    constexpr static int byteDepth = CV_MAT_DEPTH_BYTES(CV_16U);
+    constexpr static type max  = CV_16U_MAX;
+    constexpr static type min  = CV_16U_MIN;
+};
+template<> struct cv_Data_Type<CV_16S>{
+    using type = CV_16S_TYPE;
+    const static int dataType = CV_16S;
+    constexpr static int bitDepth  = CV_MAT_DEPTH_BITS(CV_16S);
+    constexpr static int byteDepth = CV_MAT_DEPTH_BYTES(CV_16S);
+    constexpr static type max  = CV_16S_MAX;
+    constexpr static type min  = CV_16S_MIN;
+};
+template<> struct cv_Data_Type<CV_32U>{
+    using type = CV_32U_TYPE;
+    const static int dataType = CV_32U;
+    constexpr static int bitDepth  = CV_MAT_DEPTH_BITS(CV_32U);
+    constexpr static int byteDepth = CV_MAT_DEPTH_BYTES(CV_32U);
+    constexpr static type max  = CV_32U_MAX;
+    constexpr static type min  = CV_32U_MIN;
+};
+template<> struct cv_Data_Type<CV_32S>{
+    using type = CV_32S_TYPE;
+    const static int dataType = CV_32S;
+    constexpr static int bitDepth  = CV_MAT_DEPTH_BITS(CV_32S);
+    constexpr static int byteDepth = CV_MAT_DEPTH_BYTES(CV_32S);
+    constexpr static type max  = CV_32S_MAX;
+    constexpr static type min  = CV_32S_MIN;
+};
+template<> struct cv_Data_Type<CV_64U>{
+    using type = CV_64U_TYPE;
+    const static int dataType = CV_64U;
+    constexpr static int bitDepth  = CV_MAT_DEPTH_BITS(CV_64U);
+    constexpr static int byteDepth = CV_MAT_DEPTH_BYTES(CV_64U);
+    constexpr static type max  = CV_64U_MAX;
+    constexpr static type min  = CV_64U_MIN;
+};
+template<> struct cv_Data_Type<CV_64S>{
+    using type = CV_64S_TYPE;
+    const static int dataType = CV_64S;
+    constexpr static int bitDepth  = CV_MAT_DEPTH_BITS(CV_64S);
+    constexpr static int byteDepth = CV_MAT_DEPTH_BYTES(CV_64S);
+    const static type max  = CV_64S_MAX;
+    const static type min  = CV_64S_MIN;
+};
+template<> struct cv_Data_Type<CV_32F>{
+    using type = CV_32F_TYPE;
+    const static int dataType = CV_32F;
+    constexpr static int bitDepth  = CV_MAT_DEPTH_BITS(CV_32F);
+    constexpr static int byteDepth = CV_MAT_DEPTH_BYTES(CV_32F);
+    constexpr static type max  = CV_32F_MAX;
+    constexpr static type min  = CV_32F_MIN;
+};
+template<> struct cv_Data_Type<CV_64F>{
+    using type = CV_64F_TYPE;
+    const static int dataType = CV_64F;
+    constexpr static int bitDepth  = CV_MAT_DEPTH_BITS(CV_64F);
+    constexpr static int byteDepth = CV_MAT_DEPTH_BYTES(CV_64F);
+    constexpr static type max  = CV_64F_MAX;
+    constexpr static type min  = CV_64F_MIN;
+};
+
+template<int cv_data_type> using cv_Type = typename cv_Data_Type<cv_data_type>::type;
+
+
+
+template<int t> struct cv_Mat_Data_Type: cv_Data_Type<CV_MAT_DEPTH(t)>{
+    constexpr static int channels  = CV_MAT_CN(t);
+    };
+    
 /* void cv_Print_Data_Type(int type){
     printf("%llu",CV_DEPTH_BITS_MAGIC);
     printf("To get back the information put into CV_MAKETYPE( depth_Type, cn) use");

@@ -1063,35 +1063,39 @@ enum
     COLOR_RGB2Rot = 131,
 
     COLOR_COLORCVT_MAX  = 132
-};
+    
 
+};
+    
     //! converts image from one color space to another
     CV_EXPORTS_W template<int src_t, int dst_t> class colorSpaceConverter{
         public :
-        const static int src_data_type = src_t, dst_data_type = dst_t;
-        constexpr static int src_Bit_Depth  = CV_MAT_DEPTH_BITS(src_t);
-        constexpr static int src_Byte_Depth = CV_MAT_DEPTH_BYTES(src_t);
-        constexpr static int src_Channels   = CV_MAT_CN(src_t);
-        constexpr static int dst_Bit_Depth  = CV_MAT_DEPTH_BITS(dst_t);
-        constexpr static int dst_Byte_Depth = CV_MAT_DEPTH_BYTES(dst_t);
-        constexpr static int dst_Channels   = CV_MAT_CN(dst_t);
-        using src_channel_type     = cv_Type<src_t>;
-        using dst_channel_type     = cv_Type<dst_t>;
-        const uint64_t targetScale = (((1 << ((sizeof(dst_channel_type) << 3)-1)) -1 ) << 1) + 1; // Range for the target type
-        virtual void operator()(const src_channel_type* src, dst_channel_type* dst, int n) const;
+        using srcType     = cv_Mat_Data_Type<src_t>;
+        using dstType     = cv_Mat_Data_Type<dst_t>;
+
+        const static int src_data_type = srcType::dataType,  dst_data_type = dstType::dataType;
+        constexpr static int src_Bit_Depth  = srcType::bitDepth; //CV_MAT_DEPTH_BITS(src_t);
+        constexpr static int src_Byte_Depth = srcType::byteDepth; //CV_MAT_DEPTH_BYTES(src_t);
+        constexpr static int src_Channels   = srcType::channels; //CV_MAT_CN(src_t);
+        constexpr static int dst_Bit_Depth  = dstType::bitDepth; //CV_MAT_DEPTH_BITS(dst_t);
+        constexpr static int dst_Byte_Depth = dstType::byteDepth; //CV_MAT_DEPTH_BYTES(dst_t);
+        constexpr static int dst_Channels   = dstType::channels; //CV_MAT_CN(dst_t);
+        using src_channel_type     = typename srcType::type;
+        using dst_channel_type     = typename dstType::type; //cv_Type<dst_t>;
+        const typename dstType::type targetScale = dstType::max; //(((1 << ((sizeof(dst_channel_type) << 3)-1)) -1 ) << 1) + 1; // Range for the target type
+        virtual void operator()(const typename srcType::type * src,  typename dstType::type * dst, int n) const;
     };
 
     CV_EXPORTS_W template<int src_t, int dst_t> struct RGB2Rot : public colorSpaceConverter<src_t, dst_t>
     {
         using cs=colorSpaceConverter<src_t, dst_t>;
-        int M[cs::dst_Channels][cs::src_Channels];
-        int TRange[cs::dst_Channels], TMin[cs::dst_Channels];
+        int M[cs::dstType::channels][cs::srcType::channels];
+        int TRange[cs::dstType::channels], TMin[cs::dstType::channels];
         int redScale, greenScale, blueScale;
         // The transform to the new color space is (T vec - 255 TMin)/TRange. 255 is the range of 8bit RGB and can be replaced directly with a different range for 16 and 32 bit RGB spaces. The division by TRange is the direct element wise division and can safely be rounded to recast in the required bit depth.
         
         RGB2Rot(const int blueIdx, Matx<int, 3, 3>& T, Vec<int, 3>& _TRange, Vec<int,3>& _TMin)
         {
-            this->src_data_type = src_t; this->dst_data_type = dst_t;
             const int idxSrc[3] = {(blueIdx+2)%4,1,blueIdx}; // (blueIdx+2)%4 = 2 if blueIdx = 0
             const int idxDst[3] = {(blueIdx+2)%4,1,blueIdx}; //                 0 if blueIdx = 2
             for(int i=0;i<3;i++){
@@ -1159,8 +1163,8 @@ enum
             Matx<int, 3, 1> RGBCubeMax = MaxInRow<int, 3, 8>(RGBBoxInNew);
             Matx<int, 3, 1> RGBCubeMin = MinInRow<int, 3, 8>(RGBBoxInNew);
             Matx<int, 3, 1> RGBCubeRange = RGBCubeMax - RGBCubeMin;
-            for(int i = 0; i < cs::dst_Channels; i++){
-                for(int j = 0; j < cs::src_Channels; j++){
+            for(int i = 0; i < cs::dstType::channels; i++){
+                for(int j = 0; j < cs::srcType::channels; j++){
                     M[i][j] = Ti(i,j);
                 }
             }
@@ -1172,10 +1176,10 @@ enum
             blueScale  = (TRange[2] / cs::targetScale)+1;
         }
         
-        void operator()(const cs::src_channel_type* src, typename cs::dst_channel_type* dst, int n) const
+        void operator()(const typename cs::srcType::type* src, typename cs::dstType::type* dst, int n) const
         {
-            int scn = cs::src_Channels;
-            int dcn = cs::dst_Channels;
+            int scn = cs::srcType::channels;
+            int dcn = cs::dstType::channels;
             
             n *= dcn;
             for(int i = 0; i < n; i += dcn, src += scn)
@@ -1183,15 +1187,15 @@ enum
                 int X = src[0]*M[0][0] + src[1]*M[0][1] + src[2]*M[0][2] + TMin[0]; // CV_DESCALE(x,n) = (((x) + (1 << ((n)-1))) >> (n))
                 int Y = src[0]*M[1][0] + src[1]*M[1][1] + src[2]*M[1][2] + TMin[1]; // could be used in place of * scale
                 int Z = src[0]*M[2][0] + src[1]*M[2][1] + src[2]*M[2][2] + TMin[2]; // Find shift which fits TRange into the desired bit depth.
-                dst[i  ] = saturate_cast<cs::dst_channel_type>(X /   redScale);
-                dst[i+1] = saturate_cast<cs::dst_channel_type>(Y / greenScale);
-                dst[i+2] = saturate_cast<cs::dst_channel_type>(Z /  blueScale);
+                dst[i  ] = saturate_cast<typename cs::dstType::type>(X /   redScale);
+                dst[i+1] = saturate_cast<typename cs::dstType::type>(Y / greenScale);
+                dst[i+2] = saturate_cast<typename cs::dstType::type>(Z /  blueScale);
             }
         }
     };
 ;
     CV_EXPORTS_W void cvtColor( InputArray src, OutputArray dst, int code, int dstCn=0 );
-    CV_EXPORTS_W void cvtColor(InputArray _src, OutputArray _dst, colorSpaceConverter& _color_Conv);
+    CV_EXPORTS_W  template<int src_t, int dst_t> void cvtColor(InputArray _src, OutputArray _dst, colorSpaceConverter<src_t, dst_t>& _color_Conv);
     template <typename Cvt> CV_EXPORTS_W void CvtColorLoop(const Mat& src, Mat& dst, const Cvt& cvt);
 
 //! raster image moments
