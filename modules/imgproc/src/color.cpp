@@ -2990,25 +2990,29 @@ void cv::cvtColor( InputArray _src, OutputArray _dst, int code, int dcn )
     }
 }
 
- void cv::cvtColor(InputArray _src, OutputArray _dst, color_Space_Converter& _color_Conv)
+ void cv::cvtColor(InputArray _src, OutputArray _dst, color_Space_Converter& colorConverter)
 {
+    printf("constexpr static int src_Bit_Depth  = %i \n", colorConverter.src_Bit_Depth);
+    printf("constexpr static int src_Byte_Depth = %i \n", colorConverter.src_Byte_Depth);
+    printf("constexpr static int src_Channels   = %i \n", colorConverter.src_Channels);
+    printf("constexpr static int dst_Bit_Depth  = %i \n", colorConverter.dst_Bit_Depth);
+    printf("constexpr static int dst_Byte_Depth = %i \n", colorConverter.dst_Byte_Depth);
+    printf("constexpr static int dst_Channels   = %i \n", colorConverter.dst_Channels);
+
     Mat src = _src.getMat(), dst;
     Size sz = src.size();
-    int scn = src.channels(), depth = src.depth(), bidx;
-    int dcn = 3;
-    CV_Assert( depth == CV_8U || depth == CV_16U || depth == CV_32F );
+    int scn = src.channels(), depth = src.depth();
+    int dcn = colorConverter.dst_Channels;
+    CV_Assert( colorConverter.src_Channels == src.channels() );
     
             if (dcn <= 0) dcn = 3;
             CV_Assert( scn >= 3 && dcn == 3 );
             
             _dst.create(sz, CV_MAKETYPE(depth, dcn));
             dst = _dst.getMat();
-            cv::Matx<int, 3, 3> M(0,1,0,1,0,0,0,0,1);
-            cv::Vec<int, 3>  TRange(255,255,255);
-            cv::Vec<int,3>   TMin(0,0,0);
             if( depth == CV_8U )
             {
-                CvtColorLoop(src, dst, RGB2Rot<CV_8UC3,CV_8UC3>(0, M, TRange, TMin));
+                CvtColorLoop(src, dst, colorConverter);
             } else {
                 CV_Error( CV_StsBadArg, "Unsupported image depth" );
             }
