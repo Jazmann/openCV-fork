@@ -1073,22 +1073,12 @@ enum
         using srcType     = cv_Mat_Data_Type<src_t>;
         using dstType     = cv_Mat_Data_Type<dst_t>;
         using wrkType     = std::uint64_t;
-
-        const static int src_data_type = srcType::dataType,  dst_data_type = dstType::dataType;
-        constexpr static int src_Bit_Depth  = srcType::bitDepth; //CV_MAT_DEPTH_BITS(src_t);
-        constexpr static int src_Byte_Depth = srcType::byteDepth; //CV_MAT_DEPTH_BYTES(src_t);
-        constexpr static int src_Channels   = srcType::channels; //CV_MAT_CN(src_t);
-        constexpr static int dst_Bit_Depth  = dstType::bitDepth; //CV_MAT_DEPTH_BITS(dst_t);
-        constexpr static int dst_Byte_Depth = dstType::byteDepth; //CV_MAT_DEPTH_BYTES(dst_t);
-        constexpr static int dst_Channels   = dstType::channels; //CV_MAT_CN(dst_t);
-        using src_channel_type     = typename srcType::type;
-        using dst_channel_type     = typename dstType::type; //cv_Type<dst_t>;
-        const typename dstType::type targetScale = dstType::max; //(((1 << ((sizeof(dst_channel_type) << 3)-1)) -1 ) << 1) + 1; // Range for the target type
-        virtual void operator()(const typename srcType::type * src,  typename dstType::type * dst, int n) const;
+        virtual void operator()(const typename srcType::type * src,  typename dstType::type * dst, int n) const = 0;
     };
 
-    CV_EXPORTS_W template<int src_t, int dst_t> struct RGB2Rot : public colorSpaceConverter<src_t, dst_t>
+    CV_EXPORTS_W template<int src_t, int dst_t> class RGB2Rot: public colorSpaceConverter<src_t, dst_t>
     {
+    public :
         using cs=colorSpaceConverter<src_t, dst_t>;
         int M[cs::dstType::channels][cs::srcType::channels];
         int TRange[cs::dstType::channels], TMin[cs::dstType::channels];
@@ -1191,7 +1181,36 @@ enum
         }
     };
 ;
-    CV_EXPORTS_W  template<int src_t, int dst_t> void convertColor(InputArray _src, OutputArray _dst, colorSpaceConverter<src_t, dst_t>& _color_Conv);
+//    CV_EXPORTS_W  template<int src_t, int dst_t> void convertColor(InputArray _src, OutputArray _dst, RGB2Rot<src_t, dst_t>& colorConverter); //colorSpaceConverter<src_t, dst_t>& _color_Conv);
+    CV_EXPORTS_W template<int src_t, int dst_t> void convertColor(InputArray _src, OutputArray _dst, colorSpaceConverter<src_t, dst_t>& colorConverter)
+    {
+        printf("constexpr static int src_Bit_Depth  = %i \n", colorConverter.srcType::bitDepth);
+        printf("constexpr static int src_Byte_Depth = %i \n", colorConverter.srcType::byteDepth);
+        printf("constexpr static int src_Channels   = %i \n", colorConverter.srcType::channels);
+        printf("constexpr static int dst_Bit_Depth  = %i \n", colorConverter.dstType::bitDepth);
+        printf("constexpr static int dst_Byte_Depth = %i \n", colorConverter.dstType::byteDepth);
+        printf("constexpr static int dst_Channels   = %i \n", colorConverter.dstType::channels);
+        
+        Mat src = _src.getMat(), dst;
+        Size sz = src.size();
+        int scn = src.channels(), depth = src.depth();
+        int dcn = colorConverter.dstType::channels;
+        // CV_Assert( colorConverter.srcType::channels == src.channels() );
+        
+        if (dcn <= 0) dcn = 3;
+        CV_Assert( scn >= 3 && dcn == 3 );
+        
+        _dst.create(sz, CV_MAKETYPE(depth, dcn));
+        dst = _dst.getMat();
+        if( depth == CV_8U )
+        {
+            CvtColorLoop(src, dst, colorConverter);
+        } else {
+            CV_Error( CV_StsBadArg, "Unsupported image depth" );
+        }
+        
+    }
+    
     template <typename Cvt> CV_EXPORTS_W void CvtColorLoop(const Mat& src, Mat& dst, const Cvt& cvt);
     
     CV_EXPORTS_W void cvtColor( InputArray src, OutputArray dst, int code, int dstCn=0 );
