@@ -1080,6 +1080,8 @@ enum
     {
     public :
         using cs=colorSpaceConverter<src_t, dst_t>;
+        using srcTp     = colorSpaceConverter<src_t, dst_t>::srcType;
+        using dstTp     = colorSpaceConverter<src_t, dst_t>::dstType;
         int M[cs::dstType::channels][cs::srcType::channels];
         int TRange[cs::dstType::channels], TMin[cs::dstType::channels];
         int redScale, greenScale, blueScale;
@@ -1184,17 +1186,17 @@ enum
 //    CV_EXPORTS_W  template<int src_t, int dst_t> void convertColor(InputArray _src, OutputArray _dst, RGB2Rot<src_t, dst_t>& colorConverter); //colorSpaceConverter<src_t, dst_t>& _color_Conv);
     CV_EXPORTS_W template<int src_t, int dst_t> void convertColor(InputArray _src, OutputArray _dst, colorSpaceConverter<src_t, dst_t>& colorConverter)
     {
-        printf("constexpr static int src_Bit_Depth  = %i \n", colorConverter.srcType::bitDepth);
-        printf("constexpr static int src_Byte_Depth = %i \n", colorConverter.srcType::byteDepth);
-        printf("constexpr static int src_Channels   = %i \n", colorConverter.srcType::channels);
-        printf("constexpr static int dst_Bit_Depth  = %i \n", colorConverter.dstType::bitDepth);
-        printf("constexpr static int dst_Byte_Depth = %i \n", colorConverter.dstType::byteDepth);
-        printf("constexpr static int dst_Channels   = %i \n", colorConverter.dstType::channels);
+        printf("constexpr static int src_Bit_Depth  = %i \n", colorConverter.srcTp::bitDepth);
+        printf("constexpr static int src_Byte_Depth = %i \n", colorConverter.srcTp::byteDepth);
+        printf("constexpr static int src_Channels   = %i \n", colorConverter.srcTp::channels);
+        printf("constexpr static int dst_Bit_Depth  = %i \n", colorConverter.dstTp::bitDepth);
+        printf("constexpr static int dst_Byte_Depth = %i \n", colorConverter.dstTp::byteDepth);
+        printf("constexpr static int dst_Channels   = %i \n", colorConverter.dstTp::channels);
         
         Mat src = _src.getMat(), dst;
         Size sz = src.size();
         int scn = src.channels(), depth = src.depth();
-        int dcn = colorConverter.dstType::channels;
+        int dcn = colorConverter.dstTp::channels;
         // CV_Assert( colorConverter.srcType::channels == src.channels() );
         
         if (dcn <= 0) dcn = 3;
