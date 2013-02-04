@@ -1072,6 +1072,7 @@ enum
         public :
         using srcType     = cv_Mat_Data_Type<src_t>;
         using dstType     = cv_Mat_Data_Type<dst_t>;
+        using wrkType     = std::uint64_t;
 
         const static int src_data_type = srcType::dataType,  dst_data_type = dstType::dataType;
         constexpr static int src_Bit_Depth  = srcType::bitDepth; //CV_MAT_DEPTH_BITS(src_t);
@@ -1105,14 +1106,13 @@ enum
                 TRange[i] = _TRange[idxDst[i]];
                 TMin[i]   = _TMin[  idxDst[i]];
             }
-            redScale   = (TRange[0] / cs::targetScale)+1;
-            greenScale = (TRange[1] / cs::targetScale)+1;
-            blueScale  = (TRange[2] / cs::targetScale)+1;
+            redScale   = (TRange[0] / cs::dstType::max)+1;
+            greenScale = (TRange[1] / cs::dstType::max)+1;
+            blueScale  = (TRange[2] / cs::dstType::max)+1;
         };
         
         
         RGB2Rot(Vec<int, 3> sp0, Vec<int, 3> sp1, Vec<int, 3> sp2){
-            this->src_data_type = src_t; this->dst_data_type = dst_t;
             sVec<int, 3> v1(1.0, sp1 - sp0); v1.factor(); v1.scale=1.0;
             sVec<int, 3> v2(1.0, sp2 - sp0); v2.factor(); v2.scale=1.0;
             
@@ -1171,32 +1171,30 @@ enum
             TMin[0] = RGBCubeMin(0,0); TRange[0] = RGBCubeRange(0,0);
             TMin[1] = RGBCubeMin(1,0); TRange[1] = RGBCubeRange(1,0);
             TMin[2] = RGBCubeMin(2,0); TRange[2] = RGBCubeRange(2,0);
-            redScale   = (TRange[0] / cs::targetScale)+1;
-            greenScale = (TRange[1] / cs::targetScale)+1;
-            blueScale  = (TRange[2] / cs::targetScale)+1;
+            redScale   = (TRange[0] / cs::dstType::max)+1;
+            greenScale = (TRange[1] / cs::dstType::max)+1;
+            blueScale  = (TRange[2] / cs::dstType::max)+1;
         }
         
         void operator()(const typename cs::srcType::type* src, typename cs::dstType::type* dst, int n) const
         {
-            int scn = cs::srcType::channels;
-            int dcn = cs::dstType::channels;
-            
-            n *= dcn;
-            for(int i = 0; i < n; i += dcn, src += scn)
+            n *= cs::dstType::channels;
+            for(int i = 0; i < n; i += cs::dstType::channels, src += cs::srcType::channels)
             {
-                int X = src[0]*M[0][0] + src[1]*M[0][1] + src[2]*M[0][2] + TMin[0]; // CV_DESCALE(x,n) = (((x) + (1 << ((n)-1))) >> (n))
-                int Y = src[0]*M[1][0] + src[1]*M[1][1] + src[2]*M[1][2] + TMin[1]; // could be used in place of * scale
-                int Z = src[0]*M[2][0] + src[1]*M[2][1] + src[2]*M[2][2] + TMin[2]; // Find shift which fits TRange into the desired bit depth.
-                dst[i  ] = saturate_cast<typename cs::dstType::type>(X /   redScale);
-                dst[i+1] = saturate_cast<typename cs::dstType::type>(Y / greenScale);
-                dst[i+2] = saturate_cast<typename cs::dstType::type>(Z /  blueScale);
+                typename cs::wrkType X = src[0]*M[0][0] + src[1]*M[0][1] + src[2]*M[0][2] + TMin[0]; // CV_DESCALE(x,n) = (((x) + (1 << ((n)-1))) >> (n))
+                typename cs::wrkType Y = src[0]*M[1][0] + src[1]*M[1][1] + src[2]*M[1][2] + TMin[1]; // could be used in place of * scale
+                typename cs::wrkType Z = src[0]*M[2][0] + src[1]*M[2][1] + src[2]*M[2][2] + TMin[2]; // Find shift which fits TRange into the desired bit depth.
+                dst[i  ] = (typename cs::dstType::type)(X /   redScale);
+                dst[i+1] = (typename cs::dstType::type)(Y / greenScale);
+                dst[i+2] = (typename cs::dstType::type)(Z /  blueScale);
             }
         }
     };
 ;
-    CV_EXPORTS_W void cvtColor( InputArray src, OutputArray dst, int code, int dstCn=0 );
-    CV_EXPORTS_W  template<int src_t, int dst_t> void cvtColor(InputArray _src, OutputArray _dst, colorSpaceConverter<src_t, dst_t>& _color_Conv);
+    CV_EXPORTS_W  template<int src_t, int dst_t> void convertColor(InputArray _src, OutputArray _dst, colorSpaceConverter<src_t, dst_t>& _color_Conv);
     template <typename Cvt> CV_EXPORTS_W void CvtColorLoop(const Mat& src, Mat& dst, const Cvt& cvt);
+    
+    CV_EXPORTS_W void cvtColor( InputArray src, OutputArray dst, int code, int dstCn=0 );
 
 //! raster image moments
 class CV_EXPORTS_W_MAP Moments

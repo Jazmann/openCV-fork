@@ -2966,6 +2966,7 @@ void cv::cvtColor( InputArray _src, OutputArray _dst, int code, int dcn )
                 }
             }
             break;
+/*
         case CV_RGB2Rot:
         {
             if (dcn <= 0) dcn = 3;
@@ -2984,12 +2985,12 @@ void cv::cvtColor( InputArray _src, OutputArray _dst, int code, int dcn )
             }
         }
             break;
-
+*/
         default:
             CV_Error( CV_StsBadFlag, "Unknown/unsupported color conversion code" );
     }
 }
-template<int src_t, int dst_t> void cv::cvtColor(InputArray _src, OutputArray _dst, colorSpaceConverter<src_t, dst_t>& colorConverter)
+template<int src_t, int dst_t> void cv::convertColor(InputArray _src, OutputArray _dst, colorSpaceConverter<src_t, dst_t>& colorConverter)
 {
     printf("constexpr static int src_Bit_Depth  = %i \n", colorConverter.srcType::bitDepth);
     printf("constexpr static int src_Byte_Depth = %i \n", colorConverter.srcType::byteDepth);
@@ -3002,7 +3003,7 @@ template<int src_t, int dst_t> void cv::cvtColor(InputArray _src, OutputArray _d
     Size sz = src.size();
     int scn = src.channels(), depth = src.depth();
     int dcn = colorConverter.dstType::channels;
-    CV_Assert( colorConverter.srcType::channels == src.channels() );
+   // CV_Assert( colorConverter.srcType::channels == src.channels() );
     
             if (dcn <= 0) dcn = 3;
             CV_Assert( scn >= 3 && dcn == 3 );
