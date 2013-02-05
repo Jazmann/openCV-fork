@@ -3019,12 +3019,19 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
             TRange[i] = _TRange[idxDst[i]];
             TMin[i]   = _TMin[  idxDst[i]];
         }
-        redScale   = (TRange[0] / cs::dstType::max)+1;
-        greenScale = (TRange[1] / cs::dstType::max)+1;
-        blueScale  = (TRange[2] / cs::dstType::max)+1;
     };
-    
-    
+
+CV_EXPORTS_W template<int src_t, int dst_t> inline typename cv::colorSpaceConverter<src_t, dst_t>::dstType::type cv::RGB2Rot<src_t, dst_t>::redScale(typename cv::colorSpaceConverter<src_t, dst_t>::wrkType x) const{
+    return (typename cv::colorSpaceConverter<src_t, dst_t>::dstType::type) ((x + TMin[0])/((TRange[0] / cv::colorSpaceConverter<src_t, dst_t>::dstType::max)+1));
+}
+CV_EXPORTS_W template<int src_t, int dst_t> inline typename cv::colorSpaceConverter<src_t, dst_t>::dstType::type cv::RGB2Rot<src_t, dst_t>::greenScale(typename cv::colorSpaceConverter<src_t, dst_t>::wrkType x) const{
+    return (typename cv::colorSpaceConverter<src_t, dst_t>::dstType::type) (x + TMin[1])/((TRange[1] / cv::colorSpaceConverter<src_t, dst_t>::dstType::max)+1);
+}
+CV_EXPORTS_W template<int src_t, int dst_t> inline typename cv::colorSpaceConverter<src_t, dst_t>::dstType::type cv::RGB2Rot<src_t, dst_t>::blueScale(const typename cv::colorSpaceConverter<src_t, dst_t>::wrkType x) const {
+    return (typename cv::colorSpaceConverter<src_t, dst_t>::dstType::type) (x + TMin[2])/((TRange[2] / cv::colorSpaceConverter<src_t, dst_t>::dstType::max)+1);
+}
+
+
 CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(cv::Vec<int, 3> sp0, cv::Vec<int, 3> sp1, cv::Vec<int, 3> sp2){
         cv::sVec<int, 3> v1(1.0, sp1 - sp0); v1.factor(); v1.scale=1.0;
         cv::sVec<int, 3> v2(1.0, sp2 - sp0); v2.factor(); v2.scale=1.0;
@@ -3076,49 +3083,46 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
         cv::Matx<int, 3, 1> RGBCubeMax = cv::MaxInRow<int, 3, 8>(RGBBoxInNew);
         cv::Matx<int, 3, 1> RGBCubeMin = cv::MinInRow<int, 3, 8>(RGBBoxInNew);
         cv::Matx<int, 3, 1> RGBCubeRange = RGBCubeMax - RGBCubeMin;
-        for(int i = 0; i < cs::dstType::channels; i++){
-            for(int j = 0; j < cs::srcType::channels; j++){
+        for(int i = 0; i < cv::colorSpaceConverter<src_t, dst_t>::dstType::channels; i++){
+            for(int j = 0; j < cv::colorSpaceConverter<src_t, dst_t>::srcType::channels; j++){
                 M[i][j] = Ti(i,j);
             }
         }
         TMin[0] = RGBCubeMin(0,0); TRange[0] = RGBCubeRange(0,0);
         TMin[1] = RGBCubeMin(1,0); TRange[1] = RGBCubeRange(1,0);
         TMin[2] = RGBCubeMin(2,0); TRange[2] = RGBCubeRange(2,0);
-        redScale   = (TRange[0] / cs::dstType::max)+1;
-        greenScale = (TRange[1] / cs::dstType::max)+1;
-        blueScale  = (TRange[2] / cs::dstType::max)+1;
-    }
-    
-CV_EXPORTS_W template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::operator()(const typename cs::srcType::type* src, typename cs::dstType::type* dst, int n) const
+}
+
+CV_EXPORTS_W template<int src_t, int dst_t> inline void cv::RGB2Rot<src_t, dst_t>::operator()(const typename cv::colorSpaceConverter<src_t, dst_t>::srcType::type* src, typename cv::colorSpaceConverter<src_t, dst_t>::dstType::type* dst, int n) const
     {
-        n *= cs::dstType::channels;
-        for(int i = 0; i < n; i += cs::dstType::channels, src += cs::srcType::channels)
+        n *= cv::colorSpaceConverter<src_t, dst_t>::dstType::channels;
+        for(int i = 0; i < n; i += cv::colorSpaceConverter<src_t, dst_t>::dstType::channels, src += cv::colorSpaceConverter<src_t, dst_t>::srcType::channels)
         {
-            typename cs::wrkType X = src[0]*M[0][0] + src[1]*M[0][1] + src[2]*M[0][2] + TMin[0]; // CV_DESCALE(x,n) = (((x) + (1 << ((n)-1))) >> (n))
-            typename cs::wrkType Y = src[0]*M[1][0] + src[1]*M[1][1] + src[2]*M[1][2] + TMin[1]; // could be used in place of * scale
-            typename cs::wrkType Z = src[0]*M[2][0] + src[1]*M[2][1] + src[2]*M[2][2] + TMin[2]; // Find shift which fits TRange into the desired bit depth.
-            dst[i  ] = (typename cs::dstType::type)(X /   redScale);
-            dst[i+1] = (typename cs::dstType::type)(Y / greenScale);
-            dst[i+2] = (typename cs::dstType::type)(Z /  blueScale);
+            typename cv::colorSpaceConverter<src_t, dst_t>::wrkType X = src[0]*M[0][0] + src[1]*M[0][1] + src[2]*M[0][2]; // CV_DESCALE(x,n) = (((x) + (1 << ((n)-1))) >> (n))
+            typename cv::colorSpaceConverter<src_t, dst_t>::wrkType Y = src[0]*M[1][0] + src[1]*M[1][1] + src[2]*M[1][2]; // could be used in place of * scale
+            typename cv::colorSpaceConverter<src_t, dst_t>::wrkType Z = src[0]*M[2][0] + src[1]*M[2][1] + src[2]*M[2][2]; // Find shift which fits TRange into the desired bit depth.
+            dst[i  ] = redScale(X);
+            dst[i+1] = greenScale(Y);
+            dst[i+2] = blueScale(Z);
         }
     }
 
 template class cv::RGB2Rot<CV_8UC3,CV_8UC3>;
 template class cv::RGB2Rot<CV_8UC4,CV_8UC3>;
 
-CV_EXPORTS_W template<int src_t, int dst_t> void cv::convertColor(cv::InputArray _src, cv::OutputArray _dst, colorSpaceConverter<src_t, dst_t>& colorConverter)
+CV_EXPORTS_W template<int src_t, int dst_t> void cv::convertColor(cv::InputArray _src, cv::OutputArray _dst, cv::colorSpaceConverter<src_t, dst_t>& colorConverter)
 {
-    printf("constexpr static int src_Bit_Depth  = %i \n", colorSpaceConverter<src_t, dst_t>::srcType::bitDepth);
-    printf("constexpr static int src_Byte_Depth = %i \n", colorSpaceConverter<src_t, dst_t>::srcType::byteDepth);
-    printf("constexpr static int src_Channels   = %i \n", colorSpaceConverter<src_t, dst_t>::srcType::channels);
-    printf("constexpr static int dst_Bit_Depth  = %i \n", colorSpaceConverter<src_t, dst_t>::dstType::bitDepth);
-    printf("constexpr static int dst_Byte_Depth = %i \n", colorSpaceConverter<src_t, dst_t>::dstType::byteDepth);
-    printf("constexpr static int dst_Channels   = %i \n", colorSpaceConverter<src_t, dst_t>::dstType::channels);
+    printf("constexpr static int src_Bit_Depth  = %i \n", cv::colorSpaceConverter<src_t, dst_t>::srcType::bitDepth);
+    printf("constexpr static int src_Byte_Depth = %i \n", cv::colorSpaceConverter<src_t, dst_t>::srcType::byteDepth);
+    printf("constexpr static int src_Channels   = %i \n", cv::colorSpaceConverter<src_t, dst_t>::srcType::channels);
+    printf("constexpr static int dst_Bit_Depth  = %i \n", cv::colorSpaceConverter<src_t, dst_t>::dstType::bitDepth);
+    printf("constexpr static int dst_Byte_Depth = %i \n", cv::colorSpaceConverter<src_t, dst_t>::dstType::byteDepth);
+    printf("constexpr static int dst_Channels   = %i \n", cv::colorSpaceConverter<src_t, dst_t>::dstType::channels);
     
     cv::Mat src = _src.getMat(), dst;
     cv::Size sz = src.size();
     int scn = src.channels(), depth = src.depth();
-    int dcn = colorSpaceConverter<src_t, dst_t>::dstType::channels;
+    int dcn = cv::colorSpaceConverter<src_t, dst_t>::dstType::channels;
     // CV_Assert( colorConverter.srcType::channels == src.channels() );
     
     if (dcn <= 0) dcn = 3;
@@ -3135,8 +3139,8 @@ CV_EXPORTS_W template<int src_t, int dst_t> void cv::convertColor(cv::InputArray
     
 }
 
-template void cv::convertColor<CV_8UC3,CV_8UC3>(cv::InputArray _src, cv::OutputArray _dst, colorSpaceConverter<CV_8UC3, CV_8UC3>& colorConverter);
-template void cv::convertColor<CV_8UC4,CV_8UC3>(cv::InputArray _src, cv::OutputArray _dst, colorSpaceConverter<CV_8UC4, CV_8UC3>& colorConverter);
+template void cv::convertColor<CV_8UC3,CV_8UC3>(cv::InputArray _src, cv::OutputArray _dst, cv::colorSpaceConverter<CV_8UC3, CV_8UC3>& colorConverter);
+template void cv::convertColor<CV_8UC4,CV_8UC3>(cv::InputArray _src, cv::OutputArray _dst, cv::colorSpaceConverter<CV_8UC4, CV_8UC3>& colorConverter);
 
 CV_IMPL void
 cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )

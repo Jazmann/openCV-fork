@@ -1083,10 +1083,12 @@ enum
     CV_EXPORTS_W template<int src_t, int dst_t> class RGB2Rot: public colorSpaceConverter<src_t, dst_t>
     {
         public :
-        using cs=colorSpaceConverter<src_t, dst_t>;
+        using cs = colorSpaceConverter<src_t, dst_t>;
         int M[cs::dstType::channels][cs::srcType::channels];
         int TRange[cs::dstType::channels], TMin[cs::dstType::channels];
-        int redScale, greenScale, blueScale;
+        typename cs::dstType::type redScale(  typename cs::wrkType x) const;
+        typename cs::dstType::type greenScale(typename cs::wrkType x) const;
+        typename cs::dstType::type blueScale( typename cs::wrkType x) const;
         
         RGB2Rot(const int blueIdx, Matx<int, 3, 3>& T, Vec<int, 3>& _TRange, Vec<int,3>& _TMin);
         
