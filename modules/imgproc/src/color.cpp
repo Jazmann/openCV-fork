@@ -122,6 +122,39 @@ namespace cv
         
         return sign*y;
     }
+    double erf(double a, double b)
+    {
+        // constants
+        double a1 =  0.254829592;
+        double a2 = -0.284496736;
+        double a3 =  1.421413741;
+        double a4 = -1.453152027;
+        double a5 =  1.061405429;
+        double p  =  0.3275911;
+        
+        // Save the sign of x
+        int sign = 1;
+        if (a < 0) sign *= -1; a = fabs(a);
+        if (b < 0) sign *= -1; b = fabs(b);
+        
+        // A&S formula 7.1.26
+        double pr = 1/p;
+        double t = (pr*b)/(a + pr*b);
+        double y = 1.0 - (((((a5*t + a4)*t) + a3)*t + a2)*t + a1)*t*exp(-(a*a)/(b*b));
+        
+        return sign*y;
+    }
+
+    
+    
+template<typename src_t, typename dst_t>  dst_t  distributeErf(double g, src_t c, src_t sMin, src_t sMax, dst_t dMin, dst_t dMax){
+    src_t sRange = (sMax - sMin);
+    dst_t dRange = (dMax - dMin);
+    wrk_t ErfA = Erf((g*(c - sMin))/sRange);
+    wrk_t ErfB = Erf((g*(c - sMax))/sRange);
+    dMin - (dRange*(ErfA + Erf((g*(-c + x))/sRange)))/
+    (ErfB + ErfA)
+    }
     
     
 // computes cubic spline coefficients for a function: (xi=i, yi=f[i]), i=0..n
