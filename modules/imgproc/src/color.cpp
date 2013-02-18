@@ -147,14 +147,14 @@ namespace cv
 
     
     
-template<typename src_t, typename dst_t>  dst_t  distributeErf(double g, src_t c, src_t sMin, src_t sMax, dst_t dMin, dst_t dMax){
-    src_t sRange = (sMax - sMin);
-    dst_t dRange = (dMax - dMin);
-    wrk_t ErfA = Erf((g*(c - sMin))/sRange);
-    wrk_t ErfB = Erf((g*(c - sMax))/sRange);
-    dMin - (dRange*(ErfA + Erf((g*(-c + x))/sRange)))/
-    (ErfB + ErfA)
-    }
+//template<typename src_t, typename dst_t>  dst_t  distributeErf(double g, src_t c, src_t sMin, src_t sMax, dst_t dMin, dst_t dMax){
+//    src_t sRange = (sMax - sMin);
+//    dst_t dRange = (dMax - dMin);
+//    wrk_t ErfA = Erf((g*(c - sMin))/sRange);
+//    wrk_t ErfB = Erf((g*(c - sMax))/sRange);
+//    dMin - (dRange*(ErfA + Erf((g*(-c + x))/sRange)))/
+//    (ErfB + ErfA)
+//    }
     
     
 // computes cubic spline coefficients for a function: (xi=i, yi=f[i]), i=0..n
