@@ -144,19 +144,211 @@ namespace cv
         
         return sign*y;
     }
+    
+    
 
+    CV_EXPORTS_W template<int src_t, int dst_t>  class  distributeErf
+    {
+        public :
+        using srcType = cv_Mat_Data_Type<src_t>;
+        using dstType = cv_Mat_Data_Type<dst_t>;
+        using wrkType = double;
+        srcType sRange, c;
+        wrkType g;
+        dstType shift, scale;
+        
+        distributeErf(wrkType _g, srcType _c, srcType sMin, srcType sMax, dstType dMin, dstType dMax): g(_g), c(_c) {
+            CV_Assert(sMin <= c && c <= sMax && dMin <= sMax);
+            sRange = (sMax - sMin);
+            dstType dRange = (dMax - dMin);
+            wrkType ErfA = erf((g*(c - sMin)), wrkType(sRange));
+            wrkType ErfB = erf((g*(sMax - c)), wrkType(sRange)) + ErfA;
+            shift = dstType(dMin - dRange * ErfA / ErfB);
+            scale = dstType(dRange / ErfB);
+        }
+        void operator()(const srcType src, dstType dst) const
+        {
+            if(x >= c){
+                dst = shift + dstType(scale * erf((g*(x - c)), sRange))))
+            }else{
+                dst = shift - dstType(scale * erf((g*(c - x)), sRange))))
+            }
+        }
+    }
     
     
-//template<typename src_t, typename dst_t>  dst_t  distributeErf(double g, src_t c, src_t sMin, src_t sMax, dst_t dMin, dst_t dMax){
-//    src_t sRange = (sMax - sMin);
-//    dst_t dRange = (dMax - dMin);
-//    wrk_t ErfA = Erf((g*(c - sMin))/sRange);
-//    wrk_t ErfB = Erf((g*(c - sMax))/sRange);
-//    dMin - (dRange*(ErfA + Erf((g*(-c + x))/sRange)))/
-//    (ErfB + ErfA)
-//    }
+    template class distributeErf<CV_2U,CV_2U>;
+    template class distributeErf<CV_2U,CV_4U>;
+    template class distributeErf<CV_2U,CV_8U>;
+    template class distributeErf<CV_2U,CV_16U>;
+    template class distributeErf<CV_2U,CV_32U>;
+    template class distributeErf<CV_2U,CV_64U>;
+    
+    template class distributeErf<CV_4U,CV_2U>;
+    template class distributeErf<CV_4U,CV_4U>;
+    template class distributeErf<CV_4U,CV_8U>;
+    template class distributeErf<CV_4U,CV_16U>;
+    template class distributeErf<CV_4U,CV_32U>;
+    template class distributeErf<CV_4U,CV_64U>;
+    
+    template class distributeErf<CV_8U,CV_2U>;
+    template class distributeErf<CV_8U,CV_4U>;
+    template class distributeErf<CV_8U,CV_8U>;
+    template class distributeErf<CV_8U,CV_16U>;
+    template class distributeErf<CV_8U,CV_32U>;
+    template class distributeErf<CV_8U,CV_64U>;
+    
+    template class distributeErf<CV_16U,CV_2U>;
+    template class distributeErf<CV_16U,CV_4U>;
+    template class distributeErf<CV_16U,CV_8U>;
+    template class distributeErf<CV_16U,CV_16U>;
+    template class distributeErf<CV_16U,CV_32U>;
+    template class distributeErf<CV_16U,CV_64U>;
+    
+    template class distributeErf<CV_32U,CV_2U>;
+    template class distributeErf<CV_32U,CV_4U>;
+    template class distributeErf<CV_32U,CV_8U>;
+    template class distributeErf<CV_32U,CV_16U>;
+    template class distributeErf<CV_32U,CV_32U>;
+    template class distributeErf<CV_32U,CV_64U>;
+    
+    template class distributeErf<CV_64U,CV_2U>;
+    template class distributeErf<CV_64U,CV_4U>;
+    template class distributeErf<CV_64U,CV_8U>;
+    template class distributeErf<CV_64U,CV_16U>;
+    template class distributeErf<CV_64U,CV_32U>;
+    template class distributeErf<CV_64U,CV_64U>;
     
     
+    template class distributeErf<CV_2S,CV_2U>;
+    template class distributeErf<CV_2S,CV_4U>;
+    template class distributeErf<CV_2S,CV_8U>;
+    template class distributeErf<CV_2S,CV_16U>;
+    template class distributeErf<CV_2S,CV_32U>;
+    template class distributeErf<CV_2S,CV_64U>;
+    
+    template class distributeErf<CV_4S,CV_2U>;
+    template class distributeErf<CV_4S,CV_4U>;
+    template class distributeErf<CV_4S,CV_8U>;
+    template class distributeErf<CV_4S,CV_16U>;
+    template class distributeErf<CV_4S,CV_32U>;
+    template class distributeErf<CV_4S,CV_64U>;
+    
+    template class distributeErf<CV_8S,CV_2U>;
+    template class distributeErf<CV_8S,CV_4U>;
+    template class distributeErf<CV_8S,CV_8U>;
+    template class distributeErf<CV_8S,CV_16U>;
+    template class distributeErf<CV_8S,CV_32U>;
+    template class distributeErf<CV_8S,CV_64U>;
+    
+    template class distributeErf<CV_16S,CV_2U>;
+    template class distributeErf<CV_16S,CV_4U>;
+    template class distributeErf<CV_16S,CV_8U>;
+    template class distributeErf<CV_16S,CV_16U>;
+    template class distributeErf<CV_16S,CV_32U>;
+    template class distributeErf<CV_16S,CV_64U>;
+    
+    template class distributeErf<CV_32S,CV_2U>;
+    template class distributeErf<CV_32S,CV_4U>;
+    template class distributeErf<CV_32S,CV_8U>;
+    template class distributeErf<CV_32S,CV_16U>;
+    template class distributeErf<CV_32S,CV_32U>;
+    template class distributeErf<CV_32S,CV_64U>;
+    
+    template class distributeErf<CV_64S,CV_2S>;
+    template class distributeErf<CV_64S,CV_4S>;
+    template class distributeErf<CV_64S,CV_8S>;
+    template class distributeErf<CV_64S,CV_16S>;
+    template class distributeErf<CV_64S,CV_32S>;
+    template class distributeErf<CV_64S,CV_64S>;
+    
+    
+    template class distributeErf<CV_2U,CV_2S>;
+    template class distributeErf<CV_2U,CV_4S>;
+    template class distributeErf<CV_2U,CV_8S>;
+    template class distributeErf<CV_2U,CV_16S>;
+    template class distributeErf<CV_2U,CV_32S>;
+    template class distributeErf<CV_2U,CV_64S>;
+    
+    template class distributeErf<CV_4U,CV_2S>;
+    template class distributeErf<CV_4U,CV_4S>;
+    template class distributeErf<CV_4U,CV_8S>;
+    template class distributeErf<CV_4U,CV_16S>;
+    template class distributeErf<CV_4U,CV_32S>;
+    template class distributeErf<CV_4U,CV_64S>;
+    
+    template class distributeErf<CV_8U,CV_2S>;
+    template class distributeErf<CV_8U,CV_4S>;
+    template class distributeErf<CV_8U,CV_8S>;
+    template class distributeErf<CV_8U,CV_16S>;
+    template class distributeErf<CV_8U,CV_32S>;
+    template class distributeErf<CV_8U,CV_64S>;
+    
+    template class distributeErf<CV_16U,CV_2S>;
+    template class distributeErf<CV_16U,CV_4S>;
+    template class distributeErf<CV_16U,CV_8S>;
+    template class distributeErf<CV_16U,CV_16S>;
+    template class distributeErf<CV_16U,CV_32S>;
+    template class distributeErf<CV_16U,CV_64S>;
+    
+    template class distributeErf<CV_32U,CV_2S>;
+    template class distributeErf<CV_32U,CV_4S>;
+    template class distributeErf<CV_32U,CV_8S>;
+    template class distributeErf<CV_32U,CV_16S>;
+    template class distributeErf<CV_32U,CV_32S>;
+    template class distributeErf<CV_32U,CV_64S>;
+    
+    template class distributeErf<CV_64U,CV_2S>;
+    template class distributeErf<CV_64U,CV_4S>;
+    template class distributeErf<CV_64U,CV_8S>;
+    template class distributeErf<CV_64U,CV_16S>;
+    template class distributeErf<CV_64U,CV_32S>;
+    template class distributeErf<CV_64U,CV_64S>;
+    
+    
+    template class distributeErf<CV_2S,CV_2S>;
+    template class distributeErf<CV_2S,CV_4S>;
+    template class distributeErf<CV_2S,CV_8S>;
+    template class distributeErf<CV_2S,CV_16S>;
+    template class distributeErf<CV_2S,CV_32S>;
+    template class distributeErf<CV_2S,CV_64S>;
+    
+    template class distributeErf<CV_4S,CV_2S>;
+    template class distributeErf<CV_4S,CV_4S>;
+    template class distributeErf<CV_4S,CV_8S>;
+    template class distributeErf<CV_4S,CV_16S>;
+    template class distributeErf<CV_4S,CV_32S>;
+    template class distributeErf<CV_4S,CV_64S>;
+    
+    template class distributeErf<CV_8S,CV_2S>;
+    template class distributeErf<CV_8S,CV_4S>;
+    template class distributeErf<CV_8S,CV_8S>;
+    template class distributeErf<CV_8S,CV_16S>;
+    template class distributeErf<CV_8S,CV_32S>;
+    template class distributeErf<CV_8S,CV_64S>;
+    
+    template class distributeErf<CV_16S,CV_2S>;
+    template class distributeErf<CV_16S,CV_4S>;
+    template class distributeErf<CV_16S,CV_8S>;
+    template class distributeErf<CV_16S,CV_16S>;
+    template class distributeErf<CV_16S,CV_32S>;
+    template class distributeErf<CV_16S,CV_64S>;
+    
+    template class distributeErf<CV_32S,CV_2S>;
+    template class distributeErf<CV_32S,CV_4S>;
+    template class distributeErf<CV_32S,CV_8S>;
+    template class distributeErf<CV_32S,CV_16S>;
+    template class distributeErf<CV_32S,CV_32S>;
+    template class distributeErf<CV_32S,CV_64S>;
+    
+    template class distributeErf<CV_64S,CV_2S>;
+    template class distributeErf<CV_64S,CV_4S>;
+    template class distributeErf<CV_64S,CV_8S>;
+    template class distributeErf<CV_64S,CV_16S>;
+    template class distributeErf<CV_64S,CV_32S>;
+    template class distributeErf<CV_64S,CV_64S>;
+    
+
 // computes cubic spline coefficients for a function: (xi=i, yi=f[i]), i=0..n
 template<typename _Tp> static void splineBuild(const _Tp* f, int n, _Tp* tab)
 {

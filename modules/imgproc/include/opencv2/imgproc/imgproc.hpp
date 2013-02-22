@@ -1067,6 +1067,21 @@ enum
 
 };
     
+    CV_EXPORTS_W template<int src_t, int dst_t>  class  distributeErf
+    {
+        public :
+        using srcType = cv_Mat_Data_Type<src_t>;
+        using dstType = cv_Mat_Data_Type<dst_t>;
+        using wrkType = double;
+        srcType sRange, c;
+        wrkType g;
+        dstType shift, scale;
+        
+        distributeErf(wrkType _g, srcType _c, srcType sMin, srcType sMax, dstType dMin, dstType dMax)
+        void operator()(const srcType src, dstType dst) const
+    }
+
+    
     CV_EXPORTS_W template<int src_t, int dst_t> class colorSpaceConverter{
         public :
         using srcType     = cv_Mat_Data_Type<src_t>;
