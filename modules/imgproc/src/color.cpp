@@ -145,37 +145,32 @@ namespace cv
         return sign*y;
     }
     
-    
-
-    CV_EXPORTS_W template<int src_t, int dst_t>  class  distributeErf
+template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf(typename depthConverter<src_t, dst_t>::wrkType _g, typename depthConverter<src_t, dst_t>::srcType _c, typename depthConverter<src_t, dst_t>::srcType sMin, typename depthConverter<src_t, dst_t>::srcType sMax, typename depthConverter<src_t, dst_t>::dstType dMin, typename depthConverter<src_t, dst_t>::dstType dMax): g(_g), c(_c)
     {
-        public :
-        using srcType = cv_Mat_Data_Type<src_t>;
-        using dstType = cv_Mat_Data_Type<dst_t>;
-        using wrkType = double;
-        srcType sRange, c;
-        wrkType g;
-        dstType shift, scale;
-        
-        distributeErf(wrkType _g, srcType _c, srcType sMin, srcType sMax, dstType dMin, dstType dMax): g(_g), c(_c) {
-            CV_Assert(sMin <= c && c <= sMax && dMin <= sMax);
-            sRange = (sMax - sMin);
-            dstType dRange = (dMax - dMin);
-            wrkType ErfA = erf((g*(c - sMin)), wrkType(sRange));
-            wrkType ErfB = erf((g*(sMax - c)), wrkType(sRange)) + ErfA;
-            shift = dstType(dMin - dRange * ErfA / ErfB);
-            scale = dstType(dRange / ErfB);
-        }
-        void operator()(const srcType src, dstType dst) const
-        {
-            if(x >= c){
-                dst = shift + dstType(scale * erf((g*(x - c)), sRange))))
-            }else{
-                dst = shift - dstType(scale * erf((g*(c - x)), sRange))))
-            }
-        }
-    }
+        using srcType = typename depthConverter<src_t, dst_t>::srcType;
+        using dstType = typename depthConverter<src_t, dst_t>::dstType;
+        using wrkType = typename depthConverter<src_t, dst_t>::wrkType;
+        CV_Assert((int)sMin <= (int)c && (int)c <= (int)sMax && (int)dMin <= (int)sMax);
+        sRange = (sMax - sMin);
+        dstType dRange = (dMax - dMin);
+        wrkType ErfA = erf((g*(c - sMin)), wrkType(sRange));
+        wrkType ErfB = erf((g*(sMax - c)), wrkType(sRange)) + ErfA;
+        shift = dstType(dMin - dRange * ErfA / ErfB);
+        scale = dstType(dRange / ErfB);
+    };
     
+template<int src_t, int dst_t>  void distributeErf<src_t, dst_t>::operator()(const typename depthConverter<src_t, dst_t>::srcType src, typename depthConverter<src_t, dst_t>::dstType dst) const
+    {
+        using srcType = typename depthConverter<src_t, dst_t>::srcType;
+        using dstType = typename depthConverter<src_t, dst_t>::dstType;
+        using wrkType = typename depthConverter<src_t, dst_t>::wrkType;
+        if(src >= c){
+            dst = shift + dstType(scale * erf(g*(src - c), wrkType(sRange)));
+        }else{
+            dst = shift - dstType(scale * erf(g*(c - src), wrkType(sRange)));
+        };
+    }
+
     
     template class distributeErf<CV_2U,CV_2U>;
     template class distributeErf<CV_2U,CV_4U>;
@@ -219,21 +214,7 @@ namespace cv
     template class distributeErf<CV_64U,CV_32U>;
     template class distributeErf<CV_64U,CV_64U>;
     
-    
-    template class distributeErf<CV_2S,CV_2U>;
-    template class distributeErf<CV_2S,CV_4U>;
-    template class distributeErf<CV_2S,CV_8U>;
-    template class distributeErf<CV_2S,CV_16U>;
-    template class distributeErf<CV_2S,CV_32U>;
-    template class distributeErf<CV_2S,CV_64U>;
-    
-    template class distributeErf<CV_4S,CV_2U>;
-    template class distributeErf<CV_4S,CV_4U>;
-    template class distributeErf<CV_4S,CV_8U>;
-    template class distributeErf<CV_4S,CV_16U>;
-    template class distributeErf<CV_4S,CV_32U>;
-    template class distributeErf<CV_4S,CV_64U>;
-    
+        
     template class distributeErf<CV_8S,CV_2U>;
     template class distributeErf<CV_8S,CV_4U>;
     template class distributeErf<CV_8S,CV_8U>;
@@ -255,99 +236,93 @@ namespace cv
     template class distributeErf<CV_32S,CV_32U>;
     template class distributeErf<CV_32S,CV_64U>;
     
-    template class distributeErf<CV_64S,CV_2S>;
-    template class distributeErf<CV_64S,CV_4S>;
-    template class distributeErf<CV_64S,CV_8S>;
-    template class distributeErf<CV_64S,CV_16S>;
-    template class distributeErf<CV_64S,CV_32S>;
-    template class distributeErf<CV_64S,CV_64S>;
+    template class distributeErf<CV_64S,CV_2U>;
+    template class distributeErf<CV_64S,CV_4U>;
+    template class distributeErf<CV_64S,CV_8U>;
+    template class distributeErf<CV_64S,CV_16U>;
+    template class distributeErf<CV_64S,CV_32U>;
+    template class distributeErf<CV_64S,CV_64U>;
     
     
-    template class distributeErf<CV_2U,CV_2S>;
-    template class distributeErf<CV_2U,CV_4S>;
     template class distributeErf<CV_2U,CV_8S>;
     template class distributeErf<CV_2U,CV_16S>;
     template class distributeErf<CV_2U,CV_32S>;
     template class distributeErf<CV_2U,CV_64S>;
     
-    template class distributeErf<CV_4U,CV_2S>;
-    template class distributeErf<CV_4U,CV_4S>;
     template class distributeErf<CV_4U,CV_8S>;
     template class distributeErf<CV_4U,CV_16S>;
     template class distributeErf<CV_4U,CV_32S>;
     template class distributeErf<CV_4U,CV_64S>;
     
-    template class distributeErf<CV_8U,CV_2S>;
-    template class distributeErf<CV_8U,CV_4S>;
     template class distributeErf<CV_8U,CV_8S>;
     template class distributeErf<CV_8U,CV_16S>;
     template class distributeErf<CV_8U,CV_32S>;
     template class distributeErf<CV_8U,CV_64S>;
     
-    template class distributeErf<CV_16U,CV_2S>;
-    template class distributeErf<CV_16U,CV_4S>;
     template class distributeErf<CV_16U,CV_8S>;
     template class distributeErf<CV_16U,CV_16S>;
     template class distributeErf<CV_16U,CV_32S>;
     template class distributeErf<CV_16U,CV_64S>;
     
-    template class distributeErf<CV_32U,CV_2S>;
-    template class distributeErf<CV_32U,CV_4S>;
     template class distributeErf<CV_32U,CV_8S>;
     template class distributeErf<CV_32U,CV_16S>;
     template class distributeErf<CV_32U,CV_32S>;
     template class distributeErf<CV_32U,CV_64S>;
     
-    template class distributeErf<CV_64U,CV_2S>;
-    template class distributeErf<CV_64U,CV_4S>;
     template class distributeErf<CV_64U,CV_8S>;
     template class distributeErf<CV_64U,CV_16S>;
     template class distributeErf<CV_64U,CV_32S>;
     template class distributeErf<CV_64U,CV_64S>;
     
-    
-    template class distributeErf<CV_2S,CV_2S>;
-    template class distributeErf<CV_2S,CV_4S>;
-    template class distributeErf<CV_2S,CV_8S>;
-    template class distributeErf<CV_2S,CV_16S>;
-    template class distributeErf<CV_2S,CV_32S>;
-    template class distributeErf<CV_2S,CV_64S>;
-    
-    template class distributeErf<CV_4S,CV_2S>;
-    template class distributeErf<CV_4S,CV_4S>;
-    template class distributeErf<CV_4S,CV_8S>;
-    template class distributeErf<CV_4S,CV_16S>;
-    template class distributeErf<CV_4S,CV_32S>;
-    template class distributeErf<CV_4S,CV_64S>;
-    
-    template class distributeErf<CV_8S,CV_2S>;
-    template class distributeErf<CV_8S,CV_4S>;
+        
     template class distributeErf<CV_8S,CV_8S>;
     template class distributeErf<CV_8S,CV_16S>;
     template class distributeErf<CV_8S,CV_32S>;
     template class distributeErf<CV_8S,CV_64S>;
     
-    template class distributeErf<CV_16S,CV_2S>;
-    template class distributeErf<CV_16S,CV_4S>;
     template class distributeErf<CV_16S,CV_8S>;
     template class distributeErf<CV_16S,CV_16S>;
     template class distributeErf<CV_16S,CV_32S>;
     template class distributeErf<CV_16S,CV_64S>;
     
-    template class distributeErf<CV_32S,CV_2S>;
-    template class distributeErf<CV_32S,CV_4S>;
     template class distributeErf<CV_32S,CV_8S>;
     template class distributeErf<CV_32S,CV_16S>;
     template class distributeErf<CV_32S,CV_32S>;
     template class distributeErf<CV_32S,CV_64S>;
     
-    template class distributeErf<CV_64S,CV_2S>;
-    template class distributeErf<CV_64S,CV_4S>;
     template class distributeErf<CV_64S,CV_8S>;
     template class distributeErf<CV_64S,CV_16S>;
     template class distributeErf<CV_64S,CV_32S>;
     template class distributeErf<CV_64S,CV_64S>;
     
+   // distributeLinear(wrkType _g, srcType _c, srcType sMin, srcType sMax, dstType dMin, dMax)
+    template<int src_t, int dst_t> distributeLinear<src_t, dst_t>::distributeLinear(typename depthConverter<src_t, dst_t>::wrkType _g, typename depthConverter<src_t, dst_t>::srcType _c, typename depthConverter<src_t, dst_t>::srcType sMin, typename depthConverter<src_t, dst_t>::srcType sMax, typename depthConverter<src_t, dst_t>::dstType _dMin, typename depthConverter<src_t, dst_t>::dstType _dMax): dMin(_dMin), dMax(_dMax)
+    {
+        using srcType = typename depthConverter<src_t, dst_t>::srcType;
+        using dstType = typename depthConverter<src_t, dst_t>::dstType;
+        using wrkType = typename depthConverter<src_t, dst_t>::wrkType;
+        
+        CV_Assert((int)sMin <= (int)c && (int)c <= (int)sMax && (int)dMin <= (int)sMax);
+        dstType sRange = (sMax - sMin);
+        dstType dRange = (dMax - dMin);
+        g = _g * wrkType(dRange)/wrkType(sRange); // When _g is 1 the conversion spans the range.
+        c = dstType(wrkType(dRange)/2.0 - g * _c); // _c is the center of the line in the src dimension.
+        fMin = srcType(wrktype(dMin - c)/g);
+        fMax = srcType(wrktype(dMax - c)/g);
+    };
+    
+    template<int src_t, int dst_t>  void distributeLinear<src_t, dst_t>::operator()(const typename depthConverter<src_t, dst_t>::srcType src, typename depthConverter<src_t, dst_t>::dstType dst) const
+    {
+        using dstType = typename depthConverter<src_t, dst_t>::dstType;
+        if(src <= fMin){
+            dst = dMin;
+        }else if(src >= fMax){
+            dst = dMax;
+        }else{
+            dst = dstType(g * src) + c;
+        };
+    }
+
 
 // computes cubic spline coefficients for a function: (xi=i, yi=f[i]), i=0..n
 template<typename _Tp> static void splineBuild(const _Tp* f, int n, _Tp* tab)
@@ -3319,18 +3294,21 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
 }
 
 CV_EXPORTS_W template<int src_t, int dst_t> inline void cv::RGB2Rot<src_t, dst_t>::operator()(const typename cv::colorSpaceConverter<src_t, dst_t>::srcType::type* src, typename cv::colorSpaceConverter<src_t, dst_t>::dstType::type* dst, int n) const
+{
+    using cs = typename cv::colorSpaceConverter<src_t, dst_t>;
+    using de = typename cv::distributeErf<src_t, dst_t>;
+    n *= cs::dstType::channels;
+    for(int i = 0; i < n; i += cs::dstType::channels, src += cs::srcType::channels)
     {
-        n *= cv::colorSpaceConverter<src_t, dst_t>::dstType::channels;
-        for(int i = 0; i < n; i += cv::colorSpaceConverter<src_t, dst_t>::dstType::channels, src += cv::colorSpaceConverter<src_t, dst_t>::srcType::channels)
-        {
-            typename cv::colorSpaceConverter<src_t, dst_t>::wrkType X = src[0]*M[0][0] + src[1]*M[0][1] + src[2]*M[0][2]; // CV_DESCALE(x,n) = (((x) + (1 << ((n)-1))) >> (n))
-            typename cv::colorSpaceConverter<src_t, dst_t>::wrkType Y = src[0]*M[1][0] + src[1]*M[1][1] + src[2]*M[1][2]; // could be used in place of * scale
-            typename cv::colorSpaceConverter<src_t, dst_t>::wrkType Z = src[0]*M[2][0] + src[1]*M[2][1] + src[2]*M[2][2]; // Find shift which fits TRange into the desired bit depth.
-            dst[i  ] = redScale(X);
-            dst[i+1] = greenScale(Y);
-            dst[i+2] = blueScale(Z);
-        }
+        typename cs::wrkType X = src[0]*M[0][0] + src[1]*M[0][1] + src[2]*M[0][2]; // CV_DESCALE(x,n) = (((x) + (1 << ((n)-1))) >> (n))
+        typename cs::wrkType Y = src[0]*M[1][0] + src[1]*M[1][1] + src[2]*M[1][2]; // could be used in place of * scale
+        typename cs::wrkType Z = src[0]*M[2][0] + src[1]*M[2][1] + src[2]*M[2][2]; // Find shift which fits TRange into the desired bit depth.
+      //  distributeErf<src_t, dst_t>::distributeErf(typename distributeErf<src_t, dst_t>::wrkType _g, typename distributeErf<src_t, dst_t>::srcType _c, typename distributeErf<src_t, dst_t>::srcType sMin, typename distributeErf<src_t, dst_t>::srcType sMax, typename distributeErf<src_t, dst_t>::dstType dMin, typename distributeErf<src_t, dst_t>::dstType dMax)
+        dst[i  ] = redScale(X);
+        dst[i+1] = greenScale(Y);
+        dst[i+2] = blueScale(Z);
     }
+}
 
 template class cv::RGB2Rot<CV_8UC3,CV_8UC3>;
 template class cv::RGB2Rot<CV_8UC4,CV_8UC3>;

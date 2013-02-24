@@ -1067,29 +1067,53 @@ enum
 
 };
     
-    CV_EXPORTS_W template<int src_t, int dst_t>  class  distributeErf
+    CV_EXPORTS_W template<int src_t, int dst_t>  class  depthConverter
     {
         public :
-        using srcType = cv_Mat_Data_Type<src_t>;
-        using dstType = cv_Mat_Data_Type<dst_t>;
+        using srcType = typename cv_Data_Type<src_t>::type;
+        using dstType = typename cv_Data_Type<dst_t>::type;
         using wrkType = double;
+        virtual void operator()(const srcType src, dstType dst) const = 0;
+    };
+
+    CV_EXPORTS_W template<int src_t, int dst_t>  class  distributeErf: public depthConverter<src_t, dst_t>
+    {
+        public :
+        using srcType = typename depthConverter<src_t, dst_t>::srcType;
+        using dstType = typename depthConverter<src_t, dst_t>::dstType;
+        using wrkType = typename depthConverter<src_t, dst_t>::wrkType;
         srcType sRange, c;
         wrkType g;
         dstType shift, scale;
         
-        distributeErf(wrkType _g, srcType _c, srcType sMin, srcType sMax, dstType dMin, dstType dMax)
-        void operator()(const srcType src, dstType dst) const
-    }
+        distributeErf( wrkType _g, srcType _c, srcType sMin, srcType sMax, dstType dMin, dstType dMax);
+        void operator()(const srcType src, dstType dst) const;
+    };
+    
+    CV_EXPORTS_W template<int src_t, int dst_t>  class  distributeLinear: public depthConverter<src_t, dst_t>
+    {
+        public :
+        using srcType = typename depthConverter<src_t, dst_t>::srcType;
+        using dstType = typename depthConverter<src_t, dst_t>::dstType;
+        using wrkType = typename depthConverter<src_t, dst_t>::wrkType;
+        srcType fMin, fMax;
+        wrkType g;
+        dstType c, dMin, dMax;
+        
+        distributeLinear( wrkType _g, srcType _c, srcType sMin, srcType sMax, dstType dMin, dstType dMax);
+        void operator()(const srcType src, dstType dst) const;
+    };
 
     
-    CV_EXPORTS_W template<int src_t, int dst_t> class colorSpaceConverter{
+    CV_EXPORTS_W template<int src_t, int dst_t> class colorSpaceConverter
+    {
         public :
         using srcType     = cv_Mat_Data_Type<src_t>;
         using dstType     = cv_Mat_Data_Type<dst_t>;
         using src_channel_type     = typename cv_Mat_Data_Type<src_t>::type;
         using dst_channel_type     = typename cv_Mat_Data_Type<dst_t>::type;
         using wrkType     = std::uint64_t;
-        virtual void operator()(const typename srcType::type * src,  typename dstType::type * dst, int n) const = 0;
+        virtual void operator()(const typename srcType::type * src, typename dstType::type * dst, int n) const = 0;
     }; 
     
 // template class colorSpaceConverter<CV_8UC3,CV_8UC3>;
