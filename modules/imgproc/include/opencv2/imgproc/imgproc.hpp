@@ -1070,6 +1070,8 @@ enum
     CV_EXPORTS_W template<int src_t, int dst_t>  class  depthConverter
     {
         public :
+        using srcInfo = cv_Data_Type<src_t>;
+        using dstInfo = cv_Data_Type<dst_t>;
         using srcType = typename cv_Data_Type<src_t>::type;
         using dstType = typename cv_Data_Type<dst_t>::type;
         using wrkType = double;
@@ -1086,7 +1088,8 @@ enum
         wrkType g;
         dstType shift, scale;
         
-        distributeErf( wrkType _g, srcType _c, srcType sMin, srcType sMax, dstType dMin, dstType dMax);
+        distributeErf();
+        distributeErf( typename cv::depthConverter<src_t, dst_t>::wrkType _g, typename depthConverter<src_t, dst_t>::srcType _c, typename depthConverter<src_t, dst_t>::srcType sMin, typename depthConverter<src_t, dst_t>::srcType sMax, typename depthConverter<src_t, dst_t>::dstType dMin, typename depthConverter<src_t, dst_t>::dstType dMax);
         void operator()(const srcType src, dstType dst) const;
     };
     
@@ -1100,6 +1103,7 @@ enum
         wrkType g;
         dstType c, dMin, dMax;
         
+        distributeLinear();
         distributeLinear( wrkType _g, srcType _c, srcType sMin, srcType sMax, dstType dMin, dstType dMax);
         void operator()(const srcType src, dstType dst) const;
     };
@@ -1108,12 +1112,19 @@ enum
     CV_EXPORTS_W template<int src_t, int dst_t> class colorSpaceConverter
     {
         public :
-        using srcType     = cv_Mat_Data_Type<src_t>;
-        using dstType     = cv_Mat_Data_Type<dst_t>;
-        using src_channel_type     = typename cv_Mat_Data_Type<src_t>::type;
-        using dst_channel_type     = typename cv_Mat_Data_Type<dst_t>::type;
-        using wrkType     = std::uint64_t;
-        virtual void operator()(const typename srcType::type * src, typename dstType::type * dst, int n) const = 0;
+        using srcInfo = cv_Mat_Data_Type<src_t>;
+        using srcType = typename cv_Data_Type<src_t>::type;
+        using src_channel_type = srcType;
+        
+        using dstInfo = cv_Mat_Data_Type<dst_t>;
+        using dstType = typename cv_Data_Type<dst_t>::type;
+        using dst_channel_type = dstType;
+
+        
+        using wrkInfo = cv_Data_Type<CV_64S>; // ToDo Update this to construct CV_64S from src and dst types.
+        using wrkType = typename cv_Data_Type<CV_64S>::type;
+        
+        virtual void operator()(const srcType * src, dstType* dst, int n) const = 0;
     }; 
     
 // template class colorSpaceConverter<CV_8UC3,CV_8UC3>;
@@ -1122,18 +1133,27 @@ enum
     CV_EXPORTS_W template<int src_t, int dst_t> class RGB2Rot: public colorSpaceConverter<src_t, dst_t>
     {
         public :
-        using cs = colorSpaceConverter<src_t, dst_t>;
-        int M[cs::dstType::channels][cs::srcType::channels];
-        int TRange[cs::dstType::channels], TMin[cs::dstType::channels];
-        typename cs::dstType::type redScale(  typename cs::wrkType x) const;
-        typename cs::dstType::type greenScale(typename cs::wrkType x) const;
-        typename cs::dstType::type blueScale( typename cs::wrkType x) const;
+        using srcInfo = typename colorSpaceConverter<src_t, dst_t>::srcInfo;
+        using dstInfo = typename colorSpaceConverter<src_t, dst_t>::dstInfo;
+        using srcType = typename colorSpaceConverter<src_t, dst_t>::srcType;
+        using dstType = typename colorSpaceConverter<src_t, dst_t>::dstType;
+        using wrkInfo = typename colorSpaceConverter<src_t, dst_t>::wrkInfo;
+        using wrkType = typename colorSpaceConverter<src_t, dst_t>::wrkType;
+        
+        int M[dstInfo::channels][srcInfo::channels];
+        int TRange[dstInfo::channels], TMin[dstInfo::channels];
+        
+        distributeErf<CV_64S, CV_MAT_DEPTH(dst_t)> *rredScale, *ggreenScale, *bblueScale;
+        distributeErf<wrkInfo::dataType, dstInfo::dataType> *redScale, *greenScale, *blueScale;
+        //typename cs::dstType redScale(  typename cs::wrkType x) const;
+        //typename cs::dstType greenScale(typename cs::wrkType x) const;
+       // typename cs::dstType blueScale( typename cs::wrkType x) const;
         
         RGB2Rot(const int blueIdx, Matx<int, 3, 3>& T, Vec<int, 3>& _TRange, Vec<int,3>& _TMin);
         
-        RGB2Rot(Vec<int, 3> sp0, Vec<int, 3> sp1, Vec<int, 3> sp2);
+        RGB2Rot(Vec<int, 3> sp0, Vec<int, 3> sp1, Vec<int, 3> sp2, typename depthConverter<src_t, dst_t>::wrkType g, typename depthConverter<src_t, dst_t>::srcType c);
         
-        void operator()(const typename cs::srcType::type* src, typename cs::dstType::type* dst, int n) const;
+        void operator()(const srcType* src, dstType* dst, int n) const;
     };
     
 // template class RGB2Rot<CV_8UC3,CV_8UC3>;

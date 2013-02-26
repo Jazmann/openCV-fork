@@ -145,6 +145,25 @@ namespace cv
         return sign*y;
     }
     
+template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf()
+    {
+        using srcType = typename depthConverter<src_t, dst_t>::srcType;
+        using dstType = typename depthConverter<src_t, dst_t>::dstType;
+        using wrkType = typename depthConverter<src_t, dst_t>::wrkType;
+        typename cv_Data_Type<src_t>::type sMax = cv_Data_Type<src_t>::max;
+        typename cv_Data_Type<src_t>::type sMin = cv_Data_Type<src_t>::min;
+        
+        typename cv_Data_Type<dst_t>::type dMax = cv_Data_Type<dst_t>::max;
+        typename cv_Data_Type<dst_t>::type dMin = cv_Data_Type<dst_t>::min;
+// g=1 c= (sMin+sMax)/2
+        sRange = (sMax - sMin);
+        dstType dRange = (dMax - dMin);
+        wrkType ErfA = erf(0.5);
+        wrkType ErfB = erf(0.5) + ErfA;
+        shift = dstType(dMin - dRange * ErfA / ErfB);
+        scale = dstType(dRange / ErfB);
+    };
+
 template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf(typename depthConverter<src_t, dst_t>::wrkType _g, typename depthConverter<src_t, dst_t>::srcType _c, typename depthConverter<src_t, dst_t>::srcType sMin, typename depthConverter<src_t, dst_t>::srcType sMax, typename depthConverter<src_t, dst_t>::dstType dMin, typename depthConverter<src_t, dst_t>::dstType dMax): g(_g), c(_c)
     {
         using srcType = typename depthConverter<src_t, dst_t>::srcType;
@@ -295,6 +314,26 @@ template<int src_t, int dst_t>  void distributeErf<src_t, dst_t>::operator()(con
     template class distributeErf<CV_64S,CV_32S>;
     template class distributeErf<CV_64S,CV_64S>;
     
+    template<int src_t, int dst_t> distributeLinear<src_t, dst_t>::distributeLinear()
+    {
+        using srcType = typename depthConverter<src_t, dst_t>::srcType;
+        using dstType = typename depthConverter<src_t, dst_t>::dstType;
+        using wrkType = typename depthConverter<src_t, dst_t>::wrkType;
+        
+        typename cv_Data_Type<src_t>::type sMax = cv_Data_Type<src_t>::max;
+        typename cv_Data_Type<src_t>::type sMin = cv_Data_Type<src_t>::min;
+        
+        typename cv_Data_Type<dst_t>::type dMax = cv_Data_Type<dst_t>::max;
+        typename cv_Data_Type<dst_t>::type dMin = cv_Data_Type<dst_t>::min;
+        
+        dstType sRange = (sMax - sMin);
+        dstType dRange = (dMax - dMin);
+        g =  wrkType(dRange)/wrkType(sRange); // When _g is 1 the conversion spans the range.
+        c = dstType(wrkType(sMax + sMin)/2.0); // _c is the center of the line in the src dimension.
+        fMin = sMin;
+        fMax = sMax;
+    };
+
    // distributeLinear(wrkType _g, srcType _c, srcType sMin, srcType sMax, dstType dMin, dMax)
     template<int src_t, int dst_t> distributeLinear<src_t, dst_t>::distributeLinear(typename depthConverter<src_t, dst_t>::wrkType _g, typename depthConverter<src_t, dst_t>::srcType _c, typename depthConverter<src_t, dst_t>::srcType sMin, typename depthConverter<src_t, dst_t>::srcType sMax, typename depthConverter<src_t, dst_t>::dstType _dMin, typename depthConverter<src_t, dst_t>::dstType _dMax): dMin(_dMin), dMax(_dMax)
     {
@@ -3221,18 +3260,32 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
         }
     };
 
-CV_EXPORTS_W template<int src_t, int dst_t> inline typename cv::colorSpaceConverter<src_t, dst_t>::dstType::type cv::RGB2Rot<src_t, dst_t>::redScale(typename cv::colorSpaceConverter<src_t, dst_t>::wrkType x) const{
-    return (typename cv::colorSpaceConverter<src_t, dst_t>::dstType::type) ((x + TMin[0])/((TRange[0] / cv::colorSpaceConverter<src_t, dst_t>::dstType::max)+1));
-}
-CV_EXPORTS_W template<int src_t, int dst_t> inline typename cv::colorSpaceConverter<src_t, dst_t>::dstType::type cv::RGB2Rot<src_t, dst_t>::greenScale(typename cv::colorSpaceConverter<src_t, dst_t>::wrkType x) const{
-    return (typename cv::colorSpaceConverter<src_t, dst_t>::dstType::type) (x + TMin[1])/((TRange[1] / cv::colorSpaceConverter<src_t, dst_t>::dstType::max)+1);
-}
-CV_EXPORTS_W template<int src_t, int dst_t> inline typename cv::colorSpaceConverter<src_t, dst_t>::dstType::type cv::RGB2Rot<src_t, dst_t>::blueScale(const typename cv::colorSpaceConverter<src_t, dst_t>::wrkType x) const {
-    return (typename cv::colorSpaceConverter<src_t, dst_t>::dstType::type) (x + TMin[2])/((TRange[2] / cv::colorSpaceConverter<src_t, dst_t>::dstType::max)+1);
-}
+//CV_EXPORTS_W template<int src_t, int dst_t> inline typename cv::colorSpaceConverter<src_t, dst_t>::dstType::type cv::RGB2Rot<src_t, dst_t>::redScale(typename cv::colorSpaceConverter<src_t, dst_t>::wrkType x) const{
+//    return (typename cv::colorSpaceConverter<src_t, dst_t>::dstType::type) ((x + TMin[0])/((TRange[0] / cv::colorSpaceConverter<src_t, dst_t>::dstType::max)+1));
+//}
+//CV_EXPORTS_W template<int src_t, int dst_t> inline typename cv::colorSpaceConverter<src_t, dst_t>::dstType::type cv::RGB2Rot<src_t, dst_t>::greenScale(typename cv::colorSpaceConverter<src_t, dst_t>::wrkType x) const{
+//    return (typename cv::colorSpaceConverter<src_t, dst_t>::dstType::type) (x + TMin[1])/((TRange[1] / cv::colorSpaceConverter<src_t, dst_t>::dstType::max)+1);
+//}
+//CV_EXPORTS_W template<int src_t, int dst_t> inline typename cv::colorSpaceConverter<src_t, dst_t>::dstType::type cv::RGB2Rot<src_t, dst_t>::blueScale(const typename cv::colorSpaceConverter<src_t, dst_t>::wrkType x) const {
+//    return (typename cv::colorSpaceConverter<src_t, dst_t>::dstType::type) (x + TMin[2])/((TRange[2] / cv::colorSpaceConverter<src_t, dst_t>::dstType::max)+1);
+//}
 
 
-CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(cv::Vec<int, 3> sp0, cv::Vec<int, 3> sp1, cv::Vec<int, 3> sp2){
+CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(cv::Vec<int, 3> sp0, cv::Vec<int, 3> sp1, cv::Vec<int, 3> sp2, typename cv::depthConverter<src_t, dst_t>::wrkType g, typename cv::depthConverter<src_t, dst_t>::srcType c)
+{
+    using srcInfo = typename cv::colorSpaceConverter<src_t, dst_t>::srcInfo;
+    using dstInfo = typename cv::colorSpaceConverter<src_t, dst_t>::dstInfo;
+    using srcType = typename cv::colorSpaceConverter<src_t, dst_t>::srcType;
+    using dstType = typename cv::colorSpaceConverter<src_t, dst_t>::dstType;
+    using wrkInfo = typename cv::colorSpaceConverter<src_t, dst_t>::wrkInfo;
+    using wrkType = typename cv::colorSpaceConverter<src_t, dst_t>::wrkType;
+    
+    const int wrk_t = cv::colorSpaceConverter<src_t, dst_t>::wrkInfo::dataType;
+    
+    using dcSrcType = typename cv::depthConverter<src_t, dst_t>::srcType;
+    using dcDstType = typename cv::depthConverter<src_t, dst_t>::dstType;
+    using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
+
         cv::sVec<int, 3> v1(1.0, sp1 - sp0); v1.factor(); v1.scale=1.0;
         cv::sVec<int, 3> v2(1.0, sp2 - sp0); v2.factor(); v2.scale=1.0;
         
@@ -3283,30 +3336,59 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
         cv::Matx<int, 3, 1> RGBCubeMax = cv::MaxInRow<int, 3, 8>(RGBBoxInNew);
         cv::Matx<int, 3, 1> RGBCubeMin = cv::MinInRow<int, 3, 8>(RGBBoxInNew);
         cv::Matx<int, 3, 1> RGBCubeRange = RGBCubeMax - RGBCubeMin;
-        for(int i = 0; i < cv::colorSpaceConverter<src_t, dst_t>::dstType::channels; i++){
-            for(int j = 0; j < cv::colorSpaceConverter<src_t, dst_t>::srcType::channels; j++){
+        for(int i = 0; i < dstInfo::channels; i++){
+            for(int j = 0; j < srcInfo::channels; j++){
                 M[i][j] = Ti(i,j);
             }
         }
         TMin[0] = RGBCubeMin(0,0); TRange[0] = RGBCubeRange(0,0);
         TMin[1] = RGBCubeMin(1,0); TRange[1] = RGBCubeRange(1,0);
         TMin[2] = RGBCubeMin(2,0); TRange[2] = RGBCubeRange(2,0);
+    
+    
+    rredScale = new distributeErf<CV_64S, CV_MAT_DEPTH(dst_t)> (   typename cv::depthConverter<src_t, dst_t>::wrkType(g), typename cv::depthConverter<src_t, dst_t>::srcType(c), typename cv::depthConverter<src_t, dst_t>::srcType(TMin[0]), typename cv::depthConverter<src_t, dst_t>::srcType(RGBCubeMax(0,0)), typename cv::depthConverter<src_t, dst_t>::dstType(dstInfo::min), typename cv::depthConverter<src_t, dst_t>::dstType(dstInfo::max));
+    ggreenScale = new distributeErf<CV_64S, CV_MAT_DEPTH(dst_t)> ( dcWrkType(g), dcSrcType(c), dcSrcType(TMin[0]), dcSrcType(RGBCubeMax(0,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
+    bblueScale = new distributeErf<CV_64S, CV_MAT_DEPTH(dst_t)> (  dcWrkType(g), dcSrcType(c), dcSrcType(TMin[0]), dcSrcType(RGBCubeMax(0,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
+    
+    redScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (   typename cv::depthConverter<src_t, dst_t>::wrkType(g), typename cv::depthConverter<src_t, dst_t>::srcType(c), typename cv::depthConverter<src_t, dst_t>::srcType(TMin[0]), typename cv::depthConverter<src_t, dst_t>::srcType(RGBCubeMax(0,0)), typename cv::depthConverter<src_t, dst_t>::dstType(dstInfo::min), typename cv::depthConverter<src_t, dst_t>::dstType(dstInfo::max));
+    greenScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> ( dcWrkType(g), dcSrcType(c), dcSrcType(TMin[0]), dcSrcType(RGBCubeMax(0,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
+    blueScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (  dcWrkType(g), dcSrcType(c), dcSrcType(TMin[0]), dcSrcType(RGBCubeMax(0,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
 }
 
-CV_EXPORTS_W template<int src_t, int dst_t> inline void cv::RGB2Rot<src_t, dst_t>::operator()(const typename cv::colorSpaceConverter<src_t, dst_t>::srcType::type* src, typename cv::colorSpaceConverter<src_t, dst_t>::dstType::type* dst, int n) const
+
+//CV_EXPORTS_W template<int src_t, int dst_t>  class  distributeErf: public depthConverter<src_t, dst_t>
+//{
+//    public :
+//    using srcType = typename depthConverter<src_t, dst_t>::srcType;
+//    using dstType = typename depthConverter<src_t, dst_t>::dstType;
+//    using wrkType = typename depthConverter<src_t, dst_t>::wrkType;
+//    srcType sRange, c;
+//    wrkType g;
+//    dstType shift, scale;
+//    
+//    distributeErf();
+//    distributeErf( wrkType _g, srcType _c, srcType sMin, srcType sMax, dstType dMin, dstType dMax);
+//    void operator()(const srcType src, dstType dst) const;
+//};
+
+CV_EXPORTS_W template<int src_t, int dst_t> inline void cv::RGB2Rot<src_t, dst_t>::operator()(const typename cv::colorSpaceConverter<src_t, dst_t>::srcType* src, typename cv::colorSpaceConverter<src_t, dst_t>::dstType* dst, int n) const
 {
     using cs = typename cv::colorSpaceConverter<src_t, dst_t>;
     using de = typename cv::distributeErf<src_t, dst_t>;
-    n *= cs::dstType::channels;
-    for(int i = 0; i < n; i += cs::dstType::channels, src += cs::srcType::channels)
+    n *= cs::dstInfo::channels;
+    for(int i = 0; i < n; i += cs::dstInfo::channels, src += cs::srcInfo::channels)
     {
         typename cs::wrkType X = src[0]*M[0][0] + src[1]*M[0][1] + src[2]*M[0][2]; // CV_DESCALE(x,n) = (((x) + (1 << ((n)-1))) >> (n))
         typename cs::wrkType Y = src[0]*M[1][0] + src[1]*M[1][1] + src[2]*M[1][2]; // could be used in place of * scale
         typename cs::wrkType Z = src[0]*M[2][0] + src[1]*M[2][1] + src[2]*M[2][2]; // Find shift which fits TRange into the desired bit depth.
-      //  distributeErf<src_t, dst_t>::distributeErf(typename distributeErf<src_t, dst_t>::wrkType _g, typename distributeErf<src_t, dst_t>::srcType _c, typename distributeErf<src_t, dst_t>::srcType sMin, typename distributeErf<src_t, dst_t>::srcType sMax, typename distributeErf<src_t, dst_t>::dstType dMin, typename distributeErf<src_t, dst_t>::dstType dMax)
-        dst[i  ] = redScale(X);
-        dst[i+1] = greenScale(Y);
-        dst[i+2] = blueScale(Z);
+        //  distributeErf<src_t, dst_t>::distributeErf(typename distributeErf<src_t, dst_t>::wrkType _g, typename distributeErf<src_t, dst_t>::srcInfo _c, typename distributeErf<src_t, dst_t>::srcInfo sMin, typename distributeErf<src_t, dst_t>::srcInfo sMax, typename distributeErf<src_t, dst_t>::dstInfo dMin, typename distributeErf<src_t, dst_t>::dstInfo dMax)
+        (*rredScale)(X, dst[i  ]);
+        (*ggreenScale)(Y, dst[i+1]);
+        (*bblueScale)(Z, dst[i+2]);
+
+        (*redScale)(X, dst[i  ]);
+        (*greenScale)(Y, dst[i+1]);
+        (*blueScale)(Z, dst[i+2]);
     }
 }
 
@@ -3315,18 +3397,18 @@ template class cv::RGB2Rot<CV_8UC4,CV_8UC3>;
 
 CV_EXPORTS_W template<int src_t, int dst_t> void cv::convertColor(cv::InputArray _src, cv::OutputArray _dst, cv::colorSpaceConverter<src_t, dst_t>& colorConverter)
 {
-    printf("constexpr static int src_Bit_Depth  = %i \n", cv::colorSpaceConverter<src_t, dst_t>::srcType::bitDepth);
-    printf("constexpr static int src_Byte_Depth = %i \n", cv::colorSpaceConverter<src_t, dst_t>::srcType::byteDepth);
-    printf("constexpr static int src_Channels   = %i \n", cv::colorSpaceConverter<src_t, dst_t>::srcType::channels);
-    printf("constexpr static int dst_Bit_Depth  = %i \n", cv::colorSpaceConverter<src_t, dst_t>::dstType::bitDepth);
-    printf("constexpr static int dst_Byte_Depth = %i \n", cv::colorSpaceConverter<src_t, dst_t>::dstType::byteDepth);
-    printf("constexpr static int dst_Channels   = %i \n", cv::colorSpaceConverter<src_t, dst_t>::dstType::channels);
+    printf("constexpr static int src_Bit_Depth  = %i \n", cv::colorSpaceConverter<src_t, dst_t>::srcInfo::bitDepth);
+    printf("constexpr static int src_Byte_Depth = %i \n", cv::colorSpaceConverter<src_t, dst_t>::srcInfo::byteDepth);
+    printf("constexpr static int src_Channels   = %i \n", cv::colorSpaceConverter<src_t, dst_t>::srcInfo::channels);
+    printf("constexpr static int dst_Bit_Depth  = %i \n", cv::colorSpaceConverter<src_t, dst_t>::dstInfo::bitDepth);
+    printf("constexpr static int dst_Byte_Depth = %i \n", cv::colorSpaceConverter<src_t, dst_t>::dstInfo::byteDepth);
+    printf("constexpr static int dst_Channels   = %i \n", cv::colorSpaceConverter<src_t, dst_t>::dstInfo::channels);
     
     cv::Mat src = _src.getMat(), dst;
     cv::Size sz = src.size();
     int scn = src.channels(), depth = src.depth();
-    int dcn = cv::colorSpaceConverter<src_t, dst_t>::dstType::channels;
-    // CV_Assert( colorConverter.srcType::channels == src.channels() );
+    int dcn = cv::colorSpaceConverter<src_t, dst_t>::dstInfo::channels;
+    // CV_Assert( colorConverter.srcInfo::channels == src.channels() );
     
     if (dcn <= 0) dcn = 3;
     CV_Assert( scn >= 3 && dcn == 3 );
