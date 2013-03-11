@@ -1142,8 +1142,7 @@ enum
         
         int M[dstInfo::channels][srcInfo::channels];
         int TRange[dstInfo::channels], TMin[dstInfo::channels];
-        
-        distributeErf<CV_64S, CV_MAT_DEPTH(dst_t)> *rredScale, *ggreenScale, *bblueScale;
+
         distributeErf<wrkInfo::dataType, dstInfo::dataType> *redScale, *greenScale, *blueScale;
         //typename cs::dstType redScale(  typename cs::wrkType x) const;
         //typename cs::dstType greenScale(typename cs::wrkType x) const;
