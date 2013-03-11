@@ -94,6 +94,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <stdout>
 
 namespace cv
 {
@@ -3486,6 +3487,12 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
            (srcInfo::max - srcInfo::min) * TMin[0], //wrkType((srcInfo::max - srcInfo::min) * TMin[0]),
            wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(0,0)),
            dcDstType(dstInfo::min), dcDstType(dstInfo::max));
+    
+    cout << "distributeErf<" << wrkInfo::dataType << ", " << dstInfo::dataType << "> (  g(" << g << "), c("<< c <<"), sMin("<< (srcInfo::max - srcInfo::min) * TMin[1] <<"), sMax("<< (srcInfo::max - srcInfo::min) * RGBCubeMax(1,0) <<"), dMin("<< dstInfo::min <<"), dMax("<< dstInfo::max <<"))\n";
+    cout << "DistributeErf<" << wrkInfo::dataType << ", " << dstInfo::dataType << "> (  g(" << dcWrkType(g) << "), c(" << dcSrcType(c) << "), sMin(" << wrkType((srcInfo::max - srcInfo::min) * TMin[1]) << "), sMax(" << wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(1,0)) << "), dMin(" << dcDstType(dstInfo::min) << "), dMax(" << dcDstType(dstInfo::max) << "))\n";
+    cout << "distributeErf<" << wrkInfo::dataType << ", " << dstInfo::dataType << "> (  g(" << g << "), c(" << c << "), sMin(" << (srcInfo::max - srcInfo::min) * TMin[2] << "), sMax(" << (srcInfo::max - srcInfo::min) * RGBCubeMax(2,0) << "), dMin(" << dstInfo::min << "), dMax(" << dstInfo::max << "))\n";
+    cout << "DistributeErf<" << wrkInfo::dataType << ", " << dstInfo::dataType << "> (  g(" << dcWrkType(g) << "), c(" << dcSrcType(c) << "), sMin(" << wrkType((srcInfo::max - srcInfo::min) * TMin[2]) << "), sMax(" << wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(2,0)) << "), dMin(" << dcDstType(dstInfo::min) << "), dMax(" << dcDstType(dstInfo::max) << "))\n";
+    
     printf("distributeErf<%i, %i> (  g(%f), c(%i), sMin(%i), sMax(%i), dMin(%i), dMax(%i))\n",wrkInfo::dataType, dstInfo::dataType,  g, c, (srcInfo::max - srcInfo::min) * TMin[1], (srcInfo::max - srcInfo::min) * RGBCubeMax(1,0), dstInfo::min, dstInfo::max);
     printf("DistributeErf<%i, %i> (  g(%f), c(%i), sMin(%i), sMax(%i), dMin(%i), dMax(%i))\n",wrkInfo::dataType, dstInfo::dataType,  dcWrkType(g), dcSrcType(c), wrkType((srcInfo::max - srcInfo::min) * TMin[1]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(1,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
     printf("distributeErf<%i, %i> (  g(%f), c(%i), sMin(%i), sMax(%i), dMin(%i), dMax(%i))\n",wrkInfo::dataType, dstInfo::dataType,  g, c, (srcInfo::max - srcInfo::min) * TMin[2], (srcInfo::max - srcInfo::min) * RGBCubeMax(2,0), dstInfo::min, dstInfo::max);
