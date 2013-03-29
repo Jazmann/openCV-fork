@@ -94,7 +94,7 @@
 
 #include <iostream>
 #include <fstream>
-#include <stdout>
+#include <inttypes.h>
 
 namespace cv
 {
@@ -171,7 +171,7 @@ template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf(typena
         using dstType = typename depthConverter<src_t, dst_t>::dstType;
         using wrkType = typename depthConverter<src_t, dst_t>::wrkType;
         
-        printf("In distributeErf (  %f, %i, %i, %i, %u, %u)\n",  _g, _c, sMin, sMax, dMin, dMax);
+    //    printf("In distributeErf (  %f, %i, %i, %i, %u, %u)\n",  _g, _c, sMin, sMax, dMin, dMax);
         
         CV_Assert((int)sMin <= (int)c && (int)c <= (int)sMax && (int)dMin <= (int)dMax);
         sRange = (sMax - sMin);
@@ -182,7 +182,7 @@ template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf(typena
         scale = dstType(dRange / ErfB);
     };
     
-template<int src_t, int dst_t>  void distributeErf<src_t, dst_t>::operator()(const typename depthConverter<src_t, dst_t>::srcType src, typename depthConverter<src_t, dst_t>::dstType dst) const
+template<int src_t, int dst_t>  void distributeErf<src_t, dst_t>::operator()(const typename depthConverter<src_t, dst_t>::srcType src, typename depthConverter<src_t, dst_t>::dstType &dst)
     {
         using srcType = typename depthConverter<src_t, dst_t>::srcType;
         using dstType = typename depthConverter<src_t, dst_t>::dstType;
@@ -192,7 +192,7 @@ template<int src_t, int dst_t>  void distributeErf<src_t, dst_t>::operator()(con
         }else{
             dst = shift - dstType(scale * erf(g*(c - src), wrkType(sRange)));
         };
-        printf("dst(%u) = shift(%u) + dstType(scale(%u) * erf(g(%f)*(src(%i) - c(%i)), wrkType(sRange(%i))))\n",dst,shift,scale,g,src,c,sRange);
+     //   printf("distributeErf :: dst(%u) = shift(%u) + dstType(scale(%u) * erf(g(%f)*(src(%i) - c(%i)), wrkType(sRange(%i))))\n",dst,shift,scale,g,src,c,sRange);
     }
 
     
@@ -3468,10 +3468,20 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
     printf("g(%f) \n", g, dcWrkType(g));
     
     printf("c(%i) %i \n", c, dcSrcType(c));
-    printf("(srcInfo::max - srcInfo::min) * TMin[0](%l) [%i,%i,%i]\n", wrkType((srcInfo::max - srcInfo::min) * TMin[0]), 1,2,3);
-    printf("(srcInfo::max - srcInfo::min) * TMin[1](%ll) [%i,%i,%i]\n", wrkType((srcInfo::max - srcInfo::min) * TMin[1]), 1,2,3);
-    printf("(srcInfo::max - srcInfo::min) * TMin[2](%ul) [%i,%i,%i]\n", wrkType((srcInfo::max - srcInfo::min) * TMin[2]), 1,2,3);
-    printf("(srcInfo::max - srcInfo::min) * RGBCubeMax(0,0)(%i) %i [%i,%i,%i]\n", (srcInfo::max - srcInfo::min) * RGBCubeMax(0,0), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(0,0)), 1,2,3);
+    printf("PRIu64\n");
+    printf("PRIu8  " PRIu8 "  \n");
+    printf("PRIu16  " PRIu16 "  \n");
+    printf("PRIu32  " PRIu32 "  \n");
+    printf("PRIu64  " PRIu64 "  \n");
+    printf("PRIi8  " PRIi8 "  \n");
+    printf("PRIi16  " PRIi16 "  \n");
+    printf("PRIi32  " PRIi32 "  \n");
+    printf("PRIi64  " PRIi64 "  \n");
+    
+    printf("(srcInfo::max - srcInfo::min) * TMin[0](%" PRIi64 ") [%i,%i,%i]\n", wrkType((srcInfo::max - srcInfo::min) * TMin[0]), 1,2,3);
+    printf("(srcInfo::max - srcInfo::min) * TMin[1](%" PRIi64 ") [%i,%i,%i]\n", wrkType((srcInfo::max - srcInfo::min) * TMin[1]), 1,2,3);
+    printf("(srcInfo::max - srcInfo::min) * TMin[2](%" PRIi64 ") [%i,%i,%i]\n", wrkType((srcInfo::max - srcInfo::min) * TMin[2]), 1,2,3);
+    printf("(srcInfo::max - srcInfo::min) * RGBCubeMax(0,0)(%i) %lli [%i,%i,%i]\n", (srcInfo::max - srcInfo::min) * RGBCubeMax(0,0), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(0,0)), 1,2,3);
     printf("(srcInfo::max - srcInfo::min) * RGBCubeMax(1,0)(%i) %i [%i,%i,%i] \n", (srcInfo::max - srcInfo::min) * RGBCubeMax(1,0), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(1,0)), 1,2,3);
     
     printf("(srcInfo::max - srcInfo::min) * RGBCubeMax(2,0)(%i) %i [%i,%i,%i] \n", (srcInfo::max - srcInfo::min) * RGBCubeMax(2,0), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(2,0)), 1,2,3);
@@ -3483,15 +3493,15 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
            (srcInfo::max - srcInfo::min) * TMin[0],
            (srcInfo::max - srcInfo::min) * RGBCubeMax(0,0),
            dstInfo::min, dstInfo::max);
-    printf("DistributeErf<%i, %i> (  g(%f), c(%i), sMin(%i), sMax(%i), dMin(%u), dMax(%u))\n",wrkInfo::dataType, dstInfo::dataType,  dcWrkType(g), dcSrcType(c),
+    printf("DistributeErf<%lli, %i> (  g(%f), c(%i), sMin(%i), sMax(%i), dMin(%u), dMax(%u))\n",wrkInfo::dataType, dstInfo::dataType,  dcWrkType(g), dcSrcType(c),
            (srcInfo::max - srcInfo::min) * TMin[0], //wrkType((srcInfo::max - srcInfo::min) * TMin[0]),
            wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(0,0)),
            dcDstType(dstInfo::min), dcDstType(dstInfo::max));
     
-    cout << "distributeErf<" << wrkInfo::dataType << ", " << dstInfo::dataType << "> (  g(" << g << "), c("<< c <<"), sMin("<< (srcInfo::max - srcInfo::min) * TMin[1] <<"), sMax("<< (srcInfo::max - srcInfo::min) * RGBCubeMax(1,0) <<"), dMin("<< dstInfo::min <<"), dMax("<< dstInfo::max <<"))\n";
-    cout << "DistributeErf<" << wrkInfo::dataType << ", " << dstInfo::dataType << "> (  g(" << dcWrkType(g) << "), c(" << dcSrcType(c) << "), sMin(" << wrkType((srcInfo::max - srcInfo::min) * TMin[1]) << "), sMax(" << wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(1,0)) << "), dMin(" << dcDstType(dstInfo::min) << "), dMax(" << dcDstType(dstInfo::max) << "))\n";
-    cout << "distributeErf<" << wrkInfo::dataType << ", " << dstInfo::dataType << "> (  g(" << g << "), c(" << c << "), sMin(" << (srcInfo::max - srcInfo::min) * TMin[2] << "), sMax(" << (srcInfo::max - srcInfo::min) * RGBCubeMax(2,0) << "), dMin(" << dstInfo::min << "), dMax(" << dstInfo::max << "))\n";
-    cout << "DistributeErf<" << wrkInfo::dataType << ", " << dstInfo::dataType << "> (  g(" << dcWrkType(g) << "), c(" << dcSrcType(c) << "), sMin(" << wrkType((srcInfo::max - srcInfo::min) * TMin[2]) << "), sMax(" << wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(2,0)) << "), dMin(" << dcDstType(dstInfo::min) << "), dMax(" << dcDstType(dstInfo::max) << "))\n";
+    std::cout << "distributeErf<" << wrkInfo::dataType << ", " << dstInfo::dataType << "> (  g(" << g << "), c("<< c <<"), sMin("<< (srcInfo::max - srcInfo::min) * TMin[1] <<"), sMax("<< (srcInfo::max - srcInfo::min) * RGBCubeMax(1,0) <<"), dMin("<< dstInfo::min <<"), dMax("<< dstInfo::max <<"))" << std::endl;
+    std::cout << "DistributeErf<" << wrkInfo::dataType << ", " << dstInfo::dataType << "> (  g(" << dcWrkType(g) << "), c(" << dcSrcType(c) << "), sMin(" << wrkType((srcInfo::max - srcInfo::min) * TMin[1]) << "), sMax(" << wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(1,0)) << "), dMin(" << dcDstType(dstInfo::min) << "), dMax(" << dcDstType(dstInfo::max) << "))" << std::endl;
+    std::cout << "distributeErf<" << wrkInfo::dataType << ", " << dstInfo::dataType << "> (  g(" << g << "), c(" << c << "), sMin(" << (srcInfo::max - srcInfo::min) * TMin[2] << "), sMax(" << (srcInfo::max - srcInfo::min) * RGBCubeMax(2,0) << "), dMin(" << dstInfo::min << "), dMax(" << dstInfo::max << "))\n" << std::endl;
+    std::cout << "DistributeErf<" << wrkInfo::dataType << ", " << dstInfo::dataType << "> (  g(" << dcWrkType(g) << "), c(" << dcSrcType(c) << "), sMin(" << wrkType((srcInfo::max - srcInfo::min) * TMin[2]) << "), sMax(" << wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(2,0)) << "), dMin(" << dcDstType(dstInfo::min) << "), dMax(" << dcDstType(dstInfo::max) << "))\n" << std::endl;
     
     printf("distributeErf<%i, %i> (  g(%f), c(%i), sMin(%i), sMax(%i), dMin(%i), dMax(%i))\n",wrkInfo::dataType, dstInfo::dataType,  g, c, (srcInfo::max - srcInfo::min) * TMin[1], (srcInfo::max - srcInfo::min) * RGBCubeMax(1,0), dstInfo::min, dstInfo::max);
     printf("DistributeErf<%i, %i> (  g(%f), c(%i), sMin(%i), sMax(%i), dMin(%i), dMax(%i))\n",wrkInfo::dataType, dstInfo::dataType,  dcWrkType(g), dcSrcType(c), wrkType((srcInfo::max - srcInfo::min) * TMin[1]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(1,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
@@ -3526,15 +3536,15 @@ CV_EXPORTS_W template<int src_t, int dst_t> inline void cv::RGB2Rot<src_t, dst_t
     n *= cs::dstInfo::channels;
     for(int i = 0; i < n; i += cs::dstInfo::channels, src += cs::srcInfo::channels)
     {
-        printf("%i src : X = %u, Y = %u, Z = %u \n",i,src[0],src[1],src[2]);
+     //   printf("RGB2Rot :: %i src : X = %u, Y = %u, Z = %u \n",i,src[0],src[1],src[2]);
         
         typename cs::wrkType X = src[0]*M[0][0] + src[1]*M[0][1] + src[2]*M[0][2]; // CV_DESCALE(x,n) = (((x) + (1 << ((n)-1))) >> (n))
         typename cs::wrkType Y = src[0]*M[1][0] + src[1]*M[1][1] + src[2]*M[1][2]; // could be used in place of * scale
         typename cs::wrkType Z = src[0]*M[2][0] + src[1]*M[2][1] + src[2]*M[2][2]; // Find shift which fits TRange into the desired bit depth.
         
-        printf("%i X = %i * %i + %i * %i + %i * %i = %i\n",i,src[0], M[0][0],src[1],M[0][1],src[2],M[0][2],X);
-        printf("%i Y = %i * %i + %i * %i + %i * %i = %i \n",i,src[0], M[1][0],src[1],M[1][1],src[2],M[1][2],Y);
-        printf("%i Z = %i * %i + %i * %i + %i * %i = %i \n",i,src[0], M[2][0],src[1],M[2][1],src[2],M[2][2],Z);
+     //   printf("RGB2Rot :: %i X = %i * %i + %i * %i + %i * %i = %i\n",i,src[0], M[0][0],src[1],M[0][1],src[2],M[0][2],X);
+     //   printf("RGB2Rot :: %i Y = %i * %i + %i * %i + %i * %i = %i \n",i,src[0], M[1][0],src[1],M[1][1],src[2],M[1][2],Y);
+     //   printf("RGB2Rot :: %i Z = %i * %i + %i * %i + %i * %i = %i \n",i,src[0], M[2][0],src[1],M[2][1],src[2],M[2][2],Z);
         //   501 src : X = 198, Y = 168, Z = 166
      //   501 XYZ : X = 1632, Y = 0, Z = 453909386
      //   501 dst : X = 0, Y = 0, Z = 0
@@ -3542,7 +3552,7 @@ CV_EXPORTS_W template<int src_t, int dst_t> inline void cv::RGB2Rot<src_t, dst_t
         (*greenScale)(Y, dst[i+1]);
         (*blueScale)(Z, dst[i+2]);
         
-        printf("%i dst : X = %u, Y = %u, Z = %u \n",i,dst[i  ],dst[i+1],dst[i+2]);
+    //    printf("RGB2Rot :: %i dst : X = %u, Y = %u, Z = %u \n",i,dst[i  ],dst[i+1],dst[i+2]);
         
     }
 }

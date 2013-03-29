@@ -1075,7 +1075,7 @@ enum
         using srcType = typename cv_Data_Type<src_t>::type;
         using dstType = typename cv_Data_Type<dst_t>::type;
         using wrkType = double;
-        virtual void operator()(const srcType src, dstType dst) const = 0;
+        virtual void operator()(const srcType src, dstType &dst) = 0;
     };
 
     CV_EXPORTS_W template<int src_t, int dst_t>  class  distributeErf: public depthConverter<src_t, dst_t>
@@ -1090,7 +1090,7 @@ enum
         
         distributeErf();
         distributeErf( typename cv::depthConverter<src_t, dst_t>::wrkType _g, typename depthConverter<src_t, dst_t>::srcType _c, typename depthConverter<src_t, dst_t>::srcType sMin, typename depthConverter<src_t, dst_t>::srcType sMax, typename depthConverter<src_t, dst_t>::dstType dMin, typename depthConverter<src_t, dst_t>::dstType dMax);
-        void operator()(const srcType src, dstType dst) const;
+        void operator()(const srcType src, dstType &dst);
     };
     
     CV_EXPORTS_W template<int src_t, int dst_t>  class  distributeLinear: public depthConverter<src_t, dst_t>
