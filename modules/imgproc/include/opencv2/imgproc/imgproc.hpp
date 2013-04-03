@@ -1150,7 +1150,7 @@ enum
         
         RGB2Rot(const int blueIdx, Matx<int, 3, 3>& T, Vec<int, 3>& _TRange, Vec<int,3>& _TMin);
         
-        RGB2Rot(Vec<int, 3> sp0, Vec<int, 3> sp1, Vec<int, 3> sp2, typename depthConverter<src_t, dst_t>::wrkType g, typename depthConverter<src_t, dst_t>::srcType c);
+        RGB2Rot(Vec<int, 3> sp0, Vec<int, 3> sp1, Vec<int, 3> sp2, Vec<typename depthConverter<src_t, dst_t>::wrkType, 3> g, Vec<typename depthConverter<src_t, dst_t>::srcType, 3 > c);
         
         void operator()(const srcType* src, dstType* dst, int n) const;
     };

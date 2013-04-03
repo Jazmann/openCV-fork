@@ -3276,9 +3276,9 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
 //}
 
 
-CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(cv::Vec<int, 3> sp0, cv::Vec<int, 3> sp1, cv::Vec<int, 3> sp2, typename cv::depthConverter<src_t, dst_t>::wrkType g, typename cv::depthConverter<src_t, dst_t>::srcType c)
+CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(cv::Vec<int, 3> sp0, cv::Vec<int, 3> sp1, cv::Vec<int, 3> sp2, cv::Vec<typename cv::depthConverter<src_t, dst_t>::wrkType, 3> g, cv::Vec<typename cv::depthConverter<src_t, dst_t>::srcType,3> c)
 {
-    printf(" g = %f   c =  %i \n",g,c);
+    // printf(" g = %f   c =  %i \n",g,c);
     using srcInfo = typename cv::colorSpaceConverter<src_t, dst_t>::srcInfo;
     using dstInfo = typename cv::colorSpaceConverter<src_t, dst_t>::dstInfo;
     using srcType = typename cv::colorSpaceConverter<src_t, dst_t>::srcType;
@@ -3292,12 +3292,12 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
     using dcDstType = typename cv::depthConverter<src_t, dst_t>::dstType;
     using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
     
-    printf(" g = %f   c =  %i \n",g,c);
+    // printf(" g = %f   c =  %i \n",g,c);
 
     cv::sVec<int, 3> v1(1.0, sp1 - sp0);
     cv::sVec<int, 3> v2(1.0, sp2 - sp0);
     
-    printf(" g = %f   c =  %i \n",g,c);
+    // printf(" g = %f   c =  %i \n",g,c);
     
     printf(" v1 = %f / %i \\  =  / %f \\ \n",v1.scale,v1[0], v1(0));
     printf("              | %i |  =  | %f |  \n",v1[1], v1(1) );
@@ -3310,15 +3310,12 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
     v1.factor(); v1.scale=1.0;
     v2.factor(); v2.scale=1.0;
     
-    printf(" g = %f   c =  %i \n",g,c);
         
         cv::sVec<int, 1> v1Norm2 = v1 * v1; // v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2];
         cv::sVec<int, 1> v2Norm2 = v2 * v2; // v2[0] * v2[0] + v2[1] * v2[1] + v2[2] * v2[2];
         cv::sVec<int, 1> v2DotV1 = v2 * v1; // v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
     float v1V2Sin = sqrtf(v1Norm2(0) * v2Norm2(0) - v2DotV1(0) * v2DotV1(0));
     
-    
-    printf(" g = %f   c =  %i \n",g,c);
     
     printf(" v1 = %f / %i \\  =  / %f \\ \n",v1.scale,v1[0], v1(0));
     printf("              | %i |  =  | %f |  \n",v1[1], v1(1) );
@@ -3339,8 +3336,6 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
         cv::sVec<int, 3> a3 = v1.cross(v2);
         a3.scale = 1.0/v1V2Sin;
     
-    printf(" g = %f   c =  %i \n",g,c);
-    
     printf(" a1 = %f / %i \\  =  / %f \\ \n",a1.scale,a1[0], a1(0));
     printf("              | %i |  =  | %f |  \n",a1[1], a1(1) );
     printf("              \\ %i /  =  \\ %f / \n",a1[2], a1(2) );
@@ -3355,8 +3350,6 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
         
         // Remove common factors
         a1.factor(); a2.factor(); a3.factor();
-    
-    printf(" g = %f   c =  %i \n",g,c);
     
     printf(" a1 = %f / %i \\  =  / %f \\ \n",a1.scale,a1[0], a1(0));
     printf("              | %i |  =  | %f |  \n",a1[1], a1(1) );
@@ -3397,7 +3390,6 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
             }
         }
     
-    printf(" g = %f   c =  %i \n",g,c);
     
     printf(" a1 = %f / %i \\  =  / %f \\ \n",a1.scale,a1[0], a1(0));
     printf("              | %i |  =  | %f |  \n",a1[1], a1(1) );
@@ -3411,24 +3403,18 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
     printf("              | %i |  =  | %f |  \n",a3[1], a3(1) );
     printf("              \\ %i /  =  \\ %f / \n",a3[2], a3(2) );
     
-    printf(" g = %f   c =  %i \n",g,c);
-
-        // Setup internal data
+    // Setup internal data
         cv::Matx<int, 3, 3> Ti = cv::Matx<int, 3, 3>(a1[0],a1[1],a1[2],a2[0],a2[1],a2[2],a3[0],a3[1],a3[2]);
         cv::Matx<int, 3, 8> RGBBox({0, 1, 0, 0, 0, 1, 1, 1,
             0, 0, 1, 0, 1, 0, 1, 1,
             0, 0, 0, 1, 1, 1, 0, 1});
     cv::Matx<int, 3, 8> RGBBoxInNew = Ti * RGBBox;
     
-    printf(" g = %f   c =  %i \n",g,c);
-    
     printf(" RGBBoxInNew = %i  %i  %i  %i  %i  %i  %i  %i \n",RGBBoxInNew(0,0),RGBBoxInNew(0,1),RGBBoxInNew(0,2),RGBBoxInNew(0,3),RGBBoxInNew(0,4),RGBBoxInNew(0,5),RGBBoxInNew(0,6),RGBBoxInNew(0,7));
     printf("              %i  %i  %i  %i  %i  %i  %i  %i \n",RGBBoxInNew(1,0),RGBBoxInNew(1,1),RGBBoxInNew(1,2),RGBBoxInNew(1,3),RGBBoxInNew(1,4),RGBBoxInNew(1,5),RGBBoxInNew(1,6),RGBBoxInNew(1,7) );
     printf("              %i  %i  %i  %i  %i  %i  %i  %i \n",RGBBoxInNew(2,0),RGBBoxInNew(2,1),RGBBoxInNew(2,2),RGBBoxInNew(2,3),RGBBoxInNew(2,4),RGBBoxInNew(2,5),RGBBoxInNew(2,6),RGBBoxInNew(2,7) );
     
     cv::Matx<int, 3, 1> RGBCubeMax = cv::MaxInRow<int, 3, 8>(RGBBoxInNew);
-    
-    printf(" g = %f   c =  %i \n",g,c);
     
     printf(" RGBCubeMax = %i \n",RGBCubeMax(0,0));
     printf("              %i \n",RGBCubeMax(1,0));
@@ -3450,6 +3436,8 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
     TMin[0] = RGBCubeMin(0,0); TRange[0] = RGBCubeRange(0,0);
     TMin[1] = RGBCubeMin(1,0); TRange[1] = RGBCubeRange(1,0);
     TMin[2] = RGBCubeMin(2,0); TRange[2] = RGBCubeRange(2,0);
+    
+    /*
     printf(" TMin = %i \n",TMin[0]);
     printf("                %i \n",TMin[1]);
     printf("                %i \n",TMin[2]);
@@ -3507,10 +3495,11 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
     printf("DistributeErf<%i, %i> (  g(%f), c(%i), sMin(%i), sMax(%i), dMin(%i), dMax(%i))\n",wrkInfo::dataType, dstInfo::dataType,  dcWrkType(g), dcSrcType(c), wrkType((srcInfo::max - srcInfo::min) * TMin[1]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(1,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
     printf("distributeErf<%i, %i> (  g(%f), c(%i), sMin(%i), sMax(%i), dMin(%i), dMax(%i))\n",wrkInfo::dataType, dstInfo::dataType,  g, c, (srcInfo::max - srcInfo::min) * TMin[2], (srcInfo::max - srcInfo::min) * RGBCubeMax(2,0), dstInfo::min, dstInfo::max);
     printf("DistributeErf<%i, %i> (  g(%f), c(%i), sMin(%i), sMax(%i), dMin(%i), dMax(%i))\n",wrkInfo::dataType, dstInfo::dataType,  dcWrkType(g), dcSrcType(c), wrkType((srcInfo::max - srcInfo::min) * TMin[2]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(2,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
+    */
     
-    redScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (   dcWrkType(g), dcSrcType(c), wrkType((srcInfo::max - srcInfo::min) * TMin[0]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(0,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
-    greenScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> ( dcWrkType(g), dcSrcType(c), wrkType((srcInfo::max - srcInfo::min) * TMin[1]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(1,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
-    blueScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (  dcWrkType(g), dcSrcType(c), wrkType((srcInfo::max - srcInfo::min) * TMin[2]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(2,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
+    redScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (   dcWrkType(g[0]), dcSrcType(c[0]), wrkType((srcInfo::max - srcInfo::min) * TMin[0]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(0,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
+    greenScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> ( dcWrkType(g[1]), dcSrcType(c[1]), wrkType((srcInfo::max - srcInfo::min) * TMin[1]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(1,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
+    blueScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (  dcWrkType(g[2]), dcSrcType(c[2]), wrkType((srcInfo::max - srcInfo::min) * TMin[2]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(2,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
 }
 
 
