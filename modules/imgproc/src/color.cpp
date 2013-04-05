@@ -3276,7 +3276,7 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
 //}
 
 
-CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(cv::Vec<int, 3> sp0, cv::Vec<int, 3> sp1, cv::Vec<int, 3> sp2, cv::Vec<typename cv::depthConverter<src_t, dst_t>::wrkType, 3> g, cv::Vec<typename cv::depthConverter<src_t, dst_t>::srcType,3> c)
+CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(cv::Vec<int, 3> sp0, cv::Vec<int, 3> sp1, cv::Vec<int, 3> sp2, cv::Vec<double, 3> g, cv::Vec<typename cv::depthConverter<src_t, dst_t>::srcType,3> c)
 {
     // printf(" g = %f   c =  %i \n",g,c);
     using srcInfo = typename cv::colorSpaceConverter<src_t, dst_t>::srcInfo;
@@ -3292,6 +3292,9 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
     using dcDstType = typename cv::depthConverter<src_t, dst_t>::dstType;
     using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
     
+    int indxA = 0;
+    int indxB = 1;
+    int indxC = 2;
     // printf(" g = %f   c =  %i \n",g,c);
 
     cv::sVec<int, 3> v1(1.0, sp1 - sp0);
@@ -3369,14 +3372,18 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
             if (a1.scale < 0.0) { // a1 is pointing in the wrong direction flip the sign and correct the product a1 x a2 = a3.
                 a1.scale *= -1.0;
                 std::swap(a2, a3);
+                std::swap(indxB, indxC);
             }
         } else if (a2.allPositive()){ // Then a2.vec is in RGB. Make a2 -> a1, a1 -> a2 and flip sign of a3 to preserve a1 x a2 = a3.
             if (a2.scale < 0.0) { // a2 is pointing in the wrong direction flip the sign and correct the product a1 x a2 = a3.
                 a2.scale *= -1.0;
                 std::swap(a1, a2); // Now : a2,a1,a3 As desired.
+                std::swap(indxA, indxB);
             } else {
                 std::swap(a1, a3);    // Now : a3,a2,a1
+                std::swap(indxA, indxC);
                 std::swap(a1, a2);    // Now : a2,a3,a1 As desired.
+                std::swap(indxA, indxB);
             }
             a3 *= -1; // Flip sign of a3 to preserve a1 x a2 = a3.
             
@@ -3384,9 +3391,12 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
             if (a3.scale < 0.0) { // a3 is pointing in the wrong direction flip the sign and correct the product a1 x a2 = a3.
                 a3.scale *= -1.0;
                 std::swap(a1, a3);    // Now : a3,a2,a1
+                std::swap(indxA, indxC);
             } else {
                 std::swap(a1, a3);    // Now : a3,a2,a1
+                std::swap(indxA, indxC);
                 std::swap(a2, a3);    // Now : a3,a1,a2 As desired.
+                std::swap(indxB, indxC);
             }
         }
     
@@ -3497,9 +3507,9 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
     printf("DistributeErf<%i, %i> (  g(%f), c(%i), sMin(%i), sMax(%i), dMin(%i), dMax(%i))\n",wrkInfo::dataType, dstInfo::dataType,  dcWrkType(g), dcSrcType(c), wrkType((srcInfo::max - srcInfo::min) * TMin[2]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(2,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
     */
     
-    redScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (   dcWrkType(g[0]), dcSrcType(c[0]), wrkType((srcInfo::max - srcInfo::min) * TMin[0]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(0,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
-    greenScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> ( dcWrkType(g[1]), dcSrcType(c[1]), wrkType((srcInfo::max - srcInfo::min) * TMin[1]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(1,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
-    blueScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (  dcWrkType(g[2]), dcSrcType(c[2]), wrkType((srcInfo::max - srcInfo::min) * TMin[2]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(2,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
+    redScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (   dcWrkType(g[indxA]), dcSrcType(c[indxA]), wrkType((srcInfo::max - srcInfo::min) * TMin[0]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(0,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
+    greenScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> ( dcWrkType(g[indxB]), dcSrcType(c[indxB]), wrkType((srcInfo::max - srcInfo::min) * TMin[1]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(1,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
+    blueScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (  dcWrkType(g[indxC]), dcSrcType(c[indxC]), wrkType((srcInfo::max - srcInfo::min) * TMin[2]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(2,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
 }
 
 
