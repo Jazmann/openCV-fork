@@ -1089,7 +1089,7 @@ enum
         dstType shift, scale;
         
         distributeErf();
-        distributeErf( typename cv::depthConverter<src_t, dst_t>::wrkType _g, typename depthConverter<src_t, dst_t>::srcType _c, typename depthConverter<src_t, dst_t>::srcType sMin, typename depthConverter<src_t, dst_t>::srcType sMax, typename depthConverter<src_t, dst_t>::dstType dMin, typename depthConverter<src_t, dst_t>::dstType dMax);
+        distributeErf( typename cv::depthConverter<src_t, dst_t>::wrkType _g, typename depthConverter<src_t, dst_t>::wrkType _c, typename depthConverter<src_t, dst_t>::wrkType sMin, typename depthConverter<src_t, dst_t>::wrkType sMax, typename depthConverter<src_t, dst_t>::dstType dMin, typename depthConverter<src_t, dst_t>::dstType dMax);
         void operator()(const srcType src, dstType &dst);
     };
     
@@ -1150,7 +1150,7 @@ enum
         
         RGB2Rot(const int blueIdx, Matx<int, 3, 3>& T, Vec<int, 3>& _TRange, Vec<int,3>& _TMin);
         
-        RGB2Rot(Vec<int, 3> sp0, Vec<int, 3> sp1, Vec<int, 3> sp2, Vec<typename depthConverter<src_t, dst_t>::wrkType, 3> g, Vec<typename depthConverter<src_t, dst_t>::srcType, 3 > c);
+        RGB2Rot(Vec<int, 3> sp0, Vec<int, 3> sp1, Vec<int, 3> sp2, Vec<double, 3> g, Vec<typename depthConverter<src_t, dst_t>::srcType, 3 > c);
         
         void operator()(const srcType* src, dstType* dst, int n) const;
     };
