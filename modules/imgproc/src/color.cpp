@@ -126,13 +126,15 @@ namespace cv
     double erf(double a, double b)
     {
         // constants
-        double a1 =  0.254829592;
-        double a2 = -0.284496736;
-        double a3 =  1.421413741;
-        double a4 = -1.453152027;
-        double a5 =  1.061405429;
-        double p  =  0.3275911;
+        const double a1 =  0.254829592;
+        const double a2 = -0.284496736;
+        const double a3 =  1.421413741;
+        const double a4 = -1.453152027;
+        const double a5 =  1.061405429;
+        const double p  =  0.3275911;
         
+     //   printf("erf :: a(%f) b(%f)\n",a,b);
+
         // Save the sign of x
         int sign = 1;
         if (a < 0) sign *= -1; a = fabs(a);
@@ -161,11 +163,11 @@ template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf()
         dstType dRange = (dMax - dMin);
         wrkType ErfA = erf(0.5);
         wrkType ErfB = erf(0.5) + ErfA;
-        shift = dstType(dMin - dRange * ErfA / ErfB);
+        shift = dstType(dMin + dRange * ErfA / ErfB);
         scale = dstType(dRange / ErfB);
     };
 
-template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf(typename depthConverter<src_t, dst_t>::wrkType _g, typename depthConverter<src_t, dst_t>::wrkType _c, typename depthConverter<src_t, dst_t>::wrkType sMin, typename depthConverter<src_t, dst_t>::wrkType sMax, typename depthConverter<src_t, dst_t>::dstType dMin, typename depthConverter<src_t, dst_t>::dstType dMax): g(_g), c(_c)
+template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf(double _g, typename depthConverter<src_t, dst_t>::srcType _c, typename depthConverter<src_t, dst_t>::srcType sMin, typename depthConverter<src_t, dst_t>::srcType sMax, typename depthConverter<src_t, dst_t>::dstType dMin, typename depthConverter<src_t, dst_t>::dstType dMax): g(_g), c(_c)
     {
         using srcType = typename depthConverter<src_t, dst_t>::srcType;
         using dstType = typename depthConverter<src_t, dst_t>::dstType;
@@ -178,7 +180,7 @@ template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf(typena
         dstType dRange = (dMax - dMin);
         wrkType ErfA = erf((g*(c - sMin)), wrkType(sRange));
         wrkType ErfB = erf((g*(sMax - c)), wrkType(sRange)) + ErfA;
-        shift = dstType(dMin - dRange * ErfA / ErfB);
+        shift = dstType(dMin + dRange * ErfA / ErfB);
         scale = dstType(dRange / ErfB);
     };
     
@@ -188,11 +190,13 @@ template<int src_t, int dst_t>  void distributeErf<src_t, dst_t>::operator()(con
         using dstType = typename depthConverter<src_t, dst_t>::dstType;
         using wrkType = typename depthConverter<src_t, dst_t>::wrkType;
         if(src >= c){
-            dst = shift + dstType(scale * erf(g*(src - c), wrkType(sRange)));
+            dst = shift + dstType(scale * erf(g*(src - c), double(sRange)));
+         //   printf("distributeErf :: dst(%" PRIu8 ") = shift(%" PRIu8 ") + dstType(scale(%" PRIu8 ") * erf(g(%f)*(src(%" PRIu64 ") - c(%" PRIu64 ")), sRange(%" PRIu64 "))) erf(g*(src - c), double(sRange))(%f) (%" PRIu8 ")\n",dst,shift,scale,g,src,c,sRange, erf(g*(src - c), double(sRange)), dstType(scale * erf(g*(c - src), double(sRange))));
         }else{
-            dst = shift - dstType(scale * erf(g*(c - src), wrkType(sRange)));
+            dst = shift - dstType(scale * erf(g*(c - src), double(sRange)));
+         //   printf("distributeErf :: dst(%" PRIu8 ") = shift(%" PRIu8 ") - dstType(scale(%" PRIu8 ") * erf(g(%f)*( c(%" PRIu64 ") - src(%" PRIu64 ")), wrkType(sRange(%" PRIu64 ")))) erf(g*(c - src), double(sRange))(%f) (%" PRIu8 ")\n",dst,shift,scale,g,c,src,sRange,erf(g*(c - src), double(sRange)), dstType(scale * erf(g*(c - src), double(sRange))));
         };
-     //   printf("distributeErf :: dst(%u) = shift(%u) + dstType(scale(%u) * erf(g(%f)*(src(%i) - c(%i)), wrkType(sRange(%i))))\n",dst,shift,scale,g,src,c,sRange);
+        
     }
 
     
@@ -3511,13 +3515,17 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
     
     printf("distributeErf<%i, %i> (  g(%f), c(%u), sMin(%" PRIi64 "), sMax(%" PRIi64 "), dMin(%u), dMax(%u))\n",wrkInfo::dataType, dstInfo::dataType,  dcWrkType(g[indxC]), dcSrcType(c[indxC]), wrkType((srcInfo::max - srcInfo::min) * TMin[2]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(2,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
     
-    wrkType c1 = c[0]*M[0][0] + c[1]*M[0][1] + c[2]*M[0][2];
-    wrkType c2 = c[0]*M[1][0] + c[1]*M[1][1] + c[2]*M[1][2];
-    wrkType c3 = c[0]*M[2][0] + c[1]*M[2][1] + c[2]*M[2][2];
+    wrkType c1 = c[0];
+    wrkType c2 = c[1];
+    wrkType c3 = c[2];
     
-    redScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (   dcWrkType(g[indxA]), c1, wrkType((srcInfo::max - srcInfo::min) * TMin[0]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(0,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
-    greenScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> ( dcWrkType(g[indxB]), c2, wrkType((srcInfo::max - srcInfo::min) * TMin[1]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(1,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
-    blueScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (  dcWrkType(g[indxC]), c3, wrkType((srcInfo::max - srcInfo::min) * TMin[2]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(2,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
+    // wrkType c1 = c[0]*M[0][0] + c[1]*M[0][1] + c[2]*M[0][2];
+    // wrkType c2 = c[0]*M[1][0] + c[1]*M[1][1] + c[2]*M[1][2];
+    // wrkType c3 = c[0]*M[2][0] + c[1]*M[2][1] + c[2]*M[2][2];
+    
+    redScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (   g[indxA], c1, wrkType((srcInfo::max - srcInfo::min) * TMin[0]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(0,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
+    greenScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> ( g[indxB], c2, wrkType((srcInfo::max - srcInfo::min) * TMin[1]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(1,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
+    blueScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (  g[indxC], c3, wrkType((srcInfo::max - srcInfo::min) * TMin[2]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(2,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
 }
 
 
