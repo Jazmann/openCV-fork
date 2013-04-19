@@ -1085,8 +1085,8 @@ enum
         using dstType = typename depthConverter<src_t, dst_t>::dstType;
         using wrkType = typename depthConverter<src_t, dst_t>::wrkType;
         srcType sRange, c;
-        double g;
-        dstType shift, scale;
+        double g, scale;
+        wrkType shift;
         
         distributeErf();
         distributeErf( double _g, typename depthConverter<src_t, dst_t>::srcType _c, typename depthConverter<src_t, dst_t>::srcType sMin, typename depthConverter<src_t, dst_t>::srcType sMax, typename depthConverter<src_t, dst_t>::dstType dMin, typename depthConverter<src_t, dst_t>::dstType dMax);

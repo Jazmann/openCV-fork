@@ -167,7 +167,7 @@ template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf()
         scale = dstType(dRange / ErfB);
     };
 
-template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf(double _g, typename depthConverter<src_t, dst_t>::srcType _c, typename depthConverter<src_t, dst_t>::srcType sMin, typename depthConverter<src_t, dst_t>::srcType sMax, typename depthConverter<src_t, dst_t>::dstType dMin, typename depthConverter<src_t, dst_t>::dstType dMax): g(_g), c(_c)
+template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf(double _g, typename depthConverter<src_t, dst_t>::srcType _c, typename depthConverter<src_t, dst_t>::srcType sMin, typename depthConverter<src_t, dst_t>::srcType sMax, typename depthConverter<src_t, dst_t>::dstType dMin, typename depthConverter<src_t, dst_t>::dstType dMax): c(_c), g(_g)
     {
         using srcType = typename depthConverter<src_t, dst_t>::srcType;
         using dstType = typename depthConverter<src_t, dst_t>::dstType;
@@ -178,10 +178,10 @@ template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf(double
         CV_Assert((int)sMin <= (int)c && (int)c <= (int)sMax && (int)dMin <= (int)dMax);
         sRange = (sMax - sMin);
         dstType dRange = (dMax - dMin);
-        wrkType ErfA = erf((g*(c - sMin)), wrkType(sRange));
-        wrkType ErfB = erf((g*(sMax - c)), wrkType(sRange)) + ErfA;
-        shift = dstType(dMin + dRange * ErfA / ErfB);
-        scale = dstType(dRange / ErfB);
+        double ErfA = erf((g*(c - sMin)), double(sRange));
+        double ErfB = erf((g*(sMax - c)), double(sRange)) + ErfA;
+        shift = wrkType(dMin + dRange * ErfA / ErfB);
+        scale = double(dRange / ErfB);
     };
     
 template<int src_t, int dst_t>  void distributeErf<src_t, dst_t>::operator()(const typename depthConverter<src_t, dst_t>::srcType src, typename depthConverter<src_t, dst_t>::dstType &dst)
@@ -190,11 +190,11 @@ template<int src_t, int dst_t>  void distributeErf<src_t, dst_t>::operator()(con
         using dstType = typename depthConverter<src_t, dst_t>::dstType;
         using wrkType = typename depthConverter<src_t, dst_t>::wrkType;
         if(src >= c){
-            dst = shift + dstType(scale * erf(g*(src - c), double(sRange)));
-         //   printf("distributeErf :: dst(%" PRIu8 ") = shift(%" PRIu8 ") + dstType(scale(%" PRIu8 ") * erf(g(%f)*(src(%" PRIu64 ") - c(%" PRIu64 ")), sRange(%" PRIu64 "))) erf(g*(src - c), double(sRange))(%f) (%" PRIu8 ")\n",dst,shift,scale,g,src,c,sRange, erf(g*(src - c), double(sRange)), dstType(scale * erf(g*(c - src), double(sRange))));
+            dst = dstType(shift + scale * erf(g*(src - c), double(sRange)));
+            printf("distributeErf :: dst(%" PRIu8 ") = shift(%f) + dstType(scale(%f) * erf(g(%f)*(src(%" PRIu64 ") - c(%" PRIu64 ")), sRange(%" PRIu64 "))) erf(g*(src - c), double(sRange))(%f) (%" PRIu8 ")\n",dst,shift,scale,g,src,c,sRange, erf(g*(src - c), double(sRange)), dstType(scale * erf(g*(c - src), double(sRange))));
         }else{
-            dst = shift - dstType(scale * erf(g*(c - src), double(sRange)));
-         //   printf("distributeErf :: dst(%" PRIu8 ") = shift(%" PRIu8 ") - dstType(scale(%" PRIu8 ") * erf(g(%f)*( c(%" PRIu64 ") - src(%" PRIu64 ")), wrkType(sRange(%" PRIu64 ")))) erf(g*(c - src), double(sRange))(%f) (%" PRIu8 ")\n",dst,shift,scale,g,c,src,sRange,erf(g*(c - src), double(sRange)), dstType(scale * erf(g*(c - src), double(sRange))));
+            dst = dstType(shift - scale * erf(g*(c - src), double(sRange)));
+            printf("distributeErf :: dst(%" PRIu8 ") = shift(%f) - dstType(scale(%f) * erf(g(%f)*( c(%" PRIu64 ") - src(%" PRIu64 ")), wrkType(sRange(%" PRIu64 ")))) erf(g*(c - src), double(sRange))(%f) (%" PRIu8 ")\n",dst,shift,scale,g,c,src,sRange,erf(g*(c - src), double(sRange)), dstType(scale * erf(g*(c - src), double(sRange))));
         };
         
     }
@@ -3419,6 +3419,9 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
     printf(" a3 = %f / %i \\  =  / %f \\ \n",a3.scale,a3[0], a3(0));
     printf("              | %i |  =  | %f |  \n",a3[1], a3(1) );
     printf("              \\ %i /  =  \\ %f / \n",a3[2], a3(2) );
+    // Rescale to avoid bit overflow during transform.]
+    
+    
     
     // Setup internal data
         cv::Matx<int, 3, 3> Ti = cv::Matx<int, 3, 3>(a1[0],a1[1],a1[2],a2[0],a2[1],a2[2],a3[0],a3[1],a3[2]);
