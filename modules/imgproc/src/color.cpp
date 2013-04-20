@@ -191,10 +191,10 @@ template<int src_t, int dst_t>  void distributeErf<src_t, dst_t>::operator()(con
         using wrkType = typename depthConverter<src_t, dst_t>::wrkType;
         if(src >= c){
             dst = dstType(shift + scale * erf(g*(src - c), double(sRange)));
-            printf("distributeErf :: dst(%" PRIu8 ") = shift(%f) + dstType(scale(%f) * erf(g(%f)*(src(%" PRIu64 ") - c(%" PRIu64 ")), sRange(%" PRIu64 "))) erf(g*(src - c), double(sRange))(%f) (%" PRIu8 ")\n",dst,shift,scale,g,src,c,sRange, erf(g*(src - c), double(sRange)), dstType(scale * erf(g*(c - src), double(sRange))));
+         //   printf("distributeErf :: dst(%" PRIu8 ") = shift(%f) + dstType(scale(%f) * erf(g(%f)*(src(%" PRIu64 ") - c(%" PRIu64 ")), sRange(%" PRIu64 "))) erf(g*(src - c), double(sRange))(%f) (%" PRIu8 ")\n",dst,shift,scale,g,src,c,sRange, erf(g*(src - c), double(sRange)), dstType(scale * erf(g*(c - src), double(sRange))));
         }else{
             dst = dstType(shift - scale * erf(g*(c - src), double(sRange)));
-            printf("distributeErf :: dst(%" PRIu8 ") = shift(%f) - dstType(scale(%f) * erf(g(%f)*( c(%" PRIu64 ") - src(%" PRIu64 ")), wrkType(sRange(%" PRIu64 ")))) erf(g*(c - src), double(sRange))(%f) (%" PRIu8 ")\n",dst,shift,scale,g,c,src,sRange,erf(g*(c - src), double(sRange)), dstType(scale * erf(g*(c - src), double(sRange))));
+        //    printf("distributeErf :: dst(%" PRIu8 ") = shift(%f) - dstType(scale(%f) * erf(g(%f)*( c(%" PRIu64 ") - src(%" PRIu64 ")), wrkType(sRange(%" PRIu64 ")))) erf(g*(c - src), double(sRange))(%f) (%" PRIu8 ")\n",dst,shift,scale,g,c,src,sRange,erf(g*(c - src), double(sRange)), dstType(scale * erf(g*(c - src), double(sRange))));
         };
         
     }
@@ -3413,19 +3413,71 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
     printf("              \\ %i /  =  \\ %f / \n",a1[2], a1(2) );
     
     printf(" a2 = %f / %i \\  =  / %f \\ \n",a2.scale,a2[0], a2(0));
-    printf("              | %i |  =  | %f |  \n",a2[1], a2(1) );
+    printf("              | %i |  =  | %f |  \n", a2[1], a2(1) );
     printf("              \\ %i /  =  \\ %f / \n",a2[2], a2(2) );
     
     printf(" a3 = %f / %i \\  =  / %f \\ \n",a3.scale,a3[0], a3(0));
     printf("              | %i |  =  | %f |  \n",a3[1], a3(1) );
     printf("              \\ %i /  =  \\ %f / \n",a3[2], a3(2) );
-    // Rescale to avoid bit overflow during transform.]
+    // Rescale to avoid bit overflow during transform.
+    
+    /* void cv_Print_Data_Type(int type){
+     printf("%llu",CV_DEPTH_BITS_MAGIC);
+     printf("To get back the information put into CV_MAKETYPE( depth_Type, cn) use");
+     printf("int depth_Type = %u", CV_MAT_DEPTH(type));
+     printf("int cn = %u", CV_MAT_CN(type));
+     printf("To get info on the type itself use");
+     printf("int bit_Depth  = %u",   CV_MAT_DEPTH_BITS(type));
+     printf("int byte_Depth = %u", CV_MAT_DEPTH_BYTES(type));
+     printf("int channels = %u",  CV_MAT_CN(type));
+     }*/
+    
+    cv::Matx<int, 3, 3> Tit = cv::Matx<int, 3, 3>(a1[0],a1[1],a1[2],a2[0],a2[1],a2[2],a3[0],a3[1],a3[2]);
+    int TitRowSum[3] = {a1[0]+a1[1]+a1[2],a2[0]+a2[1]+a2[2],a3[0]+a3[1]+a3[2]};
+    //cv::Matx<int, 3, 1> unit({ 1, 1, 1});
+    //cv::Matx<int, 3, 1> TitRowSum = Tit * unit;
+    
+    printf(" TitRowSum = %i \n",TitRowSum[0]);
+    printf("             %i \n",TitRowSum[1]);
+    printf("             %i \n",TitRowSum[2]);
+    
+    int TitRowLog2Sum[3] = {0,0,0};
+    for (int i=0; i<=2; i++) {
+        while (TitRowSum[i] >>= 1) ++TitRowLog2Sum[i];
+    }
+    
+    printf(" TitRowLog2Sum = %i \n",TitRowLog2Sum[0]);
+    printf("                 %i \n",TitRowLog2Sum[1]);
+    printf("                 %i \n",TitRowLog2Sum[2]);
+    
+    cv::Matx<int, 3, 1> MWB({
+        TitRowLog2Sum[0] + CV_MAT_DEPTH_BITS(src_t),
+        TitRowLog2Sum[1] + CV_MAT_DEPTH_BITS(src_t),
+        TitRowLog2Sum[2] + CV_MAT_DEPTH_BITS(src_t)
+    });
+    
+    int excessWBFactor[3] = {
+        (int) ceil(pow(2, TitRowLog2Sum[0] - CV_MAT_DEPTH_BITS(src_t))),
+        (int) ceil(pow(2, TitRowLog2Sum[1] - CV_MAT_DEPTH_BITS(src_t))),
+        (int) ceil(pow(2, TitRowLog2Sum[2] - CV_MAT_DEPTH_BITS(src_t)))
+    };
+    
+    printf(" excessWBFactor = %i \n",excessWBFactor[0]);
+    printf("                  %i \n",excessWBFactor[1]);
+    printf("                  %i \n",excessWBFactor[2]);
+    
+    cv::Matx<int, 3, 3> Ti = cv::Matx<int, 3, 3>(a1[0]/excessWBFactor[0], a1[1]/excessWBFactor[0], a1[2]/excessWBFactor[0],
+                                                 a2[0]/excessWBFactor[1], a2[1]/excessWBFactor[1], a2[2]/excessWBFactor[1],
+                                                 a3[0]/excessWBFactor[2], a3[1]/excessWBFactor[2], a3[2]/excessWBFactor[2]);
     
     
+    printf(" Ti = %i  %i  %i \n",Ti(0,0),Ti(0,1),Ti(0,2));
+    printf("      %i  %i  %i \n",Ti(1,0),Ti(1,1),Ti(1,2));
+    printf("      %i  %i  %i \n",Ti(2,0),Ti(2,1),Ti(2,2));
     
     // Setup internal data
-        cv::Matx<int, 3, 3> Ti = cv::Matx<int, 3, 3>(a1[0],a1[1],a1[2],a2[0],a2[1],a2[2],a3[0],a3[1],a3[2]);
-        cv::Matx<int, 3, 8> RGBBox({0, 1, 0, 0, 0, 1, 1, 1,
+        cv::Matx<int, 3, 8> RGBBox({
+            0, 1, 0, 0, 0, 1, 1, 1,
             0, 0, 1, 0, 1, 0, 1, 1,
             0, 0, 0, 1, 1, 1, 0, 1});
     cv::Matx<int, 3, 8> RGBBoxInNew = Ti * RGBBox;
@@ -3518,13 +3570,13 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
     
     printf("distributeErf<%i, %i> (  g(%f), c(%u), sMin(%" PRIi64 "), sMax(%" PRIi64 "), dMin(%u), dMax(%u))\n",wrkInfo::dataType, dstInfo::dataType,  dcWrkType(g[indxC]), dcSrcType(c[indxC]), wrkType((srcInfo::max - srcInfo::min) * TMin[2]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(2,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
     
-    wrkType c1 = c[0];
-    wrkType c2 = c[1];
-    wrkType c3 = c[2];
+    // wrkType c1 = c[0];
+    // wrkType c2 = c[1];
+    // wrkType c3 = c[2];
     
-    // wrkType c1 = c[0]*M[0][0] + c[1]*M[0][1] + c[2]*M[0][2];
-    // wrkType c2 = c[0]*M[1][0] + c[1]*M[1][1] + c[2]*M[1][2];
-    // wrkType c3 = c[0]*M[2][0] + c[1]*M[2][1] + c[2]*M[2][2];
+     wrkType c1 = c[0]*M[0][0] + c[1]*M[0][1] + c[2]*M[0][2];
+     wrkType c2 = c[0]*M[1][0] + c[1]*M[1][1] + c[2]*M[1][2];
+     wrkType c3 = c[0]*M[2][0] + c[1]*M[2][1] + c[2]*M[2][2];
     
     redScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (   g[indxA], c1, wrkType((srcInfo::max - srcInfo::min) * TMin[0]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(0,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
     greenScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> ( g[indxB], c2, wrkType((srcInfo::max - srcInfo::min) * TMin[1]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(1,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
