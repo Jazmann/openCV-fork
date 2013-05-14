@@ -3341,8 +3341,17 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
     printf(" v1V2Sin = %f  \n",v1V2Sin);
 
         cv::sVec<int, 3> a1 = v1;
-        v1.scale = 1.0 / sqrtf(v1Norm2[0]);
-        cv::sVec<int, 3> a2(1.0 / (v1Norm2(0) * v1V2Sin), v1Norm2(0) * v2 - v2DotV1(0) * v1);
+    //    v1.scale = 1.0 / sqrtf(v1Norm2[0]);
+    cv::sVec<int, 3> a2a = v1Norm2(0) * v2;
+    printf(" a2a = %f / %i \\  =  / %f \\ \n",a2a.scale,a2a[0], a2a(0));
+    printf("              | %i |  =  | %f |  \n",a2a[1], a2a(1) );
+    printf("              \\ %i /  =  \\ %f / \n",a2a[2], a2a(2) );
+     cv::sVec<int, 3> a2b = v2DotV1(0) * v1;
+    // cv::sVec<int, 3> a2b(v2DotV1(0) * v1.scale, v1.val);
+    printf(" a2b = %f / %i \\  =  / %f \\ \n",a2b.scale,a2b[0], a2b(0));
+    printf("              | %i |  =  | %f |  \n",a2b[1], a2b(1) );
+    printf("              \\ %i /  =  \\ %f / \n",a2b[2], a2b(2) );
+    cv::sVec<int, 3> a2(1.0 / (v1Norm2(0) * v1V2Sin), v1Norm2(0) * v2 - v2DotV1(0) * v1);
         cv::sVec<int, 3> a3 = v1.cross(v2);
         a3.scale = 1.0/v1V2Sin;
     
