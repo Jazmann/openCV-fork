@@ -1142,11 +1142,9 @@ enum
         
         int M[dstInfo::channels][srcInfo::channels];
         int TRange[dstInfo::channels], TMin[dstInfo::channels];
+        dstType[dstInfo::channels] cRot;
 
         distributeErf<wrkInfo::dataType, dstInfo::dataType> *redScale, *greenScale, *blueScale;
-        //typename cs::dstType redScale(  typename cs::wrkType x) const;
-        //typename cs::dstType greenScale(typename cs::wrkType x) const;
-       // typename cs::dstType blueScale( typename cs::wrkType x) const;
         
         RGB2Rot(const int blueIdx, Matx<int, 3, 3>& T, Vec<int, 3>& _TRange, Vec<int,3>& _TMin);
         

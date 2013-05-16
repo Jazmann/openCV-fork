@@ -3590,6 +3590,15 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
     redScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (   g[indxA], c1, wrkType((srcInfo::max - srcInfo::min) * TMin[0]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(0,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
     greenScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> ( g[indxB], c2, wrkType((srcInfo::max - srcInfo::min) * TMin[1]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(1,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
     blueScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (  g[indxC], c3, wrkType((srcInfo::max - srcInfo::min) * TMin[2]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(2,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
+    
+    (*redScale)(  c1, cRot[0]);
+    (*greenScale)(c2, cRot[1]);
+    (*blueScale)( c3, cRot[2]);
+    
+    printf(" cRot = %" PRIu8 " \n",cRot[0]);
+    printf("                %" PRIu8 " \n",cRot[1]);
+    printf("                %" PRIu8 " \n",cRot[2]);
+
 }
 
 
@@ -3630,6 +3639,22 @@ CV_EXPORTS_W template<int src_t, int dst_t> inline void cv::RGB2Rot<src_t, dst_t
         (*redScale)(X, dst[i  ]);
         (*greenScale)(Y, dst[i+1]);
         (*blueScale)(Z, dst[i+2]);
+        if (dst[i] > cRot[0]) {
+            dst[i] = dst[i]-cRot[0];
+        }else{
+            dst[i] = cRot[0] - dst[i];
+        }
+        if (dst[i+1] > cRot[1]) {
+            dst[i+1] = dst[i+1]-cRot[1];
+        }else{
+            dst[i+1] = cRot[1] - dst[i+1];
+        }
+        if (dst[i+2] > cRot[2]) {
+            dst[i+2] = dst[i+2]-cRot[2];
+        }else{
+            dst[i+2] = cRot[2] - dst[i+2];
+        }
+
         
     //    printf("RGB2Rot :: %i dst : X = %u, Y = %u, Z = %u \n",i,dst[i  ],dst[i+1],dst[i+2]);
         
