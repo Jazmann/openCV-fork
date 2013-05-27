@@ -3640,19 +3640,19 @@ CV_EXPORTS_W template<int src_t, int dst_t> inline void cv::RGB2Rot<src_t, dst_t
         (*greenScale)(Y, dst[i+1]);
         (*blueScale)(Z, dst[i+2]);
         if (dst[i] > cRot[0]) {
-            dst[i] = dst[i]-cRot[0];
+            dst[i] = 254 - (dst[i]-cRot[0]);
         }else{
-            dst[i] = cRot[0] - dst[i];
+            dst[i] = 254 - (cRot[0] - dst[i]);
         }
         if (dst[i+1] > cRot[1]) {
-            dst[i+1] = dst[i+1]-cRot[1];
+            dst[i+1] = 254 - (dst[i+1]-cRot[1]);
         }else{
-            dst[i+1] = cRot[1] - dst[i+1];
+            dst[i+1] = 254 - (cRot[1] - dst[i+1]);
         }
         if (dst[i+2] > cRot[2]) {
-            dst[i+2] = dst[i+2]-cRot[2];
+            dst[i+2] = 254 - (dst[i+2]-cRot[2]);
         }else{
-            dst[i+2] = cRot[2] - dst[i+2];
+            dst[i+2] = 254 - (cRot[2] - dst[i+2]);
         }
 
         

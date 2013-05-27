@@ -1142,7 +1142,7 @@ enum
         
         int M[dstInfo::channels][srcInfo::channels];
         int TRange[dstInfo::channels], TMin[dstInfo::channels];
-        dstType[dstInfo::channels] cRot;
+        dstType cRot[dstInfo::channels];
 
         distributeErf<wrkInfo::dataType, dstInfo::dataType> *redScale, *greenScale, *blueScale;
         
