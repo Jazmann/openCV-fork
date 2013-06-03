@@ -78,10 +78,10 @@ def build_opencv(srcroot, buildroot, target, arch):
 def build_framework(srcroot, dstroot):
     "main function to do all the work"
 
-  #  targets = ["iPhoneOS", "iPhoneOS", "iPhoneSimulator"]
-  #  archs = ["armv7", "armv7s", "i386"]
-    targets = ["iPhoneSimulator"]
-    archs = ["i386"]
+    targets = ["iPhoneOS", "iPhoneOS", "iPhoneSimulator"]
+    archs = ["armv7", "armv7s", "i386"]
+  #  targets = ["iPhoneSimulator"]
+  #  archs = ["i386"]
   #  targets = ["OSX"]
   #  archs = ["x86_64"]
     for i in range(len(targets)):
