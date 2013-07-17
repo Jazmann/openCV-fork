@@ -13,11 +13,17 @@
    */
 #cmakedefine HAVE_ALLOCA_H 1
 
+/* Video for Windows support */
+#cmakedefine HAVE_VFW
+
 /* V4L capturing support */
 #cmakedefine HAVE_CAMV4L
 
 /* V4L2 capturing support */
 #cmakedefine HAVE_CAMV4L2
+
+/* V4L2 capturing support in videoio.h */
+#cmakedefine HAVE_VIDEOIO
 
 /* V4L/V4L2 capturing support via libv4l */
 #cmakedefine HAVE_LIBV4L
@@ -51,6 +57,9 @@
 
 /* GTK+ 2.0 Thread support */
 #cmakedefine  HAVE_GTHREAD
+
+/* Win32 UI */
+#cmakedefine HAVE_WIN32UI
 
 /* GTK+ 2.x toolkit */
 #cmakedefine  HAVE_GTK
@@ -202,8 +211,11 @@
 /* AMD's Basic Linear Algebra Subprograms Library*/
 #cmakedefine HAVE_CLAMDBLAS
 
-/* VideoInput library */
-#cmakedefine HAVE_VIDEOINPUT
+/* DirectShow Video Capture library */
+#cmakedefine HAVE_DSHOW
+
+/* Microsoft Media Foundation Capture library */
+#cmakedefine HAVE_MSMF
 
 /* XIMEA camera support */
 #cmakedefine HAVE_XIMEA
@@ -213,3 +225,9 @@
 
 /* Clp support */
 #cmakedefine HAVE_CLP
+
+/* Qt support */
+#cmakedefine HAVE_QT
+
+/* Qt OpenGL support */
+#cmakedefine HAVE_QT_OPENGL

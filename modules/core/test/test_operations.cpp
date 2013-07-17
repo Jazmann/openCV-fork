@@ -75,6 +75,7 @@ protected:
     bool TestSparseMat();
     bool TestVec();
     bool TestMatxMultiplication();
+    bool TestMatxElementwiseDivison();
     bool TestSubMatAccess();
     bool TestExp();
     bool TestSVD();
@@ -891,6 +892,28 @@ bool CV_OperationsTest::TestMatxMultiplication()
     return true;
 }
 
+bool CV_OperationsTest::TestMatxElementwiseDivison()
+{
+    try
+    {
+        Matx22f mat(2, 4, 6, 8);
+        Matx22f mat2(2, 2, 2, 2);
+
+        Matx22f res = mat / mat2;
+
+        if(res(0, 0) != 1.0) throw test_excep();
+        if(res(0, 1) != 2.0) throw test_excep();
+        if(res(1, 0) != 3.0) throw test_excep();
+        if(res(1, 1) != 4.0) throw test_excep();
+    }
+    catch(const test_excep&)
+    {
+        ts->set_failed_test_info(cvtest::TS::FAIL_INVALID_OUTPUT);
+        return false;
+    }
+    return true;
+}
+
 
 bool CV_OperationsTest::TestVec()
 {
@@ -998,6 +1021,23 @@ bool CV_OperationsTest::operations1()
 
         add(Mat::zeros(6, 1, CV_64F), 1, c, noArray(), c.type());
         CV_Assert( norm(Matx61f(1.f, 1.f, 1.f, 1.f, 1.f, 1.f), c, CV_C) == 0 );
+
+        vector<Point2f> pt2d(3);
+        vector<Point3d> pt3d(2);
+
+        CV_Assert( Mat(pt2d).checkVector(2) == 3 && Mat(pt2d).checkVector(3) < 0 &&
+                   Mat(pt3d).checkVector(2) < 0 && Mat(pt3d).checkVector(3) == 2 );
+
+        Matx44f m44(0.8147f, 0.6324f, 0.9575f, 0.9572f,
+                0.9058f, 0.0975f, 0.9649f, 0.4854f,
+                0.1270f, 0.2785f, 0.1576f, 0.8003f,
+                0.9134f, 0.5469f, 0.9706f, 0.1419f);
+        double d = determinant(m44);
+        CV_Assert( fabs(d - (-0.0262)) <= 0.001 );
+
+        Cv32suf z;
+        z.i = 0x80000000;
+        CV_Assert( cvFloor(z.f) == 0 && cvCeil(z.f) == 0 && cvRound(z.f) == 0 );
     }
     catch(const test_excep&)
     {
@@ -1090,6 +1130,9 @@ void CV_OperationsTest::run( int /* start_from */)
         return;
 
     if (!TestMatxMultiplication())
+        return;
+
+    if (!TestMatxElementwiseDivison())
         return;
 
     if (!TestSubMatAccess())

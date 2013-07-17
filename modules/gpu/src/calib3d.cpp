@@ -44,19 +44,18 @@
 
 using namespace cv;
 using namespace cv::gpu;
-using namespace std;
 
 #if !defined HAVE_CUDA || defined(CUDA_DISABLER)
 
-void cv::gpu::transformPoints(const GpuMat&, const Mat&, const Mat&, GpuMat&, Stream&) { throw_nogpu(); }
+void cv::gpu::transformPoints(const GpuMat&, const Mat&, const Mat&, GpuMat&, Stream&) { throw_no_cuda(); }
 
-void cv::gpu::projectPoints(const GpuMat&, const Mat&, const Mat&, const Mat&, const Mat&, GpuMat&, Stream&) { throw_nogpu(); }
+void cv::gpu::projectPoints(const GpuMat&, const Mat&, const Mat&, const Mat&, const Mat&, GpuMat&, Stream&) { throw_no_cuda(); }
 
-void cv::gpu::solvePnPRansac(const Mat&, const Mat&, const Mat&, const Mat&, Mat&, Mat&, bool, int, float, int, vector<int>*) { throw_nogpu(); }
+void cv::gpu::solvePnPRansac(const Mat&, const Mat&, const Mat&, const Mat&, Mat&, Mat&, bool, int, float, int, std::vector<int>*) { throw_no_cuda(); }
 
 #else
 
-namespace cv { namespace gpu { namespace device
+namespace cv { namespace gpu { namespace cudev
 {
     namespace transform_points
     {
@@ -79,7 +78,7 @@ namespace cv { namespace gpu { namespace device
     }
 }}}
 
-using namespace ::cv::gpu::device;
+using namespace ::cv::gpu::cudev;
 
 namespace
 {
@@ -130,7 +129,7 @@ void cv::gpu::projectPoints(const GpuMat& src, const Mat& rvec, const Mat& tvec,
 namespace
 {
     // Selects subset_size random different points from [0, num_points - 1] range
-    void selectRandom(int subset_size, int num_points, vector<int>& subset)
+    void selectRandom(int subset_size, int num_points, std::vector<int>& subset)
     {
         subset.resize(subset_size);
         for (int i = 0; i < subset_size; ++i)
@@ -151,7 +150,7 @@ namespace
     }
 
     // Computes rotation, translation pair for small subsets if the input data
-    class TransformHypothesesGenerator
+    class TransformHypothesesGenerator : public ParallelLoopBody
     {
     public:
         TransformHypothesesGenerator(const Mat& object_, const Mat& image_, const Mat& dist_coef_,
@@ -161,10 +160,10 @@ namespace
                   num_points(num_points_), subset_size(subset_size_), rot_matrices(rot_matrices_),
                   transl_vectors(transl_vectors_) {}
 
-        void operator()(const BlockedRange& range) const
+        void operator()(const Range& range) const
         {
             // Input data for generation of the current hypothesis
-            vector<int> subset_indices(subset_size);
+            std::vector<int> subset_indices(subset_size);
             Mat_<Point3f> object_subset(1, subset_size);
             Mat_<Point2f> image_subset(1, subset_size);
 
@@ -173,7 +172,7 @@ namespace
             Mat rot_mat(3, 3, CV_64F);
             Mat transl_vec(1, 3, CV_64F);
 
-            for (int iter = range.begin(); iter < range.end(); ++iter)
+            for (int iter = range.start; iter < range.end; ++iter)
             {
                 selectRandom(subset_size, num_points, subset_indices);
                 for (int i = 0; i < subset_size; ++i)
@@ -212,7 +211,7 @@ namespace
 void cv::gpu::solvePnPRansac(const Mat& object, const Mat& image, const Mat& camera_mat,
                              const Mat& dist_coef, Mat& rvec, Mat& tvec, bool use_extrinsic_guess,
                              int num_iters, float max_dist, int min_inlier_count,
-                             vector<int>* inliers)
+                             std::vector<int>* inliers)
 {
     (void)min_inlier_count;
     CV_Assert(object.rows == 1 && object.cols > 0 && object.type() == CV_32FC3);
@@ -239,7 +238,7 @@ void cv::gpu::solvePnPRansac(const Mat& object, const Mat& image, const Mat& cam
     // Generate set of hypotheses using small subsets of the input data
     TransformHypothesesGenerator body(object, image_normalized, empty_dist_coef, eye_camera_mat,
                                       num_points, subset_size, rot_matrices, transl_vectors);
-    parallel_for(BlockedRange(0, num_iters), body);
+    parallel_for_(Range(0, num_iters), body);
 
     // Compute scores (i.e. number of inliers) for each hypothesis
     GpuMat d_object(object);
@@ -253,7 +252,7 @@ void cv::gpu::solvePnPRansac(const Mat& object, const Mat& image, const Mat& cam
     // Find the best hypothesis index
     Point best_idx;
     double best_score;
-    minMaxLoc(d_hypothesis_scores, NULL, &best_score, NULL, &best_idx);
+    gpu::minMaxLoc(d_hypothesis_scores, NULL, &best_score, NULL, &best_idx);
     int num_inliers = static_cast<int>(best_score);
 
     // Extract the best hypothesis data

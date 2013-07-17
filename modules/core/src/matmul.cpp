@@ -2212,7 +2212,7 @@ void cv::calcCovarMatrix( InputArray _src, OutputArray _covar, InputOutputArray 
         Mat _data(static_cast<int>(src.size()), size.area(), type);
 
         int i = 0;
-        for(vector<cv::Mat>::iterator each = src.begin(); each != src.end(); each++, i++ )
+        for(std::vector<cv::Mat>::iterator each = src.begin(); each != src.end(); each++, i++ )
         {
             CV_Assert( (*each).size() == size && (*each).type() == type );
             Mat dataRow(size.height, size.width, type, _data.ptr(i));
@@ -2367,11 +2367,6 @@ double cv::Mahalanobis( InputArray _v1, InputArray _v2, InputArray _icovar )
         CV_Error( CV_StsUnsupportedFormat, "" );
 
     return std::sqrt(result);
-}
-
-double cv::Mahalonobis( InputArray _v1, InputArray _v2, InputArray _icovar )
-{
-    return Mahalanobis(_v1, _v2, _icovar);
 }
 
 /****************************************************************************************\
@@ -2918,6 +2913,7 @@ PCA& PCA::operator()(InputArray _data, InputArray __mean, int flags, int maxComp
     {
         CV_Assert( _mean.size() == mean_sz );
         _mean.convertTo(mean, ctype);
+        covar_flags |= CV_COVAR_USE_AVG;
     }
 
     calcCovarMatrix( data, covar, mean, covar_flags, ctype );
@@ -2959,6 +2955,36 @@ PCA& PCA::operator()(InputArray _data, InputArray __mean, int flags, int maxComp
         eigenvectors = eigenvectors.rowRange(0,out_count).clone();
     }
     return *this;
+}
+
+template <typename T>
+int computeCumulativeEnergy(const Mat& eigenvalues, double retainedVariance)
+{
+    CV_DbgAssert( eigenvalues.type() == DataType<T>::type );
+
+    Mat g(eigenvalues.size(), DataType<T>::type);
+
+    for(int ig = 0; ig < g.rows; ig++)
+    {
+        g.at<T>(ig, 0) = 0;
+        for(int im = 0; im <= ig; im++)
+        {
+            g.at<T>(ig,0) += eigenvalues.at<T>(im,0);
+        }
+    }
+
+    int L;
+
+    for(L = 0; L < eigenvalues.rows; L++)
+    {
+        double energy = g.at<T>(L, 0) / g.at<T>(g.rows - 1, 0);
+        if(energy > retainedVariance)
+            break;
+    }
+
+    L = std::max(2, L);
+
+    return L;
 }
 
 PCA& PCA::operator()(InputArray _data, InputArray __mean, int flags, double retainedVariance)
@@ -3037,26 +3063,11 @@ PCA& PCA::operator()(InputArray _data, InputArray __mean, int flags, double reta
     }
 
     // compute the cumulative energy content for each eigenvector
-    Mat g(eigenvalues.size(), ctype);
-
-    for(int ig = 0; ig < g.rows; ig++)
-    {
-        g.at<float>(ig,0) = 0;
-        for(int im = 0; im <= ig; im++)
-        {
-            g.at<float>(ig,0) += eigenvalues.at<float>(im,0);
-        }
-    }
-
     int L;
-    for(L = 0; L < eigenvalues.rows; L++)
-    {
-        double energy = g.at<float>(L, 0) / g.at<float>(g.rows - 1, 0);
-        if(energy > retainedVariance)
-            break;
-    }
-
-    L = std::max(2, L);
+    if (ctype == CV_32F)
+        L = computeCumulativeEnergy<float>(eigenvalues, retainedVariance);
+    else
+        L = computeCumulativeEnergy<double>(eigenvalues, retainedVariance);
 
     // use clone() to physically copy the data and thus deallocate the original matrices
     eigenvalues = eigenvalues.rowRange(0,L).clone();

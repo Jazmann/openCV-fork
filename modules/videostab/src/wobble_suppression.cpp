@@ -44,7 +44,14 @@
 #include "opencv2/videostab/wobble_suppression.hpp"
 #include "opencv2/videostab/ring_buffer.hpp"
 
-using namespace std;
+#ifdef HAVE_OPENCV_GPUWARPING
+#  include "opencv2/gpuwarping.hpp"
+#endif
+
+#ifdef HAVE_OPENCV_GPU
+#  include "opencv2/gpu.hpp"
+#endif
+
 
 namespace cv
 {
@@ -115,7 +122,7 @@ void MoreAccurateMotionWobbleSuppressor::suppress(int idx, const Mat &frame, Mat
 }
 
 
-#ifdef HAVE_OPENCV_GPU
+#ifdef HAVE_OPENCV_GPUWARPING
 void MoreAccurateMotionWobbleSuppressorGpu::suppress(int idx, const gpu::GpuMat &frame, gpu::GpuMat &result)
 {
     CV_Assert(motions_ && stabilizationMotions_);

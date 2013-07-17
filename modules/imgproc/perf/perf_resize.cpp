@@ -21,16 +21,14 @@ PERF_TEST_P(MatInfo_Size_Size, resizeUpLinear,
     Size from = get<1>(GetParam());
     Size to = get<2>(GetParam());
 
-    cv::Mat src(from, matType);
-    cv::Mat dst(to, matType);
-
-    declare.in(src, WARMUP_RNG).out(dst);
+    cv::Mat src(from, matType), dst(to, matType);
+    cvtest::fillGradient(src);
+    declare.in(src).out(dst);
 
     TEST_CYCLE() resize(src, dst, to);
 
-    // Test case temporary disabled for Android Platform
 #ifdef ANDROID
-    SANITY_CHECK(dst, 255); // TODO: Reimplement check in future versions
+    SANITY_CHECK(dst, 5);
 #else
     SANITY_CHECK(dst, 1 + 1e-6);
 #endif
@@ -50,16 +48,14 @@ PERF_TEST_P(MatInfo_Size_Size, resizeDownLinear,
     Size from = get<1>(GetParam());
     Size to = get<2>(GetParam());
 
-    cv::Mat src(from, matType);
-    cv::Mat dst(to, matType);
-
-    declare.in(src, WARMUP_RNG).out(dst);
+    cv::Mat src(from, matType), dst(to, matType);
+    cvtest::fillGradient(src);
+    declare.in(src).out(dst);
 
     TEST_CYCLE() resize(src, dst, to);
 
-    // Test case temporary disabled for Android Platform
 #ifdef ANDROID
-    SANITY_CHECK(dst, 255); // TODO: Reimplement check in future versions
+    SANITY_CHECK(dst, 5);
 #else
     SANITY_CHECK(dst, 1 + 1e-6);
 #endif
@@ -89,7 +85,8 @@ PERF_TEST_P(MatInfo_Size_Scale, ResizeAreaFast,
 
     declare.in(src, WARMUP_RNG).out(dst);
 
-    TEST_CYCLE() resize(src, dst, dst.size(), 0, 0, INTER_AREA);
+    int runs = 15;
+    TEST_CYCLE_MULTIRUN(runs) resize(src, dst, dst.size(), 0, 0, INTER_AREA);
 
     //difference equal to 1 is allowed because of different possible rounding modes: round-to-nearest vs bankers' rounding
     SANITY_CHECK(dst, 1);
@@ -101,7 +98,7 @@ typedef TestBaseWithParam<tr1::tuple<MatType, Size, double> > MatInfo_Size_Scale
 PERF_TEST_P(MatInfo_Size_Scale_Area, ResizeArea,
             testing::Combine(
                 testing::Values(CV_8UC1, CV_8UC4),
-                testing::Values(szVGA, szqHD, sz720p, sz1080p),
+                testing::Values(szVGA, szqHD, sz720p),
                 testing::Values(2.4, 3.4, 1.3)
                 )
             )

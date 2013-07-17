@@ -7,7 +7,7 @@ ocl::Sobel
 ------------------
 Returns void
 
-.. ocv:function:: void Sobel(const oclMat &src, oclMat &dst, int ddepth, int dx, int dy, int ksize = 3, double scale = 1, double delta = 0.0, int bordertype = BORDER_DEFAULT)
+.. ocv:function:: void ocl::Sobel(const oclMat &src, oclMat &dst, int ddepth, int dx, int dy, int ksize = 3, double scale = 1, double delta = 0.0, int bordertype = BORDER_DEFAULT)
 
     :param src: The source image
 
@@ -33,7 +33,7 @@ ocl::Scharr
 ------------------
 Returns void
 
-.. ocv:function:: void Scharr(const oclMat &src, oclMat &dst, int ddepth, int dx, int dy, double scale = 1, double delta = 0.0, int bordertype = BORDER_DEFAULT)
+.. ocv:function:: void ocl::Scharr(const oclMat &src, oclMat &dst, int ddepth, int dx, int dy, double scale = 1, double delta = 0.0, int bordertype = BORDER_DEFAULT)
 
     :param src: The source image
 
@@ -57,7 +57,7 @@ ocl::GaussianBlur
 ------------------
 Returns void
 
-.. ocv:function:: void GaussianBlur(const oclMat &src, oclMat &dst, Size ksize, double sigma1, double sigma2 = 0, int bordertype = BORDER_DEFAULT)
+.. ocv:function:: void ocl::GaussianBlur(const oclMat &src, oclMat &dst, Size ksize, double sigma1, double sigma2 = 0, int bordertype = BORDER_DEFAULT)
 
     :param src: The source image
 
@@ -75,7 +75,7 @@ ocl::boxFilter
 ------------------
 Returns void
 
-.. ocv:function:: void boxFilter(const oclMat &src, oclMat &dst, int ddepth, Size ksize, Point anchor = Point(-1, -1), int borderType = BORDER_DEFAULT)
+.. ocv:function:: void ocl::boxFilter(const oclMat &src, oclMat &dst, int ddepth, Size ksize, Point anchor = Point(-1, -1), int borderType = BORDER_DEFAULT)
 
     :param src: The source image
 
@@ -95,7 +95,7 @@ ocl::Laplacian
 ------------------
 Returns void
 
-.. ocv:function:: void Laplacian(const oclMat &src, oclMat &dst, int ddepth, int ksize = 1, double scale = 1)
+.. ocv:function:: void ocl::Laplacian(const oclMat &src, oclMat &dst, int ddepth, int ksize = 1, double scale = 1)
 
     :param src: The source image
 
@@ -109,17 +109,52 @@ Returns void
 
 The function calculates the Laplacian of the source image by adding up the second x and y derivatives calculated using the Sobel operator.
 
+ocl::ConvolveBuf
+----------------
+.. ocv:struct:: ocl::ConvolveBuf
+
+Class providing a memory buffer for :ocv:func:`ocl::convolve` function, plus it allows to adjust some specific parameters. ::
+
+    struct CV_EXPORTS ConvolveBuf
+    {
+        Size result_size;
+        Size block_size;
+        Size user_block_size;
+        Size dft_size;
+        int spect_len;
+
+        oclMat image_spect, templ_spect, result_spect;
+        oclMat image_block, templ_block, result_data;
+
+        void create(Size image_size, Size templ_size);
+        static Size estimateBlockSize(Size result_size, Size templ_size);
+    };
+
+You can use field `user_block_size` to set specific block size for :ocv:func:`ocl::convolve` function. If you leave its default value `Size(0,0)` then automatic estimation of block size will be used (which is optimized for speed). By varying `user_block_size` you can reduce memory requirements at the cost of speed.
+
+ocl::ConvolveBuf::create
+------------------------
+.. ocv:function:: ocl::ConvolveBuf::create(Size image_size, Size templ_size)
+
+Constructs a buffer for :ocv:func:`ocl::convolve` function with respective arguments.
+
 ocl::convolve
 ------------------
 Returns void
 
-.. ocv:function:: void convolve(const oclMat &image, const oclMat &temp1, oclMat &result)
+.. ocv:function:: void ocl::convolve(const oclMat &image, const oclMat &temp1, oclMat &result, bool ccorr=false)
 
-    :param image: The source image
+.. ocv:function:: void ocl::convolve(const oclMat &image, const oclMat &temp1, oclMat &result, bool ccorr, ConvolveBuf& buf)
 
-    :param temp1: Convolution kernel, a single-channel floating point matrix.
+    :param image: The source image. Only  ``CV_32FC1`` images are supported for now.
+
+    :param temp1: Convolution kernel, a single-channel floating point matrix. The size is not greater than the  ``image`` size. The type is the same as  ``image``.
 
     :param result: The destination image
+    
+    :param ccorr: Flags to evaluate cross-correlation instead of convolution.
+    
+    :param buf: Optional buffer to avoid extra memory allocations and to adjust some specific parameters. See :ocv:struct:`ocl::ConvolveBuf`.
 
 Convolves an image with the kernel. Supports only CV_32FC1 data types and do not support ROI.
 
@@ -127,7 +162,7 @@ ocl::bilateralFilter
 --------------------
 Returns void
 
-.. ocv:function:: void bilateralFilter(const oclMat &src, oclMat &dst, int d, double sigmaColor, double sigmaSpave, int borderType=BORDER_DEFAULT)
+.. ocv:function:: void ocl::bilateralFilter(const oclMat &src, oclMat &dst, int d, double sigmaColor, double sigmaSpave, int borderType=BORDER_DEFAULT)
 
     :param src: The source image
 
@@ -147,7 +182,7 @@ ocl::copyMakeBorder
 --------------------
 Returns void
 
-.. ocv:function:: void copyMakeBorder(const oclMat &src, oclMat &dst, int top, int bottom, int left, int right, int boardtype, const Scalar &value = Scalar())
+.. ocv:function:: void ocl::copyMakeBorder(const oclMat &src, oclMat &dst, int top, int bottom, int left, int right, int boardtype, const Scalar &value = Scalar())
 
     :param src: The source image
 
@@ -165,7 +200,7 @@ ocl::dilate
 ------------------
 Returns void
 
-.. ocv:function:: void dilate( const oclMat &src, oclMat &dst, const Mat &kernel, Point anchor = Point(-1, -1), int iterations = 1, int borderType = BORDER_CONSTANT, const Scalar &borderValue = morphologyDefaultBorderValue())
+.. ocv:function:: void ocl::dilate( const oclMat &src, oclMat &dst, const Mat &kernel, Point anchor = Point(-1, -1), int iterations = 1, int borderType = BORDER_CONSTANT, const Scalar &borderValue = morphologyDefaultBorderValue())
 
     :param src: The source image
 
@@ -187,7 +222,7 @@ ocl::erode
 ------------------
 Returns void
 
-.. ocv:function:: void erode( const oclMat &src, oclMat &dst, const Mat &kernel, Point anchor = Point(-1, -1), int iterations = 1, int borderType = BORDER_CONSTANT, const Scalar &borderValue = morphologyDefaultBorderValue())
+.. ocv:function:: void ocl::erode( const oclMat &src, oclMat &dst, const Mat &kernel, Point anchor = Point(-1, -1), int iterations = 1, int borderType = BORDER_CONSTANT, const Scalar &borderValue = morphologyDefaultBorderValue())
 
     :param src: The source image
 
@@ -209,7 +244,7 @@ ocl::morphologyEx
 ------------------
 Returns void
 
-.. ocv:function:: void morphologyEx( const oclMat &src, oclMat &dst, int op, const Mat &kernel, Point anchor = Point(-1, -1), int iterations = 1, int borderType = BORDER_CONSTANT, const Scalar &borderValue = morphologyDefaultBorderValue())
+.. ocv:function:: void ocl::morphologyEx( const oclMat &src, oclMat &dst, int op, const Mat &kernel, Point anchor = Point(-1, -1), int iterations = 1, int borderType = BORDER_CONSTANT, const Scalar &borderValue = morphologyDefaultBorderValue())
 
     :param src: The source image
 

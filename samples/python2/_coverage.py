@@ -1,4 +1,4 @@
-#/usr/bin/env python
+#!/usr/bin/env python
 
 '''
 Utility for measuring python opencv API coverage by samples.
@@ -24,8 +24,3 @@ if __name__ == '__main__':
 
     r = 1.0 * len(cv2_used) / len(cv2_callable)
     print '\ncv2 api coverage: %d / %d  (%.1f%%)' % ( len(cv2_used), len(cv2_callable), r*100 )
-
-    print '\nold (cv) symbols:'
-    for s in found:
-        if s.startswith('cv.'):
-            print s

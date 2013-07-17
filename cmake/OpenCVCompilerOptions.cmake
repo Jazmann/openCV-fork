@@ -47,6 +47,9 @@ macro(add_extra_compiler_option option)
   endif()
 endmacro()
 
+# OpenCV fails some tests when 'char' is 'unsigned' by default
+add_extra_compiler_option(-fsigned-char)
+
 if(MINGW)
   # http://gcc.gnu.org/bugzilla/show_bug.cgi?id=40838
   # here we are trying to workaround the problem
@@ -93,7 +96,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   endif()
 
   # We need pthread's
-  if(UNIX AND NOT ANDROID)
+  if(UNIX AND NOT ANDROID AND NOT (APPLE AND CMAKE_COMPILER_IS_CLANGCXX))
     add_extra_compiler_option(-pthread)
   endif()
 
@@ -251,6 +254,12 @@ set(OPENCV_EXTRA_FLAGS_DEBUG   "${OPENCV_EXTRA_FLAGS_DEBUG}"   CACHE INTERNAL "E
 set(OPENCV_EXTRA_EXE_LINKER_FLAGS         "${OPENCV_EXTRA_EXE_LINKER_FLAGS}"         CACHE INTERNAL "Extra linker flags")
 set(OPENCV_EXTRA_EXE_LINKER_FLAGS_RELEASE "${OPENCV_EXTRA_EXE_LINKER_FLAGS_RELEASE}" CACHE INTERNAL "Extra linker flags for Release build")
 set(OPENCV_EXTRA_EXE_LINKER_FLAGS_DEBUG   "${OPENCV_EXTRA_EXE_LINKER_FLAGS_DEBUG}"   CACHE INTERNAL "Extra linker flags for Debug build")
+
+# set default visibility to hidden
+if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_OPENCV_GCC_VERSION_NUM GREATER 399)
+  add_extra_compiler_option(-fvisibility=hidden)
+  add_extra_compiler_option(-fvisibility-inlines-hidden)
+endif()
 
 #combine all "extra" options
 set(CMAKE_C_FLAGS           "${CMAKE_C_FLAGS} ${OPENCV_EXTRA_FLAGS} ${OPENCV_EXTRA_C_FLAGS}")

@@ -56,7 +56,7 @@ template<typename T> struct MinOp
     typedef T type1;
     typedef T type2;
     typedef T rtype;
-    T operator ()(T a, T b) const { return std::min(a, b); }
+    T operator ()(const T a, const T b) const { return std::min(a, b); }
 };
 
 template<typename T> struct MaxOp
@@ -64,7 +64,7 @@ template<typename T> struct MaxOp
     typedef T type1;
     typedef T type2;
     typedef T rtype;
-    T operator ()(T a, T b) const { return std::max(a, b); }
+    T operator ()(const T a, const T b) const { return std::max(a, b); }
 };
 
 #undef CV_MIN_8U
@@ -72,8 +72,8 @@ template<typename T> struct MaxOp
 #define CV_MIN_8U(a,b)       ((a) - CV_FAST_CAST_8U((a) - (b)))
 #define CV_MAX_8U(a,b)       ((a) + CV_FAST_CAST_8U((b) - (a)))
 
-template<> inline uchar MinOp<uchar>::operator ()(uchar a, uchar b) const { return CV_MIN_8U(a, b); }
-template<> inline uchar MaxOp<uchar>::operator ()(uchar a, uchar b) const { return CV_MAX_8U(a, b); }
+template<> inline uchar MinOp<uchar>::operator ()(const uchar a, const uchar b) const { return CV_MIN_8U(a, b); }
+template<> inline uchar MaxOp<uchar>::operator ()(const uchar a, const uchar b) const { return CV_MAX_8U(a, b); }
 
 struct MorphRowNoVec
 {
@@ -790,7 +790,7 @@ template<class Op, class VecOp> struct MorphFilter : BaseFilter
         ksize = _kernel.size();
         CV_Assert( _kernel.type() == CV_8U );
 
-        vector<uchar> coeffs; // we do not really the values of non-zero
+        std::vector<uchar> coeffs; // we do not really the values of non-zero
         // kernel elements, just their locations
         preprocess2DKernel( _kernel, coords, coeffs );
         ptrs.resize( coords.size() );
@@ -839,8 +839,8 @@ template<class Op, class VecOp> struct MorphFilter : BaseFilter
         }
     }
 
-    vector<Point> coords;
-    vector<uchar*> ptrs;
+    std::vector<Point> coords;
+    std::vector<uchar*> ptrs;
     VecOp vecOp;
 };
 
@@ -1081,7 +1081,7 @@ cv::Mat cv::getStructuringElement(int shape, Size ksize, Point anchor)
 namespace cv
 {
 
-class MorphologyRunner
+class MorphologyRunner : public ParallelLoopBody
 {
 public:
     MorphologyRunner(Mat _src, Mat _dst, int _nStripes, int _iterations,
@@ -1102,14 +1102,14 @@ public:
         columnBorderType = _columnBorderType;
     }
 
-    void operator () ( const BlockedRange& range ) const
+    void operator () ( const Range& range ) const
     {
-        int row0 = min(cvRound(range.begin() * src.rows / nStripes), src.rows);
-        int row1 = min(cvRound(range.end() * src.rows / nStripes), src.rows);
+        int row0 = std::min(cvRound(range.start * src.rows / nStripes), src.rows);
+        int row1 = std::min(cvRound(range.end * src.rows / nStripes), src.rows);
 
         /*if(0)
             printf("Size = (%d, %d), range[%d,%d), row0 = %d, row1 = %d\n",
-                   src.rows, src.cols, range.begin(), range.end(), row0, row1);*/
+                   src.rows, src.cols, range.start, range.end, row0, row1);*/
 
         Mat srcStripe = src.rowRange(row0, row1);
         Mat dstStripe = dst.rowRange(row0, row1);
@@ -1173,15 +1173,15 @@ static void morphOp( int op, InputArray _src, OutputArray _dst,
     }
 
     int nStripes = 1;
-#if defined HAVE_TBB && defined HAVE_TEGRA_OPTIMIZATION
+#if defined HAVE_TEGRA_OPTIMIZATION
     if (src.data != dst.data && iterations == 1 &&  //NOTE: threads are not used for inplace processing
         (borderType & BORDER_ISOLATED) == 0 && //TODO: check border types
         src.rows >= 64 ) //NOTE: just heuristics
         nStripes = 4;
 #endif
 
-    parallel_for(BlockedRange(0, nStripes),
-                 MorphologyRunner(src, dst, nStripes, iterations, op, kernel, anchor, borderType, borderType, borderValue));
+    parallel_for_(Range(0, nStripes),
+                  MorphologyRunner(src, dst, nStripes, iterations, op, kernel, anchor, borderType, borderType, borderValue));
 
     //Ptr<FilterEngine> f = createMorphologyFilter(op, src.type(),
     //                                             kernel, anchor, borderType, borderType, borderValue );
@@ -1190,9 +1190,6 @@ static void morphOp( int op, InputArray _src, OutputArray _dst,
     //for( int i = 1; i < iterations; i++ )
     //    f->apply( dst, dst );
 }
-
-template<> void Ptr<IplConvKernel>::delete_obj()
-{ cvReleaseStructuringElement(&obj); }
 
 }
 

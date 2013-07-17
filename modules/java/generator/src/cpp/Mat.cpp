@@ -1,28 +1,7 @@
-#include <jni.h>
-
-#include "converters.h"
-
-#ifdef ANDROID
-
-#include <android/log.h>
 #define LOG_TAG "org.opencv.core.Mat"
-#define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__))
-#ifdef DEBUG
-#define LOGD(...) ((void)__android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__))
-#else //!DEBUG
-#define LOGD(...)
-#endif //DEBUG
 
-#else
-#define LOGE(...)
-#define LOGD(...)
-#endif
-
-#ifdef _MSC_VER
-#  pragma warning(disable:4800)
-#endif
-
-#include "opencv2/core/core.hpp"
+#include "common.h"
+#include "opencv2/core.hpp"
 
 using namespace cv;
 
@@ -2564,12 +2543,15 @@ JNIEXPORT jstring JNICALL Java_org_opencv_core_Mat_nDump
   (JNIEnv *env, jclass, jlong self)
 {
     cv::Mat* me = (cv::Mat*) self; //TODO: check for NULL
-    std::stringstream s;
     try {
             LOGD("Mat::nDump()");
-
-            s << *me;
-            return env->NewStringUTF(s.str().c_str());
+            String s;
+            Ptr<Formatted> fmtd = Formatter::get()->format(*me);
+            for(const char* str = fmtd->next(); str; str = fmtd->next())
+            {
+                s = s + String(str);
+            }
+            return env->NewStringUTF(s.c_str());
         } catch(cv::Exception e) {
             LOGE("Mat::nDump() catched cv::Exception: %s", e.what());
             jclass je = env->FindClass("org/opencv/core/CvException");

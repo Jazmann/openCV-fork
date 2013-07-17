@@ -60,7 +60,7 @@ Erosion
 
 * As the kernel :math:`B` is scanned over the image, we compute the minimal pixel value overlapped by :math:`B` and replace the image pixel under the anchor point with that minimal value.
 
-* Analagously to the example for dilation, we can apply the erosion operator to the original image (shown above). You can see in the result below that the bright areas of the image (the background, apparently), get thinner, whereas the dark zones (the "writing"( gets bigger.
+* Analagously to the example for dilation, we can apply the erosion operator to the original image (shown above). You can see in the result below that the bright areas of the image (the background, apparently), get thinner, whereas the dark zones (the "writing") gets bigger.
 
   .. image:: images/Morphology_1_Tutorial_Theory_Erosion.png
      :alt: Erosion result - Theory example
@@ -74,8 +74,8 @@ This tutorial code's is shown lines below. You can also download it from `here <
 
 .. code-block:: cpp
 
-   #include "opencv2/imgproc/imgproc.hpp"
-   #include "opencv2/highgui/highgui.hpp"
+   #include "opencv2/imgproc.hpp"
+   #include "opencv2/highgui.hpp"
    #include "highgui.h"
    #include <stdlib.h>
    #include <stdio.h>

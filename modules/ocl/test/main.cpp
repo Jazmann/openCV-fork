@@ -115,10 +115,11 @@ int main(int argc, char **argv)
         std::cout << "platform invalid\n";
         return -1;
     }
-    if(pid != 0 || device != 0)
-    {
-        setDevice(oclinfo[pid], device);
-    }
+
+    setDevice(oclinfo[pid], device);
+    setBinaryDiskCache(CACHE_UPDATE);
+
+    cout << "Platform name:" << oclinfo[pid].PlatformName << endl;
     cout << "Device type:" << type << endl << "Device name:" << oclinfo[pid].DeviceName[device] << endl;
     return RUN_ALL_TESTS();
 }

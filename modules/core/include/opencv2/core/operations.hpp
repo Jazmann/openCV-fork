@@ -43,56 +43,13 @@
 #ifndef __OPENCV_CORE_OPERATIONS_HPP__
 #define __OPENCV_CORE_OPERATIONS_HPP__
 
-#ifndef SKIP_INCLUDES
-  #include <string.h>
-  #include <limits.h>
-#endif // SKIP_INCLUDES
-
-
-#ifdef __cplusplus
-
-/////// exchange-add operation for atomic operations on reference counters ///////
-#if defined __INTEL_COMPILER && !(defined WIN32 || defined _WIN32)   // atomic increment on the linux version of the Intel(tm) compiler
-  #define CV_XADD(addr,delta) _InterlockedExchangeAdd(const_cast<void*>(reinterpret_cast<volatile void*>(addr)), delta)
-#elif defined __GNUC__
-
-  #if defined __clang__ && __clang_major__ >= 3 && !defined __ANDROID__
-    #ifdef __ATOMIC_SEQ_CST
-        #define CV_XADD(addr, delta) __c11_atomic_fetch_add((_Atomic(int)*)(addr), (delta), __ATOMIC_SEQ_CST)
-    #else
-        #define CV_XADD(addr, delta) __atomic_fetch_add((_Atomic(int)*)(addr), (delta), 5)
-    #endif
-  #elif __GNUC__*10 + __GNUC_MINOR__ >= 42
-
-    #if !(defined WIN32 || defined _WIN32) && (defined __i486__ || defined __i586__ || \
-        defined __i686__ || defined __MMX__ || defined __SSE__  || defined __ppc__) || \
-        (defined __GNUC__ && defined _STLPORT_MAJOR)
-      #define CV_XADD __sync_fetch_and_add
-    #else
-      #include <ext/atomicity.h>
-      #define CV_XADD __gnu_cxx::__exchange_and_add
-    #endif
-
-  #else
-    #include <bits/atomicity.h>
-    #if __GNUC__*10 + __GNUC_MINOR__ >= 34
-      #define CV_XADD __gnu_cxx::__exchange_and_add
-    #else
-      #define CV_XADD __exchange_and_add
-    #endif
-  #endif
-
-#elif defined WIN32 || defined _WIN32 || defined WINCE
-  namespace cv { CV_EXPORTS int _interlockedExchangeAdd(int* addr, int delta); }
-  #define CV_XADD cv::_interlockedExchangeAdd
-
-#else
-  static inline int CV_XADD(int* addr, int delta)
-  { int tmp = *addr; *addr += delta; return tmp; }
+#ifndef __cplusplus
+#  error operations.hpp header must be compiled as C++
 #endif
 
-#include <limits>
+#include <cstdio>
 
+<<<<<<< HEAD
 #ifdef _MSC_VER
 # pragma warning(push)
 # pragma warning(disable:4127) //conditional expression is constant
@@ -4058,888 +4015,477 @@ template<typename _Tp> static inline FileNodeIterator& operator >> (FileNodeIter
 
 template<typename _Tp> static inline
 FileNodeIterator& operator >> (FileNodeIterator& it, vector<_Tp>& vec)
+=======
+namespace cv
+>>>>>>> upstream/master
 {
-    VecReaderProxy<_Tp, DataType<_Tp>::fmt != 0> r(&it);
-    r(vec, (size_t)INT_MAX);
-    return it;
-}
 
-template<typename _Tp> static inline void operator >> (const FileNode& n, _Tp& value)
-{ read( n, value, _Tp()); }
+////////////////////////////// Matx methods depending on core API /////////////////////////////
 
-template<typename _Tp> static inline void operator >> (const FileNode& n, vector<_Tp>& vec)
-{ FileNodeIterator it = n.begin(); it >> vec; }
-
-static inline bool operator == (const FileNodeIterator& it1, const FileNodeIterator& it2)
+namespace internal
 {
-    return it1.fs == it2.fs && it1.container == it2.container &&
-        it1.reader.ptr == it2.reader.ptr && it1.remaining == it2.remaining;
-}
 
-static inline bool operator != (const FileNodeIterator& it1, const FileNodeIterator& it2)
+template<typename _Tp, int m> struct Matx_FastInvOp
 {
-    return !(it1 == it2);
-}
-
-static inline ptrdiff_t operator - (const FileNodeIterator& it1, const FileNodeIterator& it2)
-{
-    return it2.remaining - it1.remaining;
-}
-
-static inline bool operator < (const FileNodeIterator& it1, const FileNodeIterator& it2)
-{
-    return it1.remaining > it2.remaining;
-}
-
-inline FileNode FileStorage::getFirstTopLevelNode() const
-{
-    FileNode r = root();
-    FileNodeIterator it = r.begin();
-    return it != r.end() ? *it : FileNode();
-}
-
-//////////////////////////////////////// Various algorithms ////////////////////////////////////
-
-template<typename _Tp> static inline _Tp gcd(_Tp a, _Tp b)
-{
-    if( a < b )
-        std::swap(a, b);
-    while( b > 0 )
+    bool operator()(const Matx<_Tp, m, m>& a, Matx<_Tp, m, m>& b, int method) const
     {
-        _Tp r = a % b;
-        a = b;
-        b = r;
+        Matx<_Tp, m, m> temp = a;
+
+        // assume that b is all 0's on input => make it a unity matrix
+        for( int i = 0; i < m; i++ )
+            b(i, i) = (_Tp)1;
+
+        if( method == DECOMP_CHOLESKY )
+            return Cholesky(temp.val, m*sizeof(_Tp), m, b.val, m*sizeof(_Tp), m);
+
+        return LU(temp.val, m*sizeof(_Tp), m, b.val, m*sizeof(_Tp), m) != 0;
     }
-    return a;
-}
-
-/****************************************************************************************\
-
-  Generic implementation of QuickSort algorithm
-  Use it as: vector<_Tp> a; ... sort(a,<less_than_predictor>);
-
-  The current implementation was derived from *BSD system qsort():
-
-    * Copyright (c) 1992, 1993
-    *  The Regents of the University of California.  All rights reserved.
-    *
-    * Redistribution and use in source and binary forms, with or without
-    * modification, are permitted provided that the following conditions
-    * are met:
-    * 1. Redistributions of source code must retain the above copyright
-    *    notice, this list of conditions and the following disclaimer.
-    * 2. Redistributions in binary form must reproduce the above copyright
-    *    notice, this list of conditions and the following disclaimer in the
-    *    documentation and/or other materials provided with the distribution.
-    * 3. All advertising materials mentioning features or use of this software
-    *    must display the following acknowledgement:
-    *  This product includes software developed by the University of
-    *  California, Berkeley and its contributors.
-    * 4. Neither the name of the University nor the names of its contributors
-    *    may be used to endorse or promote products derived from this software
-    *    without specific prior written permission.
-    *
-    * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
-    * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-    * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-    * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
-    * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-    * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-    * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-    * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-    * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-    * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-    * SUCH DAMAGE.
-
-\****************************************************************************************/
-
-template<typename _Tp, class _LT> void sort( vector<_Tp>& vec, _LT LT=_LT() )
-{
-    int isort_thresh = 7;
-    int sp = 0;
-
-    struct
-    {
-        _Tp *lb;
-        _Tp *ub;
-    } stack[48];
-
-    size_t total = vec.size();
-
-    if( total <= 1 )
-        return;
-
-    _Tp* arr = &vec[0];
-    stack[0].lb = arr;
-    stack[0].ub = arr + (total - 1);
-
-    while( sp >= 0 )
-    {
-        _Tp* left = stack[sp].lb;
-        _Tp* right = stack[sp--].ub;
-
-        for(;;)
-        {
-            int i, n = (int)(right - left) + 1, m;
-            _Tp* ptr;
-            _Tp* ptr2;
-
-            if( n <= isort_thresh )
-            {
-            insert_sort:
-                for( ptr = left + 1; ptr <= right; ptr++ )
-                {
-                    for( ptr2 = ptr; ptr2 > left && LT(ptr2[0],ptr2[-1]); ptr2--)
-                        std::swap( ptr2[0], ptr2[-1] );
-                }
-                break;
-            }
-            else
-            {
-                _Tp* left0;
-                _Tp* left1;
-                _Tp* right0;
-                _Tp* right1;
-                _Tp* pivot;
-                _Tp* a;
-                _Tp* b;
-                _Tp* c;
-                int swap_cnt = 0;
-
-                left0 = left;
-                right0 = right;
-                pivot = left + (n/2);
-
-                if( n > 40 )
-                {
-                    int d = n / 8;
-                    a = left, b = left + d, c = left + 2*d;
-                    left = LT(*a, *b) ? (LT(*b, *c) ? b : (LT(*a, *c) ? c : a))
-                                      : (LT(*c, *b) ? b : (LT(*a, *c) ? a : c));
-
-                    a = pivot - d, b = pivot, c = pivot + d;
-                    pivot = LT(*a, *b) ? (LT(*b, *c) ? b : (LT(*a, *c) ? c : a))
-                                      : (LT(*c, *b) ? b : (LT(*a, *c) ? a : c));
-
-                    a = right - 2*d, b = right - d, c = right;
-                    right = LT(*a, *b) ? (LT(*b, *c) ? b : (LT(*a, *c) ? c : a))
-                                      : (LT(*c, *b) ? b : (LT(*a, *c) ? a : c));
-                }
-
-                a = left, b = pivot, c = right;
-                pivot = LT(*a, *b) ? (LT(*b, *c) ? b : (LT(*a, *c) ? c : a))
-                                   : (LT(*c, *b) ? b : (LT(*a, *c) ? a : c));
-                if( pivot != left0 )
-                {
-                    std::swap( *pivot, *left0 );
-                    pivot = left0;
-                }
-                left = left1 = left0 + 1;
-                right = right1 = right0;
-
-                for(;;)
-                {
-                    while( left <= right && !LT(*pivot, *left) )
-                    {
-                        if( !LT(*left, *pivot) )
-                        {
-                            if( left > left1 )
-                                std::swap( *left1, *left );
-                            swap_cnt = 1;
-                            left1++;
-                        }
-                        left++;
-                    }
-
-                    while( left <= right && !LT(*right, *pivot) )
-                    {
-                        if( !LT(*pivot, *right) )
-                        {
-                            if( right < right1 )
-                                std::swap( *right1, *right );
-                            swap_cnt = 1;
-                            right1--;
-                        }
-                        right--;
-                    }
-
-                    if( left > right )
-                        break;
-                    std::swap( *left, *right );
-                    swap_cnt = 1;
-                    left++;
-                    right--;
-                }
-
-                if( swap_cnt == 0 )
-                {
-                    left = left0, right = right0;
-                    goto insert_sort;
-                }
-
-                n = std::min( (int)(left1 - left0), (int)(left - left1) );
-                for( i = 0; i < n; i++ )
-                    std::swap( left0[i], left[i-n] );
-
-                n = std::min( (int)(right0 - right1), (int)(right1 - right) );
-                for( i = 0; i < n; i++ )
-                    std::swap( left[i], right0[i-n+1] );
-                n = (int)(left - left1);
-                m = (int)(right1 - right);
-                if( n > 1 )
-                {
-                    if( m > 1 )
-                    {
-                        if( n > m )
-                        {
-                            stack[++sp].lb = left0;
-                            stack[sp].ub = left0 + n - 1;
-                            left = right0 - m + 1, right = right0;
-                        }
-                        else
-                        {
-                            stack[++sp].lb = right0 - m + 1;
-                            stack[sp].ub = right0;
-                            left = left0, right = left0 + n - 1;
-                        }
-                    }
-                    else
-                        left = left0, right = left0 + n - 1;
-                }
-                else if( m > 1 )
-                    left = right0 - m + 1, right = right0;
-                else
-                    break;
-            }
-        }
-    }
-}
-
-template<typename _Tp> class CV_EXPORTS LessThan
-{
-public:
-    bool operator()(const _Tp& a, const _Tp& b) const { return a < b; }
 };
 
-template<typename _Tp> class CV_EXPORTS GreaterEq
+template<typename _Tp> struct Matx_FastInvOp<_Tp, 2>
 {
-public:
-    bool operator()(const _Tp& a, const _Tp& b) const { return a >= b; }
+    bool operator()(const Matx<_Tp, 2, 2>& a, Matx<_Tp, 2, 2>& b, int) const
+    {
+        _Tp d = determinant(a);
+        if( d == 0 )
+            return false;
+        d = 1/d;
+        b(1,1) = a(0,0)*d;
+        b(0,0) = a(1,1)*d;
+        b(0,1) = -a(0,1)*d;
+        b(1,0) = -a(1,0)*d;
+        return true;
+    }
 };
 
-template<typename _Tp> class CV_EXPORTS LessThanIdx
+template<typename _Tp> struct Matx_FastInvOp<_Tp, 3>
 {
-public:
-    LessThanIdx( const _Tp* _arr ) : arr(_arr) {}
-    bool operator()(int a, int b) const { return arr[a] < arr[b]; }
-    const _Tp* arr;
-};
-
-template<typename _Tp> class CV_EXPORTS GreaterEqIdx
-{
-public:
-    GreaterEqIdx( const _Tp* _arr ) : arr(_arr) {}
-    bool operator()(int a, int b) const { return arr[a] >= arr[b]; }
-    const _Tp* arr;
-};
-
-
-// This function splits the input sequence or set into one or more equivalence classes and
-// returns the vector of labels - 0-based class indexes for each element.
-// predicate(a,b) returns true if the two sequence elements certainly belong to the same class.
-//
-// The algorithm is described in "Introduction to Algorithms"
-// by Cormen, Leiserson and Rivest, the chapter "Data structures for disjoint sets"
-template<typename _Tp, class _EqPredicate> int
-partition( const vector<_Tp>& _vec, vector<int>& labels,
-           _EqPredicate predicate=_EqPredicate())
-{
-    int i, j, N = (int)_vec.size();
-    const _Tp* vec = &_vec[0];
-
-    const int PARENT=0;
-    const int RANK=1;
-
-    vector<int> _nodes(N*2);
-    int (*nodes)[2] = (int(*)[2])&_nodes[0];
-
-    // The first O(N) pass: create N single-vertex trees
-    for(i = 0; i < N; i++)
+    bool operator()(const Matx<_Tp, 3, 3>& a, Matx<_Tp, 3, 3>& b, int) const
     {
-        nodes[i][PARENT]=-1;
-        nodes[i][RANK] = 0;
-    }
-
-    // The main O(N^2) pass: merge connected components
-    for( i = 0; i < N; i++ )
-    {
-        int root = i;
-
-        // find root
-        while( nodes[root][PARENT] >= 0 )
-            root = nodes[root][PARENT];
-
-        for( j = 0; j < N; j++ )
-        {
-            if( i == j || !predicate(vec[i], vec[j]))
-                continue;
-            int root2 = j;
-
-            while( nodes[root2][PARENT] >= 0 )
-                root2 = nodes[root2][PARENT];
-
-            if( root2 != root )
-            {
-                // unite both trees
-                int rank = nodes[root][RANK], rank2 = nodes[root2][RANK];
-                if( rank > rank2 )
-                    nodes[root2][PARENT] = root;
-                else
-                {
-                    nodes[root][PARENT] = root2;
-                    nodes[root2][RANK] += rank == rank2;
-                    root = root2;
-                }
-                assert( nodes[root][PARENT] < 0 );
-
-                int k = j, parent;
-
-                // compress the path from node2 to root
-                while( (parent = nodes[k][PARENT]) >= 0 )
-                {
-                    nodes[k][PARENT] = root;
-                    k = parent;
-                }
-
-                // compress the path from node to root
-                k = i;
-                while( (parent = nodes[k][PARENT]) >= 0 )
-                {
-                    nodes[k][PARENT] = root;
-                    k = parent;
-                }
-            }
-        }
-    }
-
-    // Final O(N) pass: enumerate classes
-    labels.resize(N);
-    int nclasses = 0;
-
-    for( i = 0; i < N; i++ )
-    {
-        int root = i;
-        while( nodes[root][PARENT] >= 0 )
-            root = nodes[root][PARENT];
-        // re-use the rank as the class label
-        if( nodes[root][RANK] >= 0 )
-            nodes[root][RANK] = ~nclasses++;
-        labels[i] = ~nodes[root][RANK];
-    }
-
-    return nclasses;
-}
-
-
-//////////////////////////////////////////////////////////////////////////////
-
-// bridge C++ => C Seq API
-CV_EXPORTS schar*  seqPush( CvSeq* seq, const void* element=0);
-CV_EXPORTS schar*  seqPushFront( CvSeq* seq, const void* element=0);
-CV_EXPORTS void  seqPop( CvSeq* seq, void* element=0);
-CV_EXPORTS void  seqPopFront( CvSeq* seq, void* element=0);
-CV_EXPORTS void  seqPopMulti( CvSeq* seq, void* elements,
-                              int count, int in_front=0 );
-CV_EXPORTS void  seqRemove( CvSeq* seq, int index );
-CV_EXPORTS void  clearSeq( CvSeq* seq );
-CV_EXPORTS schar*  getSeqElem( const CvSeq* seq, int index );
-CV_EXPORTS void  seqRemoveSlice( CvSeq* seq, CvSlice slice );
-CV_EXPORTS void  seqInsertSlice( CvSeq* seq, int before_index, const CvArr* from_arr );
-
-template<typename _Tp> inline Seq<_Tp>::Seq() : seq(0) {}
-template<typename _Tp> inline Seq<_Tp>::Seq( const CvSeq* _seq ) : seq((CvSeq*)_seq)
-{
-    CV_Assert(!_seq || _seq->elem_size == sizeof(_Tp));
-}
-
-template<typename _Tp> inline Seq<_Tp>::Seq( MemStorage& storage,
-                                             int headerSize )
-{
-    CV_Assert(headerSize >= (int)sizeof(CvSeq));
-    seq = cvCreateSeq(DataType<_Tp>::type, headerSize, sizeof(_Tp), storage);
-}
-
-template<typename _Tp> inline _Tp& Seq<_Tp>::operator [](int idx)
-{ return *(_Tp*)getSeqElem(seq, idx); }
-
-template<typename _Tp> inline const _Tp& Seq<_Tp>::operator [](int idx) const
-{ return *(_Tp*)getSeqElem(seq, idx); }
-
-template<typename _Tp> inline SeqIterator<_Tp> Seq<_Tp>::begin() const
-{ return SeqIterator<_Tp>(*this); }
-
-template<typename _Tp> inline SeqIterator<_Tp> Seq<_Tp>::end() const
-{ return SeqIterator<_Tp>(*this, true); }
-
-template<typename _Tp> inline size_t Seq<_Tp>::size() const
-{ return seq ? seq->total : 0; }
-
-template<typename _Tp> inline int Seq<_Tp>::type() const
-{ return seq ? CV_MAT_TYPE(seq->flags) : 0; }
-
-template<typename _Tp> inline int Seq<_Tp>::depth() const
-{ return seq ? CV_MAT_DEPTH(seq->flags) : 0; }
-
-template<typename _Tp> inline int Seq<_Tp>::channels() const
-{ return seq ? CV_MAT_CN(seq->flags) : 0; }
-
-template<typename _Tp> inline size_t Seq<_Tp>::elemSize() const
-{ return seq ? seq->elem_size : 0; }
-
-template<typename _Tp> inline size_t Seq<_Tp>::index(const _Tp& elem) const
-{ return cvSeqElemIdx(seq, &elem); }
-
-template<typename _Tp> inline void Seq<_Tp>::push_back(const _Tp& elem)
-{ cvSeqPush(seq, &elem); }
-
-template<typename _Tp> inline void Seq<_Tp>::push_front(const _Tp& elem)
-{ cvSeqPushFront(seq, &elem); }
-
-template<typename _Tp> inline void Seq<_Tp>::push_back(const _Tp* elem, size_t count)
-{ cvSeqPushMulti(seq, elem, (int)count, 0); }
-
-template<typename _Tp> inline void Seq<_Tp>::push_front(const _Tp* elem, size_t count)
-{ cvSeqPushMulti(seq, elem, (int)count, 1); }
-
-template<typename _Tp> inline _Tp& Seq<_Tp>::back()
-{ return *(_Tp*)getSeqElem(seq, -1); }
-
-template<typename _Tp> inline const _Tp& Seq<_Tp>::back() const
-{ return *(const _Tp*)getSeqElem(seq, -1); }
-
-template<typename _Tp> inline _Tp& Seq<_Tp>::front()
-{ return *(_Tp*)getSeqElem(seq, 0); }
-
-template<typename _Tp> inline const _Tp& Seq<_Tp>::front() const
-{ return *(const _Tp*)getSeqElem(seq, 0); }
-
-template<typename _Tp> inline bool Seq<_Tp>::empty() const
-{ return !seq || seq->total == 0; }
-
-template<typename _Tp> inline void Seq<_Tp>::clear()
-{ if(seq) clearSeq(seq); }
-
-template<typename _Tp> inline void Seq<_Tp>::pop_back()
-{ seqPop(seq); }
-
-template<typename _Tp> inline void Seq<_Tp>::pop_front()
-{ seqPopFront(seq); }
-
-template<typename _Tp> inline void Seq<_Tp>::pop_back(_Tp* elem, size_t count)
-{ seqPopMulti(seq, elem, (int)count, 0); }
-
-template<typename _Tp> inline void Seq<_Tp>::pop_front(_Tp* elem, size_t count)
-{ seqPopMulti(seq, elem, (int)count, 1); }
-
-template<typename _Tp> inline void Seq<_Tp>::insert(int idx, const _Tp& elem)
-{ seqInsert(seq, idx, &elem); }
-
-template<typename _Tp> inline void Seq<_Tp>::insert(int idx, const _Tp* elems, size_t count)
-{
-    CvMat m = cvMat(1, count, DataType<_Tp>::type, elems);
-    seqInsertSlice(seq, idx, &m);
-}
-
-template<typename _Tp> inline void Seq<_Tp>::remove(int idx)
-{ seqRemove(seq, idx); }
-
-template<typename _Tp> inline void Seq<_Tp>::remove(const Range& r)
-{ seqRemoveSlice(seq, r); }
-
-template<typename _Tp> inline void Seq<_Tp>::copyTo(vector<_Tp>& vec, const Range& range) const
-{
-    size_t len = !seq ? 0 : range == Range::all() ? seq->total : range.end - range.start;
-    vec.resize(len);
-    if( seq && len )
-        cvCvtSeqToArray(seq, &vec[0], range);
-}
-
-template<typename _Tp> inline Seq<_Tp>::operator vector<_Tp>() const
-{
-    vector<_Tp> vec;
-    copyTo(vec);
-    return vec;
-}
-
-template<typename _Tp> inline SeqIterator<_Tp>::SeqIterator()
-{ memset(this, 0, sizeof(*this)); }
-
-template<typename _Tp> inline SeqIterator<_Tp>::SeqIterator(const Seq<_Tp>& _seq, bool seekEnd)
-{
-    cvStartReadSeq(_seq.seq, this);
-    index = seekEnd ? _seq.seq->total : 0;
-}
-
-template<typename _Tp> inline void SeqIterator<_Tp>::seek(size_t pos)
-{
-    cvSetSeqReaderPos(this, (int)pos, false);
-    index = pos;
-}
-
-template<typename _Tp> inline size_t SeqIterator<_Tp>::tell() const
-{ return index; }
-
-template<typename _Tp> inline _Tp& SeqIterator<_Tp>::operator *()
-{ return *(_Tp*)ptr; }
-
-template<typename _Tp> inline const _Tp& SeqIterator<_Tp>::operator *() const
-{ return *(const _Tp*)ptr; }
-
-template<typename _Tp> inline SeqIterator<_Tp>& SeqIterator<_Tp>::operator ++()
-{
-    CV_NEXT_SEQ_ELEM(sizeof(_Tp), *this);
-    if( ++index >= seq->total*2 )
-        index = 0;
-    return *this;
-}
-
-template<typename _Tp> inline SeqIterator<_Tp> SeqIterator<_Tp>::operator ++(int) const
-{
-    SeqIterator<_Tp> it = *this;
-    ++*this;
-    return it;
-}
-
-template<typename _Tp> inline SeqIterator<_Tp>& SeqIterator<_Tp>::operator --()
-{
-    CV_PREV_SEQ_ELEM(sizeof(_Tp), *this);
-    if( --index < 0 )
-        index = seq->total*2-1;
-    return *this;
-}
-
-template<typename _Tp> inline SeqIterator<_Tp> SeqIterator<_Tp>::operator --(int) const
-{
-    SeqIterator<_Tp> it = *this;
-    --*this;
-    return it;
-}
-
-template<typename _Tp> inline SeqIterator<_Tp>& SeqIterator<_Tp>::operator +=(int delta)
-{
-    cvSetSeqReaderPos(this, delta, 1);
-    index += delta;
-    int n = seq->total*2;
-    if( index < 0 )
-        index += n;
-    if( index >= n )
-        index -= n;
-    return *this;
-}
-
-template<typename _Tp> inline SeqIterator<_Tp>& SeqIterator<_Tp>::operator -=(int delta)
-{
-    return (*this += -delta);
-}
-
-template<typename _Tp> inline ptrdiff_t operator - (const SeqIterator<_Tp>& a,
-                                                    const SeqIterator<_Tp>& b)
-{
-    ptrdiff_t delta = a.index - b.index, n = a.seq->total;
-    if( std::abs(static_cast<long>(delta)) > n )
-        delta += delta < 0 ? n : -n;
-    return delta;
-}
-
-template<typename _Tp> inline bool operator == (const SeqIterator<_Tp>& a,
-                                                const SeqIterator<_Tp>& b)
-{
-    return a.seq == b.seq && a.index == b.index;
-}
-
-template<typename _Tp> inline bool operator != (const SeqIterator<_Tp>& a,
-                                                const SeqIterator<_Tp>& b)
-{
-    return !(a == b);
-}
-
-
-template<typename _ClsName> struct CV_EXPORTS RTTIImpl
-{
-public:
-    static int isInstance(const void* ptr)
-    {
-        static _ClsName dummy;
-        static void* dummyp = &dummy;
-        union
-        {
-            const void* p;
-            const void** pp;
-        } a, b;
-        a.p = dummyp;
-        b.p = ptr;
-        return *a.pp == *b.pp;
-    }
-    static void release(void** dbptr)
-    {
-        if(dbptr && *dbptr)
-        {
-            delete (_ClsName*)*dbptr;
-            *dbptr = 0;
-        }
-    }
-    static void* read(CvFileStorage* fs, CvFileNode* n)
-    {
-        FileNode fn(fs, n);
-        _ClsName* obj = new _ClsName;
-        if(obj->read(fn))
-            return obj;
-        delete obj;
-        return 0;
-    }
-
-    static void write(CvFileStorage* _fs, const char* name, const void* ptr, CvAttrList)
-    {
-        if(ptr && _fs)
-        {
-            FileStorage fs(_fs);
-            fs.fs.addref();
-            ((const _ClsName*)ptr)->write(fs, string(name));
-        }
-    }
-
-    static void* clone(const void* ptr)
-    {
-        if(!ptr)
-            return 0;
-        return new _ClsName(*(const _ClsName*)ptr);
+        _Tp d = (_Tp)determinant(a);
+        if( d == 0 )
+            return false;
+        d = 1/d;
+        b(0,0) = (a(1,1) * a(2,2) - a(1,2) * a(2,1)) * d;
+        b(0,1) = (a(0,2) * a(2,1) - a(0,1) * a(2,2)) * d;
+        b(0,2) = (a(0,1) * a(1,2) - a(0,2) * a(1,1)) * d;
+
+        b(1,0) = (a(1,2) * a(2,0) - a(1,0) * a(2,2)) * d;
+        b(1,1) = (a(0,0) * a(2,2) - a(0,2) * a(2,0)) * d;
+        b(1,2) = (a(0,2) * a(1,0) - a(0,0) * a(1,2)) * d;
+
+        b(2,0) = (a(1,0) * a(2,1) - a(1,1) * a(2,0)) * d;
+        b(2,1) = (a(0,1) * a(2,0) - a(0,0) * a(2,1)) * d;
+        b(2,2) = (a(0,0) * a(1,1) - a(0,1) * a(1,0)) * d;
+        return true;
     }
 };
 
 
-class CV_EXPORTS Formatter
+template<typename _Tp, int m, int n> struct Matx_FastSolveOp
 {
-public:
-    virtual ~Formatter() {}
-    virtual void write(std::ostream& out, const Mat& m, const int* params=0, int nparams=0) const = 0;
-    virtual void write(std::ostream& out, const void* data, int nelems, int type,
-                       const int* params=0, int nparams=0) const = 0;
-    static const Formatter* get(const char* fmt="");
-    static const Formatter* setDefault(const Formatter* fmt);
-};
-
-
-struct CV_EXPORTS Formatted
-{
-    Formatted(const Mat& m, const Formatter* fmt,
-              const vector<int>& params);
-    Formatted(const Mat& m, const Formatter* fmt,
-              const int* params=0);
-    Mat mtx;
-    const Formatter* fmt;
-    vector<int> params;
-};
-
-static inline Formatted format(const Mat& mtx, const char* fmt,
-                               const vector<int>& params=vector<int>())
-{
-    return Formatted(mtx, Formatter::get(fmt), params);
-}
-
-template<typename _Tp> static inline Formatted format(const vector<Point_<_Tp> >& vec,
-                                                      const char* fmt, const vector<int>& params=vector<int>())
-{
-    return Formatted(Mat(vec), Formatter::get(fmt), params);
-}
-
-template<typename _Tp> static inline Formatted format(const vector<Point3_<_Tp> >& vec,
-                                                      const char* fmt, const vector<int>& params=vector<int>())
-{
-    return Formatted(Mat(vec), Formatter::get(fmt), params);
-}
-
-/** \brief prints Mat to the output stream in Matlab notation
- * use like
- @verbatim
- Mat my_mat = Mat::eye(3,3,CV_32F);
- std::cout << my_mat;
- @endverbatim
- */
-static inline std::ostream& operator << (std::ostream& out, const Mat& mtx)
-{
-    Formatter::get()->write(out, mtx);
-    return out;
-}
-
-/** \brief prints Mat to the output stream allows in the specified notation (see format)
- * use like
- @verbatim
- Mat my_mat = Mat::eye(3,3,CV_32F);
- std::cout << my_mat;
- @endverbatim
- */
-static inline std::ostream& operator << (std::ostream& out, const Formatted& fmtd)
-{
-    fmtd.fmt->write(out, fmtd.mtx);
-    return out;
-}
-
-
-template<typename _Tp> static inline std::ostream& operator << (std::ostream& out,
-                                                                const vector<Point_<_Tp> >& vec)
-{
-    Formatter::get()->write(out, Mat(vec));
-    return out;
-}
-
-
-template<typename _Tp> static inline std::ostream& operator << (std::ostream& out,
-                                                                const vector<Point3_<_Tp> >& vec)
-{
-    Formatter::get()->write(out, Mat(vec));
-    return out;
-}
-
-
-/** Writes a Matx to an output stream.
- */
-template<typename _Tp, int m, int n> inline std::ostream& operator<<(std::ostream& out, const Matx<_Tp, m, n>& matx)
-{
-    out << cv::Mat(matx);
-    return out;
-}
-
-/** Writes a point to an output stream in Matlab notation
- */
-template<typename _Tp> inline std::ostream& operator<<(std::ostream& out, const Point_<_Tp>& p)
-{
-    out << "[" << p.x << ", " << p.y << "]";
-    return out;
-}
-
-/** Writes a point to an output stream in Matlab notation
- */
-template<typename _Tp> inline std::ostream& operator<<(std::ostream& out, const Point3_<_Tp>& p)
-{
-    out << "[" << p.x << ", " << p.y << ", " << p.z << "]";
-    return out;
-}
-
-/** Writes a Vec to an output stream. Format example : [10, 20, 30]
- */
-template<typename _Tp, int n> inline std::ostream& operator<<(std::ostream& out, const Vec<_Tp, n>& vec)
-{
-    out << "[";
-
-    if(Vec<_Tp, n>::depth < CV_32F)
+    bool operator()(const Matx<_Tp, m, m>& a, const Matx<_Tp, m, n>& b,
+                    Matx<_Tp, m, n>& x, int method) const
     {
-        for (int i = 0; i < n - 1; ++i) {
-            out << (int)vec[i] << ", ";
-        }
-        out << (int)vec[n-1] << "]";
+        Matx<_Tp, m, m> temp = a;
+        x = b;
+        if( method == DECOMP_CHOLESKY )
+            return Cholesky(temp.val, m*sizeof(_Tp), m, x.val, n*sizeof(_Tp), n);
+
+        return LU(temp.val, m*sizeof(_Tp), m, x.val, n*sizeof(_Tp), n) != 0;
     }
+};
+
+template<typename _Tp> struct Matx_FastSolveOp<_Tp, 2, 1>
+{
+    bool operator()(const Matx<_Tp, 2, 2>& a, const Matx<_Tp, 2, 1>& b,
+                    Matx<_Tp, 2, 1>& x, int) const
+    {
+        _Tp d = determinant(a);
+        if( d == 0 )
+            return false;
+        d = 1/d;
+        x(0) = (b(0)*a(1,1) - b(1)*a(0,1))*d;
+        x(1) = (b(1)*a(0,0) - b(0)*a(1,0))*d;
+        return true;
+    }
+};
+
+template<typename _Tp> struct Matx_FastSolveOp<_Tp, 3, 1>
+{
+    bool operator()(const Matx<_Tp, 3, 3>& a, const Matx<_Tp, 3, 1>& b,
+                    Matx<_Tp, 3, 1>& x, int) const
+    {
+        _Tp d = (_Tp)determinant(a);
+        if( d == 0 )
+            return false;
+        d = 1/d;
+        x(0) = d*(b(0)*(a(1,1)*a(2,2) - a(1,2)*a(2,1)) -
+                a(0,1)*(b(1)*a(2,2) - a(1,2)*b(2)) +
+                a(0,2)*(b(1)*a(2,1) - a(1,1)*b(2)));
+
+        x(1) = d*(a(0,0)*(b(1)*a(2,2) - a(1,2)*b(2)) -
+                b(0)*(a(1,0)*a(2,2) - a(1,2)*a(2,0)) +
+                a(0,2)*(a(1,0)*b(2) - b(1)*a(2,0)));
+
+        x(2) = d*(a(0,0)*(a(1,1)*b(2) - b(1)*a(2,1)) -
+                a(0,1)*(a(1,0)*b(2) - b(1)*a(2,0)) +
+                b(0)*(a(1,0)*a(2,1) - a(1,1)*a(2,0)));
+        return true;
+    }
+};
+
+} // internal
+
+template<typename _Tp, int m, int n> inline
+Matx<_Tp,m,n> Matx<_Tp,m,n>::randu(_Tp a, _Tp b)
+{
+    Matx<_Tp,m,n> M;
+    cv::randu(M, Scalar(a), Scalar(b));
+    return M;
+}
+
+template<typename _Tp, int m, int n> inline
+Matx<_Tp,m,n> Matx<_Tp,m,n>::randn(_Tp a, _Tp b)
+{
+    Matx<_Tp,m,n> M;
+    cv::randn(M, Scalar(a), Scalar(b));
+    return M;
+}
+
+template<typename _Tp, int m, int n> inline
+Matx<_Tp, n, m> Matx<_Tp, m, n>::inv(int method) const
+{
+    Matx<_Tp, n, m> b;
+    bool ok;
+    if( method == DECOMP_LU || method == DECOMP_CHOLESKY )
+        ok = internal::Matx_FastInvOp<_Tp, m>()(*this, b, method);
     else
     {
-        for (int i = 0; i < n - 1; ++i) {
-            out << vec[i] << ", ";
-        }
-        out << vec[n-1] << "]";
+        Mat A(*this, false), B(b, false);
+        ok = (invert(A, B, method) != 0);
+    }
+    return ok ? b : Matx<_Tp, n, m>::zeros();
+}
+
+template<typename _Tp, int m, int n> template<int l> inline
+Matx<_Tp, n, l> Matx<_Tp, m, n>::solve(const Matx<_Tp, m, l>& rhs, int method) const
+{
+    Matx<_Tp, n, l> x;
+    bool ok;
+    if( method == DECOMP_LU || method == DECOMP_CHOLESKY )
+        ok = internal::Matx_FastSolveOp<_Tp, m, l>()(*this, rhs, x, method);
+    else
+    {
+        Mat A(*this, false), B(rhs, false), X(x, false);
+        ok = cv::solve(A, B, X, method);
     }
 
-    return out;
+    return ok ? x : Matx<_Tp, n, l>::zeros();
 }
 
-/** Writes a Size_ to an output stream. Format example : [640 x 480]
- */
-template<typename _Tp> inline std::ostream& operator<<(std::ostream& out, const Size_<_Tp>& size)
+
+
+////////////////////////// Augmenting algebraic & logical operations //////////////////////////
+
+#define CV_MAT_AUG_OPERATOR1(op, cvop, A, B) \
+    static inline A& operator op (A& a, const B& b) { cvop; return a; }
+
+#define CV_MAT_AUG_OPERATOR(op, cvop, A, B)   \
+    CV_MAT_AUG_OPERATOR1(op, cvop, A, B)      \
+    CV_MAT_AUG_OPERATOR1(op, cvop, const A, B)
+
+#define CV_MAT_AUG_OPERATOR_T(op, cvop, A, B)                   \
+    template<typename _Tp> CV_MAT_AUG_OPERATOR1(op, cvop, A, B) \
+    template<typename _Tp> CV_MAT_AUG_OPERATOR1(op, cvop, const A, B)
+
+CV_MAT_AUG_OPERATOR  (+=, cv::add(a,b,a), Mat, Mat)
+CV_MAT_AUG_OPERATOR  (+=, cv::add(a,b,a), Mat, Scalar)
+CV_MAT_AUG_OPERATOR_T(+=, cv::add(a,b,a), Mat_<_Tp>, Mat)
+CV_MAT_AUG_OPERATOR_T(+=, cv::add(a,b,a), Mat_<_Tp>, Scalar)
+CV_MAT_AUG_OPERATOR_T(+=, cv::add(a,b,a), Mat_<_Tp>, Mat_<_Tp>)
+
+CV_MAT_AUG_OPERATOR  (-=, cv::subtract(a,b,a), Mat, Mat)
+CV_MAT_AUG_OPERATOR  (-=, cv::subtract(a,b,a), Mat, Scalar)
+CV_MAT_AUG_OPERATOR_T(-=, cv::subtract(a,b,a), Mat_<_Tp>, Mat)
+CV_MAT_AUG_OPERATOR_T(-=, cv::subtract(a,b,a), Mat_<_Tp>, Scalar)
+CV_MAT_AUG_OPERATOR_T(-=, cv::subtract(a,b,a), Mat_<_Tp>, Mat_<_Tp>)
+
+CV_MAT_AUG_OPERATOR  (*=, cv::gemm(a, b, 1, Mat(), 0, a, 0), Mat, Mat)
+CV_MAT_AUG_OPERATOR_T(*=, cv::gemm(a, b, 1, Mat(), 0, a, 0), Mat_<_Tp>, Mat)
+CV_MAT_AUG_OPERATOR_T(*=, cv::gemm(a, b, 1, Mat(), 0, a, 0), Mat_<_Tp>, Mat_<_Tp>)
+CV_MAT_AUG_OPERATOR  (*=, a.convertTo(a, -1, b), Mat, double)
+CV_MAT_AUG_OPERATOR_T(*=, a.convertTo(a, -1, b), Mat_<_Tp>, double)
+
+CV_MAT_AUG_OPERATOR  (/=, cv::divide(a,b,a), Mat, Mat)
+CV_MAT_AUG_OPERATOR_T(/=, cv::divide(a,b,a), Mat_<_Tp>, Mat)
+CV_MAT_AUG_OPERATOR_T(/=, cv::divide(a,b,a), Mat_<_Tp>, Mat_<_Tp>)
+CV_MAT_AUG_OPERATOR  (/=, a.convertTo((Mat&)a, -1, 1./b), Mat, double)
+CV_MAT_AUG_OPERATOR_T(/=, a.convertTo((Mat&)a, -1, 1./b), Mat_<_Tp>, double)
+
+CV_MAT_AUG_OPERATOR  (&=, cv::bitwise_and(a,b,a), Mat, Mat)
+CV_MAT_AUG_OPERATOR  (&=, cv::bitwise_and(a,b,a), Mat, Scalar)
+CV_MAT_AUG_OPERATOR_T(&=, cv::bitwise_and(a,b,a), Mat_<_Tp>, Mat)
+CV_MAT_AUG_OPERATOR_T(&=, cv::bitwise_and(a,b,a), Mat_<_Tp>, Scalar)
+CV_MAT_AUG_OPERATOR_T(&=, cv::bitwise_and(a,b,a), Mat_<_Tp>, Mat_<_Tp>)
+
+CV_MAT_AUG_OPERATOR  (|=, cv::bitwise_or(a,b,a), Mat, Mat)
+CV_MAT_AUG_OPERATOR  (|=, cv::bitwise_or(a,b,a), Mat, Scalar)
+CV_MAT_AUG_OPERATOR_T(|=, cv::bitwise_or(a,b,a), Mat_<_Tp>, Mat)
+CV_MAT_AUG_OPERATOR_T(|=, cv::bitwise_or(a,b,a), Mat_<_Tp>, Scalar)
+CV_MAT_AUG_OPERATOR_T(|=, cv::bitwise_or(a,b,a), Mat_<_Tp>, Mat_<_Tp>)
+
+CV_MAT_AUG_OPERATOR  (^=, cv::bitwise_xor(a,b,a), Mat, Mat)
+CV_MAT_AUG_OPERATOR  (^=, cv::bitwise_xor(a,b,a), Mat, Scalar)
+CV_MAT_AUG_OPERATOR_T(^=, cv::bitwise_xor(a,b,a), Mat_<_Tp>, Mat)
+CV_MAT_AUG_OPERATOR_T(^=, cv::bitwise_xor(a,b,a), Mat_<_Tp>, Scalar)
+CV_MAT_AUG_OPERATOR_T(^=, cv::bitwise_xor(a,b,a), Mat_<_Tp>, Mat_<_Tp>)
+
+#undef CV_MAT_AUG_OPERATOR_T
+#undef CV_MAT_AUG_OPERATOR
+#undef CV_MAT_AUG_OPERATOR1
+
+
+
+///////////////////////////////////////////// SVD /////////////////////////////////////////////
+
+inline SVD::SVD() {}
+inline SVD::SVD( InputArray m, int flags ) { operator ()(m, flags); }
+inline void SVD::solveZ( InputArray m, OutputArray _dst )
 {
-    out << "[" << size.width << " x " << size.height << "]";
-    return out;
+    Mat mtx = m.getMat();
+    SVD svd(mtx, (mtx.rows >= mtx.cols ? 0 : SVD::FULL_UV));
+    _dst.create(svd.vt.cols, 1, svd.vt.type());
+    Mat dst = _dst.getMat();
+    svd.vt.row(svd.vt.rows-1).reshape(1,svd.vt.cols).copyTo(dst);
 }
 
-/** Writes a Rect_ to an output stream. Format example : [640 x 480 from (10, 20)]
- */
-template<typename _Tp> inline std::ostream& operator<<(std::ostream& out, const Rect_<_Tp>& rect)
+template<typename _Tp, int m, int n, int nm> inline void
+    SVD::compute( const Matx<_Tp, m, n>& a, Matx<_Tp, nm, 1>& w, Matx<_Tp, m, nm>& u, Matx<_Tp, n, nm>& vt )
 {
-    out << "[" << rect.width << " x " << rect.height << " from (" << rect.x << ", " << rect.y << ")]";
-    return out;
+    CV_StaticAssert( nm == MIN(m, n), "Invalid size of output vector.");
+    Mat _a(a, false), _u(u, false), _w(w, false), _vt(vt, false);
+    SVD::compute(_a, _w, _u, _vt);
+    CV_Assert(_w.data == (uchar*)&w.val[0] && _u.data == (uchar*)&u.val[0] && _vt.data == (uchar*)&vt.val[0]);
+}
+
+template<typename _Tp, int m, int n, int nm> inline void
+SVD::compute( const Matx<_Tp, m, n>& a, Matx<_Tp, nm, 1>& w )
+{
+    CV_StaticAssert( nm == MIN(m, n), "Invalid size of output vector.");
+    Mat _a(a, false), _w(w, false);
+    SVD::compute(_a, _w);
+    CV_Assert(_w.data == (uchar*)&w.val[0]);
+}
+
+template<typename _Tp, int m, int n, int nm, int nb> inline void
+SVD::backSubst( const Matx<_Tp, nm, 1>& w, const Matx<_Tp, m, nm>& u,
+                const Matx<_Tp, n, nm>& vt, const Matx<_Tp, m, nb>& rhs,
+                Matx<_Tp, n, nb>& dst )
+{
+    CV_StaticAssert( nm == MIN(m, n), "Invalid size of output vector.");
+    Mat _u(u, false), _w(w, false), _vt(vt, false), _rhs(rhs, false), _dst(dst, false);
+    SVD::backSubst(_w, _u, _vt, _rhs, _dst);
+    CV_Assert(_dst.data == (uchar*)&dst.val[0]);
 }
 
 
-template<typename _Tp> inline Ptr<_Tp> Algorithm::create(const string& name)
+
+/////////////////////////////////// Multiply-with-Carry RNG ///////////////////////////////////
+
+inline RNG::RNG()              { state = 0xffffffff; }
+inline RNG::RNG(uint64 _state) { state = _state ? _state : 0xffffffff; }
+
+inline RNG::operator uchar()    { return (uchar)next(); }
+inline RNG::operator schar()    { return (schar)next(); }
+inline RNG::operator ushort()   { return (ushort)next(); }
+inline RNG::operator short()    { return (short)next(); }
+inline RNG::operator int()      { return (int)next(); }
+inline RNG::operator unsigned() { return next(); }
+inline RNG::operator float()    { return next()*2.3283064365386962890625e-10f; }
+inline RNG::operator double()   { unsigned t = next(); return (((uint64)t << 32) | next()) * 5.4210108624275221700372640043497e-20; }
+
+inline unsigned RNG::operator ()(unsigned N) { return (unsigned)uniform(0,N); }
+inline unsigned RNG::operator ()()           { return next(); }
+
+inline int    RNG::uniform(int a, int b)       { return a == b ? a : (int)(next() % (b - a) + a); }
+inline float  RNG::uniform(float a, float b)   { return ((float)*this)*(b - a) + a; }
+inline double RNG::uniform(double a, double b) { return ((double)*this)*(b - a) + a; }
+
+inline unsigned RNG::next()
+{
+    state = (uint64)(unsigned)state* /*CV_RNG_COEFF*/ 4164903690U + (unsigned)(state >> 32);
+    return (unsigned)state;
+}
+
+
+
+///////////////////////////////////////// LineIterator ////////////////////////////////////////
+
+inline
+uchar* LineIterator::operator *()
+{
+    return ptr;
+}
+
+inline
+LineIterator& LineIterator::operator ++()
+{
+    int mask = err < 0 ? -1 : 0;
+    err += minusDelta + (plusDelta & mask);
+    ptr += minusStep + (plusStep & mask);
+    return *this;
+}
+
+inline
+LineIterator LineIterator::operator ++(int)
+{
+    LineIterator it = *this;
+    ++(*this);
+    return it;
+}
+
+inline
+Point LineIterator::pos() const
+{
+    Point p;
+    p.y = (int)((ptr - ptr0)/step);
+    p.x = (int)(((ptr - ptr0) - p.y*step)/elemSize);
+    return p;
+}
+
+
+//! returns the next unifomly-distributed random number of the specified type
+template<typename _Tp> static inline _Tp randu()
+{
+  return (_Tp)theRNG();
+}
+
+
+
+///////////////////////////////// Formatted output of cv::Mat /////////////////////////////////
+
+static inline
+Ptr<Formatted> format(InputArray mtx, int fmt)
+{
+    return Formatter::get(fmt)->format(mtx.getMat());
+}
+
+static inline
+int print(Ptr<Formatted> fmtd, FILE* stream = stdout)
+{
+    int written = 0;
+    fmtd->reset();
+    for(const char* str = fmtd->next(); str; str = fmtd->next())
+        written += fputs(str, stream);
+
+    return written;
+}
+
+static inline
+int print(const Mat& mtx, FILE* stream = stdout)
+{
+    return print(Formatter::get()->format(mtx), stream);
+}
+
+template<typename _Tp> static inline
+int print(const std::vector<Point_<_Tp> >& vec, FILE* stream = stdout)
+{
+    return print(Formatter::get()->format(Mat(vec)), stream);
+}
+
+template<typename _Tp> static inline
+int print(const std::vector<Point3_<_Tp> >& vec, FILE* stream = stdout)
+{
+    return print(Formatter::get()->format(Mat(vec)), stream);
+}
+
+template<typename _Tp, int m, int n> static inline
+int print(const Matx<_Tp, m, n>& matx, FILE* stream = stdout)
+{
+    return print(Formatter::get()->format(matx), stream);
+}
+
+
+
+////////////////////////////////////////// Algorithm //////////////////////////////////////////
+
+template<typename _Tp> inline
+Ptr<_Tp> Algorithm::create(const String& name)
 {
     return _create(name).ptr<_Tp>();
 }
 
-template<typename _Tp>
-inline void Algorithm::set(const char* _name, const Ptr<_Tp>& value)
+template<typename _Tp> inline
+void Algorithm::set(const char* _name, const Ptr<_Tp>& value)
 {
     Ptr<Algorithm> algo_ptr = value. template ptr<cv::Algorithm>();
     if (algo_ptr.empty()) {
-        CV_Error( CV_StsUnsupportedFormat, "unknown/unsupported Ptr type of the second parameter of the method Algorithm::set");
+        CV_Error( Error::StsUnsupportedFormat, "unknown/unsupported Ptr type of the second parameter of the method Algorithm::set");
     }
     info()->set(this, _name, ParamType<Algorithm>::type, &algo_ptr);
 }
 
-template<typename _Tp>
-inline void Algorithm::set(const string& _name, const Ptr<_Tp>& value)
+template<typename _Tp> inline
+void Algorithm::set(const String& _name, const Ptr<_Tp>& value)
 {
     this->set<_Tp>(_name.c_str(), value);
 }
 
-template<typename _Tp>
-inline void Algorithm::setAlgorithm(const char* _name, const Ptr<_Tp>& value)
+template<typename _Tp> inline
+void Algorithm::setAlgorithm(const char* _name, const Ptr<_Tp>& value)
 {
     Ptr<Algorithm> algo_ptr = value. template ptr<cv::Algorithm>();
     if (algo_ptr.empty()) {
-        CV_Error( CV_StsUnsupportedFormat, "unknown/unsupported Ptr type of the second parameter of the method Algorithm::set");
+        CV_Error( Error::StsUnsupportedFormat, "unknown/unsupported Ptr type of the second parameter of the method Algorithm::set");
     }
     info()->set(this, _name, ParamType<Algorithm>::type, &algo_ptr);
 }
 
-template<typename _Tp>
-inline void Algorithm::setAlgorithm(const string& _name, const Ptr<_Tp>& value)
+template<typename _Tp> inline
+void Algorithm::setAlgorithm(const String& _name, const Ptr<_Tp>& value)
 {
     this->set<_Tp>(_name.c_str(), value);
 }
 
-template<typename _Tp> inline typename ParamType<_Tp>::member_type Algorithm::get(const string& _name) const
+template<typename _Tp> inline
+typename ParamType<_Tp>::member_type Algorithm::get(const String& _name) const
 {
     typename ParamType<_Tp>::member_type value;
     info()->get(this, _name.c_str(), ParamType<_Tp>::type, &value);
     return value;
 }
 
-template<typename _Tp> inline typename ParamType<_Tp>::member_type Algorithm::get(const char* _name) const
+template<typename _Tp> inline
+typename ParamType<_Tp>::member_type Algorithm::get(const char* _name) const
 {
     typename ParamType<_Tp>::member_type value;
     info()->get(this, _name, ParamType<_Tp>::type, &value);
     return value;
 }
 
-template<typename _Tp, typename _Base> inline void AlgorithmInfo::addParam(Algorithm& algo, const char* parameter,
-                  Ptr<_Tp>& value, bool readOnly, Ptr<_Tp> (Algorithm::*getter)(), void (Algorithm::*setter)(const Ptr<_Tp>&),
-                  const string& help)
+template<typename _Tp, typename _Base> inline
+void AlgorithmInfo::addParam(Algorithm& algo, const char* parameter, Ptr<_Tp>& value, bool readOnly,
+                             Ptr<_Tp> (Algorithm::*getter)(), void (Algorithm::*setter)(const Ptr<_Tp>&),
+                             const String& help)
 {
     //TODO: static assert: _Tp inherits from _Base
     addParam_(algo, parameter, ParamType<_Base>::type, &value, readOnly,
               (Algorithm::Getter)getter, (Algorithm::Setter)setter, help);
 }
 
-template<typename _Tp> inline void AlgorithmInfo::addParam(Algorithm& algo, const char* parameter,
-                  Ptr<_Tp>& value, bool readOnly, Ptr<_Tp> (Algorithm::*getter)(), void (Algorithm::*setter)(const Ptr<_Tp>&),
-                  const string& help)
+template<typename _Tp> inline
+void AlgorithmInfo::addParam(Algorithm& algo, const char* parameter, Ptr<_Tp>& value, bool readOnly,
+                             Ptr<_Tp> (Algorithm::*getter)(), void (Algorithm::*setter)(const Ptr<_Tp>&),
+                             const String& help)
 {
     //TODO: static assert: _Tp inherits from Algorithm
     addParam_(algo, parameter, ParamType<Algorithm>::type, &value, readOnly,
               (Algorithm::Getter)getter, (Algorithm::Setter)setter, help);
 }
 
-}
 
-#ifdef _MSC_VER
-# pragma warning(pop)
-#endif
 
-#endif // __cplusplus
+} // cv
+
 #endif

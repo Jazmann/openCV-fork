@@ -69,6 +69,8 @@ parse_patterns = (
   {'name': "ndk_path",                 'default': None,       'pattern': re.compile("^(?:ANDROID_NDK|ANDROID_STANDALONE_TOOLCHAIN)?:PATH=(.*)$")},
   {'name': "android_abi",              'default': None,       'pattern': re.compile("^ANDROID_ABI:STRING=(.*)$")},
   {'name': "android_executable",       'default': None,       'pattern': re.compile("^ANDROID_EXECUTABLE:FILEPATH=(.*android.*)$")},
+  {'name': "ant_executable",           'default': None,       'pattern': re.compile("^ANT_EXECUTABLE:FILEPATH=(.*ant.*)$")},
+  {'name': "java_test_binary_dir",     'default': None,       'pattern': re.compile("^opencv_test_java_BINARY_DIR:STATIC=(.*)$")},
   {'name': "is_x64",                   'default': "OFF",      'pattern': re.compile("^CUDA_64_BIT_DEVICE_CODE:BOOL=(ON)$")},#ugly(
   {'name': "cmake_generator",          'default': None,       'pattern': re.compile("^CMAKE_GENERATOR:INTERNAL=(.+)$")},
   {'name': "cxx_compiler",             'default': None,       'pattern': re.compile("^CMAKE_CXX_COMPILER:FILEPATH=(.+)$")},
@@ -286,6 +288,16 @@ class TestSuite(object):
             if self.adb:
                 # construct name for aapt tool
                 self.aapt = [os.path.join(os.path.dirname(self.adb[0]), ("aapt","aapt.exe")[hostos == 'nt'])]
+                if not os.path.isfile(self.aapt[0]):
+                    # it's moved in SDK r22
+                    sdk_dir = os.path.dirname( os.path.dirname(self.adb[0]) )
+                    aapt_fn = ("aapt", "aapt.exe")[hostos == 'nt']
+                    for r, ds, fs in os.walk( os.path.join(sdk_dir, 'build-tools') ):
+                        if aapt_fn in fs:
+                            self.aapt = [ os.path.join(r, aapt_fn) ]
+                            break
+                    else:
+                        self.error = "Can't find '%s' tool!" % aapt_fn
 
         # fix has_perf_tests param
         self.has_perf_tests = self.has_perf_tests == "ON"
@@ -431,6 +443,8 @@ class TestSuite(object):
         if self.tests_dir and os.path.isdir(self.tests_dir):
             files = glob.glob(os.path.join(self.tests_dir, self.nameprefix + "*"))
             files = [f for f in files if self.isTest(f)]
+            if self.ant_executable and self.java_test_binary_dir:
+                files.append("java")
             return files
         return []
 
@@ -739,6 +753,16 @@ class TestSuite(object):
                 pass
             if os.path.isfile(hostlogpath):
                 return hostlogpath
+            return None
+        elif path == "java":
+            cmd = [self.ant_executable, "-DjavaLibraryPath=" + self.tests_dir, "buildAndTest"]
+
+            print >> _stderr, "Run command:", " ".join(cmd)
+            try:
+                Popen(cmd, stdout=_stdout, stderr=_stderr, cwd = self.java_test_binary_dir + "/.build").wait()
+            except OSError:
+                pass
+
             return None
         else:
             cmd = [exe]

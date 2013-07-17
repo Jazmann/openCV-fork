@@ -1,7 +1,7 @@
 #include "precomp.hpp"
 
 #ifdef HAVE_CUDA
-#include "opencv2/core/gpumat.hpp"
+#include "opencv2/core/gpu.hpp"
 #endif
 
 #ifdef ANDROID
@@ -14,30 +14,10 @@ int64 TestBase::timeLimitDefault = 0;
 unsigned int TestBase::iterationsLimitDefault = (unsigned int)(-1);
 int64 TestBase::_timeadjustment = 0;
 
-const std::string command_line_keys =
-    "{   perf_max_outliers   |8        |percent of allowed outliers}"
-    "{   perf_min_samples    |10       |minimal required numer of samples}"
-    "{   perf_force_samples  |100      |force set maximum number of samples for all tests}"
-    "{   perf_seed           |809564   |seed for random numbers generator}"
-    "{   perf_threads        |-1       |the number of worker threads, if parallel execution is enabled}"
-    "{   perf_write_sanity   |         |create new records for sanity checks}"
-    "{   perf_verify_sanity  |         |fail tests having no regression data for sanity checks}"
-#ifdef ANDROID
-    "{   perf_time_limit     |6.0      |default time limit for a single test (in seconds)}"
-    "{   perf_affinity_mask  |0        |set affinity mask for the main thread}"
-    "{   perf_log_power_checkpoints  | |additional xml logging for power measurement}"
-#else
-    "{   perf_time_limit     |3.0      |default time limit for a single test (in seconds)}"
-#endif
-    "{   perf_max_deviation  |1.0      |}"
-    "{   help h              |         |print help info}"
-#ifdef HAVE_CUDA
-    "{   perf_run_cpu        |false    |run GPU performance tests for analogical CPU functions}"
-    "{   perf_cuda_device    |0        |run GPU test suite onto specific CUDA capable device}"
-    "{   perf_cuda_info_only |false    |print an information about system and an available CUDA devices and then exit.}"
-#endif
-;
+// Item [0] will be considered the default implementation.
+static std::vector<std::string> available_impls;
 
+static std::string  param_impl;
 static double       param_max_outliers;
 static double       param_max_deviation;
 static unsigned int param_min_samples;
@@ -48,7 +28,6 @@ static int          param_threads;
 static bool         param_write_sanity;
 static bool         param_verify_sanity;
 #ifdef HAVE_CUDA
-static bool         param_run_cpu;
 static int          param_cuda_device;
 #endif
 
@@ -70,10 +49,6 @@ static void setCurrentThreadAffinityMask(int mask)
         LOGE("Error in the syscall setaffinity: mask=%d=0x%x err=%d=0x%x", mask, mask, err, err);
     }
 }
-#endif
-
-#ifdef HAVE_CUDA
-# include <opencv2/core/gpumat.hpp>
 #endif
 
 namespace {
@@ -139,12 +114,12 @@ Regression& Regression::add(TestBase* test, const std::string& name, cv::InputAr
 Regression& Regression::addKeypoints(TestBase* test, const std::string& name, const std::vector<cv::KeyPoint>& array, double eps, ERROR_TYPE err)
 {
     int len = (int)array.size();
-    cv::Mat pt      (len, 1, CV_32FC2, (void*)&array[0].pt,       sizeof(cv::KeyPoint));
-    cv::Mat size    (len, 1, CV_32FC1, (void*)&array[0].size,     sizeof(cv::KeyPoint));
-    cv::Mat angle   (len, 1, CV_32FC1, (void*)&array[0].angle,    sizeof(cv::KeyPoint));
-    cv::Mat response(len, 1, CV_32FC1, (void*)&array[0].response, sizeof(cv::KeyPoint));
-    cv::Mat octave  (len, 1, CV_32SC1, (void*)&array[0].octave,   sizeof(cv::KeyPoint));
-    cv::Mat class_id(len, 1, CV_32SC1, (void*)&array[0].class_id, sizeof(cv::KeyPoint));
+    cv::Mat pt      (len, 1, CV_32FC2, len ? (void*)&array[0].pt : 0,       sizeof(cv::KeyPoint));
+    cv::Mat size    (len, 1, CV_32FC1, len ? (void*)&array[0].size : 0,     sizeof(cv::KeyPoint));
+    cv::Mat angle   (len, 1, CV_32FC1, len ? (void*)&array[0].angle : 0,    sizeof(cv::KeyPoint));
+    cv::Mat response(len, 1, CV_32FC1, len ? (void*)&array[0].response : 0, sizeof(cv::KeyPoint));
+    cv::Mat octave  (len, 1, CV_32SC1, len ? (void*)&array[0].octave : 0,   sizeof(cv::KeyPoint));
+    cv::Mat class_id(len, 1, CV_32SC1, len ? (void*)&array[0].class_id : 0, sizeof(cv::KeyPoint));
 
     return Regression::add(test, name + "-pt",       pt,       eps, ERROR_ABSOLUTE)
                                 (name + "-size",     size,     eps, ERROR_ABSOLUTE)
@@ -157,10 +132,10 @@ Regression& Regression::addKeypoints(TestBase* test, const std::string& name, co
 Regression& Regression::addMatches(TestBase* test, const std::string& name, const std::vector<cv::DMatch>& array, double eps, ERROR_TYPE err)
 {
     int len = (int)array.size();
-    cv::Mat queryIdx(len, 1, CV_32SC1, (void*)&array[0].queryIdx, sizeof(cv::DMatch));
-    cv::Mat trainIdx(len, 1, CV_32SC1, (void*)&array[0].trainIdx, sizeof(cv::DMatch));
-    cv::Mat imgIdx  (len, 1, CV_32SC1, (void*)&array[0].imgIdx,   sizeof(cv::DMatch));
-    cv::Mat distance(len, 1, CV_32FC1, (void*)&array[0].distance, sizeof(cv::DMatch));
+    cv::Mat queryIdx(len, 1, CV_32SC1, len ? (void*)&array[0].queryIdx : 0, sizeof(cv::DMatch));
+    cv::Mat trainIdx(len, 1, CV_32SC1, len ? (void*)&array[0].trainIdx : 0, sizeof(cv::DMatch));
+    cv::Mat imgIdx  (len, 1, CV_32SC1, len ? (void*)&array[0].imgIdx : 0,   sizeof(cv::DMatch));
+    cv::Mat distance(len, 1, CV_32FC1, len ? (void*)&array[0].distance : 0, sizeof(cv::DMatch));
 
     return Regression::add(test, name + "-queryIdx", queryIdx, DBL_EPSILON, ERROR_ABSOLUTE)
                                 (name + "-trainIdx", trainIdx, DBL_EPSILON, ERROR_ABSOLUTE)
@@ -334,29 +309,21 @@ void Regression::write(cv::Mat m)
     write() << "val" << getElem(m, y, x, cn) << "}";
 }
 
-static double evalEps(double expected, double actual, double _eps, ERROR_TYPE err)
-{
-    if (err == ERROR_ABSOLUTE)
-        return _eps;
-    else if (err == ERROR_RELATIVE)
-        return std::max(std::abs(expected), std::abs(actual)) * err;
-    return 0;
-}
-
-void Regression::verify(cv::FileNode node, cv::Mat actual, double _eps, std::string argname, ERROR_TYPE err)
+void Regression::verify(cv::FileNode node, cv::Mat actual, double eps, std::string argname, ERROR_TYPE err)
 {
     if (!actual.empty() && actual.dims < 2) return;
+
+    double expect_min = (double)node["min"];
+    double expect_max = (double)node["max"];
+
+    if (err == ERROR_RELATIVE)
+        eps *= std::max(std::abs(expect_min), std::abs(expect_max));
 
     double actual_min, actual_max;
     cv::minMaxIdx(actual, &actual_min, &actual_max);
 
-    double expect_min = (double)node["min"];
-    double eps = evalEps(expect_min, actual_min, _eps, err);
     ASSERT_NEAR(expect_min, actual_min, eps)
             << argname << " has unexpected minimal value" << std::endl;
-
-    double expect_max = (double)node["max"];
-    eps = evalEps(expect_max, actual_max, _eps, err);
     ASSERT_NEAR(expect_max, actual_max, eps)
             << argname << " has unexpected maximal value" << std::endl;
 
@@ -370,7 +337,6 @@ void Regression::verify(cv::FileNode node, cv::Mat actual, double _eps, std::str
             << argname << " has unexpected number of rows" << std::endl;
 
     double expect_last = (double)last["val"];
-    eps = evalEps(expect_last, actual_last, _eps, err);
     ASSERT_NEAR(expect_last, actual_last, eps)
             << argname << " has unexpected value of the last element" << std::endl;
 
@@ -384,7 +350,6 @@ void Regression::verify(cv::FileNode node, cv::Mat actual, double _eps, std::str
     // verified that mat size is the same as recorded
     double actual_rng1 = getElem(actual, y1, x1, cn1);
 
-    eps = evalEps(expect_rng1, actual_rng1, _eps, err);
     ASSERT_NEAR(expect_rng1, actual_rng1, eps)
             << argname << " has unexpected value of the ["<< x1 << ":" << y1 << ":" << cn1 <<"] element" << std::endl;
 
@@ -396,7 +361,6 @@ void Regression::verify(cv::FileNode node, cv::Mat actual, double _eps, std::str
     double expect_rng2 = (double)rng2["val"];
     double actual_rng2 = getElem(actual, y2, x2, cn2);
 
-    eps = evalEps(expect_rng2, actual_rng2, _eps, err);
     ASSERT_NEAR(expect_rng2, actual_rng2, eps)
             << argname << " has unexpected value of the ["<< x2 << ":" << y2 << ":" << cn2 <<"] element" << std::endl;
 }
@@ -588,11 +552,12 @@ Regression& Regression::operator() (const std::string& name, cv::InputArray arra
 
     std::string nodename = getCurrentTestNodeName();
 
-#ifdef HAVE_CUDA
-    static const std::string prefix = (param_run_cpu)? "CPU_" : "GPU_";
+    // This is a hack for compatibility and it should eventually get removed.
+    // gpu's tests don't even have CPU sanity data anymore.
     if(suiteName == "gpu")
-        nodename = prefix + nodename;
-#endif
+    {
+        nodename = (PERF_RUN_GPU() ? "GPU_" : "CPU_") + nodename;
+    }
 
     cv::FileNode n = rootIn[nodename];
     if(n.isNone())
@@ -657,6 +622,43 @@ performance_metrics::performance_metrics()
 
 void TestBase::Init(int argc, const char* const argv[])
 {
+    std::vector<std::string> plain_only;
+    plain_only.push_back("plain");
+    TestBase::Init(plain_only, argc, argv);
+}
+
+void TestBase::Init(const std::vector<std::string> & availableImpls,
+                 int argc, const char* const argv[])
+{
+    available_impls = availableImpls;
+
+    const std::string command_line_keys =
+        "{   perf_max_outliers           |8        |percent of allowed outliers}"
+        "{   perf_min_samples            |10       |minimal required numer of samples}"
+        "{   perf_force_samples          |100      |force set maximum number of samples for all tests}"
+        "{   perf_seed                   |809564   |seed for random numbers generator}"
+        "{   perf_threads                |-1       |the number of worker threads, if parallel execution is enabled}"
+        "{   perf_write_sanity           |false    |create new records for sanity checks}"
+        "{   perf_verify_sanity          |false    |fail tests having no regression data for sanity checks}"
+        "{   perf_impl                   |" + available_impls[0] +
+                                                  "|the implementation variant of functions under test}"
+        "{   perf_list_impls             |false    |list available implementation variants and exit}"
+        "{   perf_run_cpu                |false    |deprecated, equivalent to --perf_impl=plain}"
+#ifdef ANDROID
+        "{   perf_time_limit             |6.0      |default time limit for a single test (in seconds)}"
+        "{   perf_affinity_mask          |0        |set affinity mask for the main thread}"
+        "{   perf_log_power_checkpoints  |         |additional xml logging for power measurement}"
+#else
+        "{   perf_time_limit             |3.0      |default time limit for a single test (in seconds)}"
+#endif
+        "{   perf_max_deviation          |1.0      |}"
+        "{   help h                      |false    |print help info}"
+#ifdef HAVE_CUDA
+        "{   perf_cuda_device            |0        |run GPU test suite onto specific CUDA capable device}"
+        "{   perf_cuda_info_only         |false    |print an information about system and an available CUDA devices and then exit.}"
+#endif
+    ;
+
     cv::CommandLineParser args(argc, argv, command_line_keys);
     if (args.has("help"))
     {
@@ -666,6 +668,7 @@ void TestBase::Init(int argc, const char* const argv[])
 
     ::testing::AddGlobalTestEnvironment(new PerfEnvironment);
 
+    param_impl          = args.has("perf_run_cpu") ? "plain" : args.get<std::string>("perf_impl");
     param_max_outliers  = std::min(100., std::max(0., args.get<double>("perf_max_outliers")));
     param_min_samples   = std::max(1u, args.get<unsigned int>("perf_min_samples"));
     param_max_deviation = std::max(0., args.get<double>("perf_max_deviation"));
@@ -680,30 +683,52 @@ void TestBase::Init(int argc, const char* const argv[])
     log_power_checkpoints = args.has("perf_log_power_checkpoints");
 #endif
 
+    bool param_list_impls = args.has("perf_list_impls");
+
+    if (param_list_impls)
+    {
+        fputs("Available implementation variants:", stdout);
+        for (size_t i = 0; i < available_impls.size(); ++i) {
+            putchar(' ');
+            fputs(available_impls[i].c_str(), stdout);
+        }
+        putchar('\n');
+        exit(0);
+    }
+
+    if (std::find(available_impls.begin(), available_impls.end(), param_impl) == available_impls.end())
+    {
+        printf("No such implementation: %s\n", param_impl.c_str());
+        exit(1);
+    }
+
 #ifdef HAVE_CUDA
 
     bool printOnly        = args.has("perf_cuda_info_only");
 
     if (printOnly)
         exit(0);
+#endif
 
-    param_run_cpu         = args.has("perf_run_cpu");
+    if (available_impls.size() > 1)
+        printf("[----------]\n[   INFO   ] \tImplementation variant: %s.\n[----------]\n", param_impl.c_str()), fflush(stdout);
+
+#ifdef HAVE_CUDA
+
     param_cuda_device      = std::max(0, std::min(cv::gpu::getCudaEnabledDeviceCount(), args.get<int>("perf_cuda_device")));
 
-    if (param_run_cpu)
-        printf("[----------]\n[ GPU INFO ] \tRun test suite on CPU.\n[----------]\n"), fflush(stdout);
-    else
+    if (param_impl == "cuda")
     {
         cv::gpu::DeviceInfo info(param_cuda_device);
         if (!info.isCompatible())
         {
-            printf("[----------]\n[ FAILURE  ] \tDevice %s is NOT compatible with current GPU module build.\n[----------]\n", info.name().c_str()), fflush(stdout);
+            printf("[----------]\n[ FAILURE  ] \tDevice %s is NOT compatible with current GPU module build.\n[----------]\n", info.name()), fflush(stdout);
             exit(-1);
         }
 
         cv::gpu::setDevice(param_cuda_device);
 
-        printf("[----------]\n[ GPU INFO ] \tRun test suite on %s GPU.\n[----------]\n", info.name().c_str()), fflush(stdout);
+        printf("[----------]\n[ GPU INFO ] \tRun test suite on %s GPU.\n[----------]\n", info.name()), fflush(stdout);
     }
 #endif
 
@@ -717,6 +742,18 @@ void TestBase::Init(int argc, const char* const argv[])
     iterationsLimitDefault = param_force_samples == 0 ? (unsigned)(-1) : param_force_samples;
     _timeadjustment = _calibrate();
 }
+
+void TestBase::RecordRunParameters()
+{
+    ::testing::Test::RecordProperty("cv_implementation", param_impl);
+    ::testing::Test::RecordProperty("cv_num_threads", param_threads);
+}
+
+std::string TestBase::getSelectedImpl()
+{
+    return param_impl;
+}
+
 
 int64 TestBase::_calibrate()
 {
@@ -1164,7 +1201,7 @@ void TestBase::RunPerfTestBody()
     {
         metrics.terminationReason = performance_metrics::TERM_EXCEPTION;
         #ifdef HAVE_CUDA
-            if (e.code == CV_GpuApiCallError)
+            if (e.code == cv::Error::GpuApiCallError)
                 cv::gpu::resetDevice();
         #endif
         FAIL() << "Expected: PerfTestBody() doesn't throw an exception.\n  Actual: it throws cv::Exception:\n  " << e.what();
@@ -1335,12 +1372,10 @@ void perf::sort(std::vector<cv::KeyPoint>& pts, cv::InputOutputArray descriptors
 /*****************************************************************************************\
 *                                  ::perf::GpuPerf
 \*****************************************************************************************/
-#ifdef HAVE_CUDA
 bool perf::GpuPerf::targetDevice()
 {
-    return !param_run_cpu;
+    return param_impl == "cuda";
 }
-#endif
 
 /*****************************************************************************************\
 *                                  ::perf::PrintTo
@@ -1378,4 +1413,3 @@ void PrintTo(const Size& sz, ::std::ostream* os)
 }
 
 }  // namespace cv
-
