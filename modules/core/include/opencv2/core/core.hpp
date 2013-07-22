@@ -81,6 +81,7 @@ using std::ptrdiff_t;
 template<typename _Tp> class CV_EXPORTS Size_;
 template<typename _Tp> class CV_EXPORTS Point_;
 template<typename _Tp> class CV_EXPORTS Rect_;
+template<typename _Tp, int cn> class CV_EXPORTS sVec;
 template<typename _Tp, int cn> class CV_EXPORTS Vec;
 template<typename _Tp, int m, int n> class CV_EXPORTS Matx;
 
@@ -702,6 +703,145 @@ typedef Vec<double, 3> Vec3d;
 typedef Vec<double, 4> Vec4d;
 typedef Vec<double, 6> Vec6d;
 
+    //////////////////////////////// sVec /////////////////////////////////
+    
+    // A data structure which allows a vector to be expressed as a float scalar times an integer vector.
+    // _Tp must be an integer type char, short, long, long long - signed or unsigned.
+    
+    template<typename _Tp, int cn> class CV_EXPORTS sVec : public Matx<_Tp, cn, 1>
+    {
+    public:
+        typedef _Tp value_type;
+        enum { depth = DataDepth<_Tp>::value, channels = cn, type = CV_MAKETYPE(depth, channels) };
+        float scale;
+        
+        //! default constructor
+        sVec();
+        sVec(float _scale, _Tp v0); //!< 1-element vector constructor
+        sVec(float _scale, _Tp v0, _Tp v1); //!< 2-element vector constructor
+        sVec(float _scale, _Tp v0, _Tp v1, _Tp v2); //!< 3-element vector constructor
+        sVec(float _scale, _Tp v0, _Tp v1, _Tp v2, _Tp v3); //!< 4-element vector constructor
+        sVec(float _scale, _Tp v0, _Tp v1, _Tp v2, _Tp v3, _Tp v4); //!< 5-element vector constructor
+        sVec(float _scale, _Tp v0, _Tp v1, _Tp v2, _Tp v3, _Tp v4, _Tp v5); //!< 6-element vector constructor
+        sVec(float _scale, _Tp v0, _Tp v1, _Tp v2, _Tp v3, _Tp v4, _Tp v5, _Tp v6); //!< 7-element vector constructor
+        sVec(float _scale, _Tp v0, _Tp v1, _Tp v2, _Tp v3, _Tp v4, _Tp v5, _Tp v6, _Tp v7); //!< 8-element vector constructor
+        sVec(float _scale, _Tp v0, _Tp v1, _Tp v2, _Tp v3, _Tp v4, _Tp v5, _Tp v6, _Tp v7, _Tp v8); //!< 9-element vector constructor
+        sVec(float _scale, _Tp v0, _Tp v1, _Tp v2, _Tp v3, _Tp v4, _Tp v5, _Tp v6, _Tp v7, _Tp v8, _Tp v9); //!< 10-element vector constructor
+        explicit sVec(float _scale, const _Tp* values);
+        
+        sVec(const sVec<_Tp, cn>& v);
+        // sVec(const Matx<float, cn, 1>& m); // Constructors -- sVec from a float Matx
+        sVec(const Matx<float, cn, 1>& vec, int64_t max_denom = 255); // Constructors -- sVec from a float Matx
+        static sVec all(_Tp alpha);
+        
+        sVec(float _scale, Vec< _Tp, cn> _vec   ) : Matx<_Tp, cn, 1>(_vec.val), scale(_scale){};
+        sVec(float _scale, Matx<_Tp, cn, 1> _vec) : Matx<_Tp, cn, 1>(_vec.val), scale(_scale){};
+        sVec(float _scale, std::initializer_list<_Tp> initList): scale(_scale), Matx<_Tp, cn, 1>(initList){}
+        
+        // Conjugation (makes sense for complex numbers and quaternions)
+        sVec conj() const;
+        // Cross product of the two 3D vectors. For other dimensionalities the exception is raised
+        sVec cross(const sVec& v) const;
+        // Convertion to another data type
+        // Type conversion - sVec -> sVec
+        template<typename T2> operator sVec<T2, cn>() const;
+        // Type conversion - sVec -> Matx
+        operator Matx<float, cn, 1>() const;
+        // Type conversion - sVec -> 4-element CvScalar.
+        operator CvScalar() const;
+        
+        
+        // Element Access
+        
+        const  _Tp& operator [](int i) const;        // Element Access - Access Rvalue - Vector element type _Tp
+        _Tp& operator [](int i);              // Element Access - Access Lvalue - Vector element type _Tp
+        const float operator ()(int i) const;
+        
+        
+        
+        // Operator Overloading - Matx_AddOp
+        sVec(const Matx<_Tp, cn, 1>& a, const Matx<_Tp, cn, 1>& b, Matx_AddOp op);
+        sVec(const sVec<_Tp, cn   >& a, const Matx<_Tp, cn, 1>& b, Matx_AddOp op);
+        sVec(const Matx<_Tp, cn, 1>& a, const sVec<_Tp, cn   >& b, Matx_AddOp op);
+        sVec(const sVec<_Tp, cn   >& a, const sVec<_Tp, cn   >& b, Matx_AddOp op);
+        
+        // Operator Overloading - Matx_SubOp
+        sVec(const Matx<_Tp, cn, 1>& a, const Matx<_Tp, cn, 1>& b, Matx_SubOp op);
+        sVec(const sVec<_Tp, cn   >& a, const Matx<_Tp, cn, 1>& b, Matx_SubOp op);
+        sVec(const Matx<_Tp, cn, 1>& a, const sVec<_Tp, cn   >& b, Matx_SubOp op);
+        sVec(const sVec<_Tp, cn   >& a, const sVec<_Tp, cn   >& b, Matx_SubOp op);
+        
+        // Operator Overloading - Matx_ScaleOp
+        
+        template<typename _T2> sVec(const Matx<_Tp, cn, 1>& a, _T2 alpha, Matx_ScaleOp op);
+        template<typename _T2> sVec(const sVec<_Tp, cn>& a, _T2 alpha, Matx_ScaleOp op);
+        
+        
+        // Direct product with a Vec or sVec.
+        
+        sVec<_Tp, cn> mul(const  Vec<_Tp, cn>& v) const;
+        sVec<_Tp, cn> mul(const sVec<_Tp, cn>& v) const;
+        
+        // The dotProduct
+        sVec<_Tp, 1> dotProd(const sVec<_Tp, cn> v) const;
+        
+        // Methods
+        
+        void factor(){
+            // Test for all negative.
+            if (this->allNegative()) {
+                for (int i=0; i<cn; i++) {this->val[i] *= -1;}
+                scale = -1.0 * scale;
+            }
+            int common = gComDivisor<_Tp>(this->val, cn);
+            if (common>1){
+                for (int i=0; i<cn; i++) {this->val[i] /= common;}
+                scale = scale*common;
+            };
+        };
+        
+        bool allNegative(){
+            for(int i=0;i<cn;i++)
+            {
+                if(this->val[i] > 0) return false;
+            }
+            return true;
+        }
+        
+        bool allPositive(){
+            for(int i=0;i<cn;i++)
+            {
+                if(this->val[i] < 0) return false;
+            }
+            return true;
+        }
+        
+        // max and min return the max and min values in the vector part of the type.
+        _Tp max(){
+            _Tp maxVal = this->val[0];
+            for (int i=1; i<cn; i++) { if (this->val[i] > maxVal) maxVal=this->val[i];}
+            return maxVal;
+        }
+        
+        _Tp min(){
+            _Tp minVal = this->val[0];
+            for (int i=1; i<cn; i++) { if (this->val[i] > minVal) minVal=this->val[i];}
+            return minVal;
+        }
+        
+        std::string toString(){
+            std::string output = std::to_string(this->scale) + "  / " + std::to_string(this->val[0]) + " \\   / " + std::to_string(this(0)) + " \\ \n";
+            for (int i=1; i<cn-1; i++) {
+                output += "          | " + std::to_string(this->val[i]) + " | = | " + std::to_string(this(i)) + " | \n";
+            }
+            output += "          \\ " + std::to_string(this->val[cn-1]) + " /   \\ " + std::to_string(this(cn-1)) + " / \n";
+            return output;
+        }
+        
+        void print();
+        
+    };
+    
 
 //////////////////////////////// Complex //////////////////////////////
 

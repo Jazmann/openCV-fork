@@ -48,6 +48,11 @@
 
 namespace cv
 {
+    
+    
+    
+    
+
 
 /*!
    Informative template class for OpenCV "scalars".
@@ -216,9 +221,11 @@ public:
     typedef value_type work_type;
     typedef value_type channel_type;
     typedef value_type vec_type;
-    enum { generic_type = 0, depth = DataDepth<channel_type>::value, channels = 1,
-        fmt=DataDepth<channel_type>::fmt,
-        type = CV_MAKETYPE(depth, channels)
+    enum { generic_type = 0,
+           depth        = CV_32U,
+           channels     = 1,
+           fmt          = (int)'u',
+           type         = CV_MAKETYPE(depth, channels)
         };
 };
     
@@ -253,27 +260,18 @@ public:
          };
 };
 
-
-/*!
-  A helper class for cv::DataType
-
-  The class is specialized for each fundamental numerical data type supported by OpenCV.
-  It provides DataDepth<T>::value constant.
-*/
-template<typename _Tp> class DataDepth
-{
-public:
-    enum
-    {
-        value = DataType<_Tp>::depth,
-        fmt   = DataType<_Tp>::fmt
-    };
-};
-  /*
-    template<typename _Tp> class CV_EXPORTS DataDepth {};
+    /*!
+     A helper class for cv::DataType
+     
+     The class is specialized for each fundamental numerical data type supported by OpenCV.
+     It provides DataDepth<T>::value constant.
+     */
     
-    template<> class DataDepth<bool> { public: enum { value = CV_8U, fmt=(int)'u' }; };
-   */
+    /*
+     template<typename _Tp> class CV_EXPORTS DataDepth {};
+     
+     template<> class DataDepth<bool> { public: enum { value = CV_8U, fmt=(int)'u' }; };
+     */
     /*
      template<> class DataDepth<u2bit> { public: enum { value = CV_2U, fmt=(int)'u' }; };
      template<> class DataDepth<u4bit> { public: enum { value = CV_4U, fmt=(int)'u' }; };
@@ -297,7 +295,15 @@ public:
      template<> class DataDepth<unsigned long long int> { public: enum { value = CV_64U, fmt=(int)'i' }; };
      template<> class DataDepth<  signed long long int> { public: enum { value = CV_64S, fmt=(int)'i' }; };
      */
-    /*
+    template<typename _Tp> class DataDepth
+    {
+    public:
+        enum
+        {
+            value = DataType<_Tp>::depth,
+            fmt   = DataType<_Tp>::fmt
+        };
+    };
     template<> class DataDepth<uint8_t>  { public: enum { value = CV_8U,  fmt=(int)'hhu' }; };
     template<> class DataDepth< int8_t>  { public: enum { value = CV_8S,  fmt=(int)'hhi' }; };
     template<> class DataDepth<uint16_t> { public: enum { value = CV_16U, fmt=(int)'hu' }; };
@@ -311,7 +317,6 @@ public:
     template<> class DataDepth<double> { public: enum { value = CV_64F, fmt=(int)'d' }; };
     template<typename _Tp> class DataDepth<_Tp*> { public: enum { value = CV_USRTYPE1, fmt=(int)'r' }; };
     
-    */
 
 
 

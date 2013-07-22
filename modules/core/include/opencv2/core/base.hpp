@@ -449,6 +449,7 @@ _AccTp normInf(const _Tp* a, const _Tp* b, int n)
 
 ////////////////// forward declarations for important OpenCV types //////////////////
 
+template<typename _Tp, int cn> class CV_EXPORTS sVec;
 template<typename _Tp, int cn> class CV_EXPORTS Vec;
 template<typename _Tp, int m, int n> class CV_EXPORTS Matx;
 

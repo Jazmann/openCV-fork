@@ -2244,6 +2244,7 @@ template<typename _Tp> inline bool operator != (const SeqIterator<_Tp>& a,
 {
     return !(a == b);
 }
+    
 
 } // cv
 
