@@ -44,6 +44,7 @@
 #define __OPENCV_IMGPROC_HPP__
 
 #include "opencv2/core.hpp"
+#include "opencv2/imgproc/types_c.h"
 
 /*! \namespace cv
  Namespace where all the C++ OpenCV functionality resides
@@ -198,7 +199,7 @@ enum { HISTCMP_CORREL        = 0,
        HISTCMP_BHATTACHARYYA = 3,
        HISTCMP_HELLINGER     = HISTCMP_BHATTACHARYYA
      };
-
+    
 //! the color conversion code
 enum { COLOR_BGR2BGRA     = 0,
        COLOR_RGB2RGBA     = COLOR_BGR2BGRA,
@@ -452,11 +453,10 @@ enum { COLOR_BGR2BGRA     = 0,
        COLOR_BayerRG2RGB_EA  = COLOR_BayerBG2BGR_EA,
        COLOR_BayerGR2RGB_EA  = COLOR_BayerGB2BGR_EA,
 
-
        COLOR_COLORCVT_MAX  = 139
 };
     
-    CV_EXPORTS_W template<int src_t, int dst_t>  class  depthConverter
+template<int src_t, int dst_t>  class  depthConverter
     {
         public :
         using srcInfo = cv_Data_Type<src_t>;
@@ -466,8 +466,8 @@ enum { COLOR_BGR2BGRA     = 0,
         using wrkType = double;
         virtual void operator()(const srcType src, dstType &dst) = 0;
     };
-    
-    CV_EXPORTS_W template<int src_t, int dst_t>  class  distributeErf: public depthConverter<src_t, dst_t>
+        
+template<int src_t, int dst_t>  class  distributeErf: public depthConverter<src_t, dst_t>
     {
         public :
         using srcType = typename depthConverter<src_t, dst_t>::srcType;
@@ -482,7 +482,7 @@ enum { COLOR_BGR2BGRA     = 0,
         void operator()(const srcType src, dstType &dst);
     };
     
-    CV_EXPORTS_W template<int src_t, int dst_t>  class  distributeLinear: public depthConverter<src_t, dst_t>
+template<int src_t, int dst_t>  class  distributeLinear: public depthConverter<src_t, dst_t>
     {
         public :
         using srcType = typename depthConverter<src_t, dst_t>::srcType;
@@ -498,7 +498,7 @@ enum { COLOR_BGR2BGRA     = 0,
     };
     
     
-    CV_EXPORTS_W template<int src_t, int dst_t> class colorSpaceConverter
+template<int src_t, int dst_t> class colorSpaceConverter
     {
         public :
         using srcInfo = cv_Mat_Data_Type<src_t>;
@@ -519,7 +519,7 @@ enum { COLOR_BGR2BGRA     = 0,
     // template class colorSpaceConverter<CV_8UC3,CV_8UC3>;
     // template class colorSpaceConverter<CV_8UC4,CV_8UC3>;
     
-    CV_EXPORTS_W template<int src_t, int dst_t> class RGB2Rot: public colorSpaceConverter<src_t, dst_t>
+template<int src_t, int dst_t> class RGB2Rot: public colorSpaceConverter<src_t, dst_t>
     {
         public :
         using srcInfo = typename colorSpaceConverter<src_t, dst_t>::srcInfo;
@@ -545,7 +545,7 @@ enum { COLOR_BGR2BGRA     = 0,
     // template class RGB2Rot<CV_8UC3,CV_8UC3>;
     // template class RGB2Rot<CV_8UC4,CV_8UC3>;
     
-    CV_EXPORTS_W template<int src_t, int dst_t> void convertColor(InputArray _src, OutputArray _dst, colorSpaceConverter<src_t, dst_t>& colorConverter);
+template<int src_t, int dst_t> void convertColor(InputArray _src, OutputArray _dst, colorSpaceConverter<src_t, dst_t>& colorConverter);
     
     template <typename Cvt> CV_EXPORTS_W void CvtColorLoop(const Mat& src, Mat& dst, const Cvt& cvt);
     

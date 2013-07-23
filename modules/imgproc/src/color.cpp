@@ -3359,7 +3359,7 @@ template class cv::colorSpaceConverter<CV_8UC4,CV_8UC3>;
 
     // The transform to the new color space is (T vec - 255 TMin)/TRange. 255 is the range of 8bit RGB and can be replaced directly with a different range for 16 and 32 bit RGB spaces. The division by TRange is the direct element wise division and can safely be rounded to recast in the required bit depth.
     
-CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int blueIdx, cv::Matx<int, 3, 3>& T, cv::Vec<int, 3>& _TRange, cv::Vec<int,3>& _TMin)
+template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int blueIdx, cv::Matx<int, 3, 3>& T, cv::Vec<int, 3>& _TRange, cv::Vec<int,3>& _TMin)
     {
         const int idxSrc[3] = {(blueIdx+2)%4,1,blueIdx}; // (blueIdx+2)%4 = 2 if blueIdx = 0
         const int idxDst[3] = {(blueIdx+2)%4,1,blueIdx}; //                 0 if blueIdx = 2
@@ -3383,7 +3383,7 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
 //}
 
 
-CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(cv::Vec<int, 3> sp0, cv::Vec<int, 3> sp1, cv::Vec<int, 3> sp2, cv::Vec<double, 3> g, cv::Vec<typename cv::depthConverter<src_t, dst_t>::srcType,3> c)
+template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(cv::Vec<int, 3> sp0, cv::Vec<int, 3> sp1, cv::Vec<int, 3> sp2, cv::Vec<double, 3> g, cv::Vec<typename cv::depthConverter<src_t, dst_t>::srcType,3> c)
 {
     // printf(" g = %f   c =  %i \n",g,c);
     using srcInfo = typename cv::colorSpaceConverter<src_t, dst_t>::srcInfo;
@@ -3720,7 +3720,7 @@ CV_EXPORTS_W template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(c
 //    void operator()(const srcType src, dstType dst) const;
 //};
 
-CV_EXPORTS_W template<int src_t, int dst_t> inline void cv::RGB2Rot<src_t, dst_t>::operator()(const typename cv::colorSpaceConverter<src_t, dst_t>::srcType* src, typename cv::colorSpaceConverter<src_t, dst_t>::dstType* dst, int n) const
+template<int src_t, int dst_t> inline void cv::RGB2Rot<src_t, dst_t>::operator()(const typename cv::colorSpaceConverter<src_t, dst_t>::srcType* src, typename cv::colorSpaceConverter<src_t, dst_t>::dstType* dst, int n) const
 {
     using cs = typename cv::colorSpaceConverter<src_t, dst_t>;
     using de = typename cv::distributeErf<src_t, dst_t>;
@@ -3767,7 +3767,7 @@ CV_EXPORTS_W template<int src_t, int dst_t> inline void cv::RGB2Rot<src_t, dst_t
 template class cv::RGB2Rot<CV_8UC3,CV_8UC3>;
 template class cv::RGB2Rot<CV_8UC4,CV_8UC3>;
 
-CV_EXPORTS_W template<int src_t, int dst_t> void cv::convertColor(cv::InputArray _src, cv::OutputArray _dst, cv::colorSpaceConverter<src_t, dst_t>& colorConverter)
+template<int src_t, int dst_t> void cv::convertColor(cv::InputArray _src, cv::OutputArray _dst, cv::colorSpaceConverter<src_t, dst_t>& colorConverter)
 {
     printf("constexpr static int src_Bit_Depth  = %i \n", cv::colorSpaceConverter<src_t, dst_t>::srcInfo::bitDepth);
     printf("constexpr static int src_Byte_Depth = %i \n", cv::colorSpaceConverter<src_t, dst_t>::srcInfo::byteDepth);
