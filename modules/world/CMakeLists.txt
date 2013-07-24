@@ -80,7 +80,6 @@ foreach(m ${OPENCV_MODULE_${the_module}_DEPS})
   endforeach()
 endforeach()
 
-
 macro(ios_include_3party_libs)
   foreach(l ${ARGN})
     add_dependencies(${the_module} ${l})
@@ -99,6 +98,7 @@ macro(ios_include_3party_libs)
       list(APPEND objlist "\"${objpath3}\"")
     endforeach() # (srcname ${sources})
   endforeach()
+  ocv_list_filterout(objlist jmemansi) # <<= dirty fix
 endmacro()
 
 if(IOS AND WITH_PNG)
