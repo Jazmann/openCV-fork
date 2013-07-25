@@ -26,6 +26,7 @@ However, opencv2.framework directory is erased and recreated on each run.
 """
 
 import glob, re, os, os.path, shutil, string, sys
+build_type="Debug"
 
 def build_opencv(srcroot, buildroot, target, arch):
     "builds OpenCV for device or simulator"
@@ -37,10 +38,10 @@ def build_opencv(srcroot, buildroot, target, arch):
     os.chdir(builddir)
     # for some reason, if you do not specify CMAKE_BUILD_TYPE, it puts libs to "RELEASE" rather than "Release"
     cmakeargs = ("-GXcode " +
-                "-DCMAKE_BUILD_TYPE=Release " +
+                "-DCMAKE_BUILD_TYPE=%s " +
                 "-DCMAKE_TOOLCHAIN_FILE=%s/platforms/ios/cmake/Toolchains/Toolchain-%s_Xcode.cmake " +
                 "-DBUILD_opencv_world=ON " +
-                "-DCMAKE_INSTALL_PREFIX=install") % (srcroot, target)
+                "-DCMAKE_INSTALL_PREFIX=install") % (build_type, srcroot, target)
     # if cmake cache exists, just rerun cmake to update OpenCV.xproj if necessary
     if os.path.isfile(os.path.join(builddir, "CMakeCache.txt")):
         os.system("cmake %s ." % (cmakeargs,))
@@ -48,12 +49,12 @@ def build_opencv(srcroot, buildroot, target, arch):
         os.system("cmake %s %s" % (cmakeargs, srcroot))
 
     for wlib in [builddir + "/modules/world/UninstalledProducts/libopencv_world.a",
-                 builddir + "/lib/Release/libopencv_world.a"]:
+                 builddir + "/lib/" + build_type + "/libopencv_world.a"]:
         if os.path.isfile(wlib):
             os.remove(wlib)
 
-    os.system("xcodebuild -parallelizeTargets ARCHS=%s -jobs 8 -sdk %s -configuration Release -target ALL_BUILD" % (arch, target.lower()))
-    os.system("xcodebuild ARCHS=%s -sdk %s -configuration Release -target install install" % (arch, target.lower()))
+    os.system("xcodebuild -parallelizeTargets ARCHS=%s -jobs 8 -sdk %s -configuration %s -target ALL_BUILD" % (arch, target.lower(), build_type))
+    os.system("xcodebuild ARCHS=%s -sdk %s -configuration %s -target install install" % (arch, target.lower(), build_type))
     os.chdir(currdir)
 
 def put_framework_together(srcroot, dstroot):
@@ -88,7 +89,7 @@ def put_framework_together(srcroot, dstroot):
     shutil.copytree(tdir0 + "/install/include/opencv2", dstdir + "/Headers")
 
     # make universal static lib
-    wlist = " ".join(["../build/" + t + "/lib/Release/libopencv_world.a" for t in targetlist])
+    wlist = " ".join(["../build/" + t + "/lib/" + build_type + "/libopencv_world.a" for t in targetlist])
     os.system("lipo -create " + wlist + " -o " + dstdir + "/opencv2")
 
     # form Info.plist
