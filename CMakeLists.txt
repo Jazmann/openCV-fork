@@ -244,10 +244,6 @@ OCV_OPTION(OPENCV_WARNINGS_ARE_ERRORS "Treat warnings as errors"                
 # ===================================================
 OCV_OPTION(CMAKE_VERBOSE "Verbose mode" OFF )
 
-# backward compatibility
-# ===================================================
-include(cmake/OpenCVLegacyOptions.cmake OPTIONAL)
-
 
 # ----------------------------------------------------------------------------
 #  Get actual OpenCV version number from sources
