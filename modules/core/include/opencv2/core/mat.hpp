@@ -494,13 +494,13 @@ public:
     //! builds matrix from comma initializer
     template<typename _Tp> explicit Mat(const MatCommaInitializer_<_Tp>& commaInitializer);
 
-    // //! converts old-style CvMat to the new matrix; the data is not copied by default
-    // Mat(const CvMat* m, bool copyData=false);
-    // //! converts old-style CvMatND to the new matrix; the data is not copied by default
-    // Mat(const CvMatND* m, bool copyData=false);
-    // //! converts old-style IplImage to the new matrix; the data is not copied by default
-    // Mat(const IplImage* img, bool copyData=false);
-    //Mat(const void* img, bool copyData=false);
+//    //! converts old-style CvMat to the new matrix; the data is not copied by default
+//    Mat(const CvMat* m, bool copyData=false);
+//     //! converts old-style CvMatND to the new matrix; the data is not copied by default
+//    Mat(const CvMatND* m, bool copyData=false);
+//     //! converts old-style IplImage to the new matrix; the data is not copied by default
+//    Mat(const IplImage* img, bool copyData=false);
+//    Mat(const void* img, bool copyData=false);
 
     //! download data from GpuMat
     explicit Mat(const gpu::GpuMat& m);
