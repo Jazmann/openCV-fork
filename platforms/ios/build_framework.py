@@ -28,7 +28,7 @@ However, opencv2.framework directory is erased and recreated on each run.
 import glob, re, os, os.path, shutil, string, sys
 build_type="Debug"
 
-def build_opencv(srcroot, buildroot, target, arch):
+def build_xcode(srcroot, buildroot, target, arch):
     "builds OpenCV for device or simulator"
 
     builddir = os.path.join(buildroot, target + '-' + arch)
@@ -53,6 +53,17 @@ def build_opencv(srcroot, buildroot, target, arch):
         if os.path.isfile(wlib):
             os.remove(wlib)
 
+    os.chdir(currdir)
+
+
+def build_opencv(srcroot, buildroot, target, arch):
+    "builds OpenCV for device or simulator"
+
+    builddir = os.path.join(buildroot, target + '-' + arch)
+    if not os.path.isdir(builddir):
+        os.makedirs(builddir)
+    currdir = os.getcwd()
+    os.chdir(builddir)
     os.system("xcodebuild -parallelizeTargets ARCHS=%s -jobs 8 -sdk %s -configuration %s -target ALL_BUILD" % (arch, target.lower(), build_type))
     os.system("xcodebuild ARCHS=%s -sdk %s -configuration %s -target install install" % (arch, target.lower(), build_type))
     os.chdir(currdir)
@@ -113,6 +124,7 @@ def build_framework(srcroot, dstroot):
     targets = ["iPhoneOS", "iPhoneOS", "iPhoneSimulator"]
     archs = ["armv7", "armv7s", "i386"]
     for i in range(len(targets)):
+       # build_xcode(srcroot, os.path.join(dstroot, "build"), targets[i], archs[i])
         build_opencv(srcroot, os.path.join(dstroot, "build"), targets[i], archs[i])
 
     put_framework_together(srcroot, dstroot)
