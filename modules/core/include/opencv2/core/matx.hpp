@@ -469,7 +469,7 @@ template<typename _Tp, int cn> static Vec<_Tp, cn> normalize(const Vec<_Tp, cn>&
         
         const  _Tp& operator [](int i) const;        // Element Access - Access Rvalue - Vector element type _Tp
         _Tp& operator [](int i);              // Element Access - Access Lvalue - Vector element type _Tp
-        const float operator ()(int i) const;
+        float operator ()(int i) const;
         
         
         
@@ -1516,7 +1516,7 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
         return this->val[i];
     }
     // Element Access - Access Rvalue - Scaled Vector element
-    template<typename _Tp, int cn> inline const float sVec<_Tp, cn>::operator ()(int i) const
+    template<typename _Tp, int cn> inline float sVec<_Tp, cn>::operator ()(int i) const
     {
         CV_DbgAssert( (unsigned)i < (unsigned)cn );
         return this->scale * this->val[i];

@@ -465,6 +465,7 @@ enum { COLOR_BGR2BGRA     = 0,
 template<int src_t, int dst_t>  class  depthConverter
     {
         public :
+        virtual ~depthConverter<src_t, dst_t>(){};
         using srcInfo = cv_Data_Type<src_t>;
         using dstInfo = cv_Data_Type<dst_t>;
         using srcType = typename cv_Data_Type<src_t>::type;
@@ -507,6 +508,7 @@ template<int src_t, int dst_t>  class  distributeLinear: public depthConverter<s
 template<int src_t, int dst_t> class colorSpaceConverter
     {
         public :
+        virtual ~colorSpaceConverter<src_t, dst_t>(){};
         using srcInfo = cv_Mat_Data_Type<src_t>;
         using srcType = typename cv_Data_Type<src_t>::type;
         using src_channel_type = srcType;
