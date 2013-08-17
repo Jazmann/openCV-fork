@@ -366,6 +366,10 @@ if(CMAKE_GENERATOR MATCHES "Makefiles|Ninja|Xcode" AND "${CMAKE_BUILD_TYPE}" STR
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
+if(CMAKE_GENERATOR MATCHES "Xcode" AND "${COMBINE_HIDPI_IMAGES}" STREQUAL "")
+  set(COMBINE_HIDPI_IMAGES YES)
+endif()
+
 include(cmake/OpenCVCompilerOptions.cmake)
 
 
