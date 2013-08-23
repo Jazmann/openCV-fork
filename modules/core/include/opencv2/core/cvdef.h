@@ -597,10 +597,12 @@ template<> struct cv_Data_Type<CV_64F>{
 template<int cv_data_type> using cv_Type = typename cv_Data_Type<cv_data_type>::type;
 
 
+namespace cv {
+    template<int t> struct Data_Type : cv_Data_Type<CV_MAT_DEPTH(t)>{
+        constexpr static int channels  = CV_MAT_CN(t);
+    };
+}
 
-template<int t> struct cv::Data_Type: cv_Data_Type<CV_MAT_DEPTH(t)>{
-    constexpr static int channels  = CV_MAT_CN(t);
-};
 
 
 /* void cv_Print_Data_Type(int type){

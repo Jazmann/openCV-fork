@@ -1256,11 +1256,11 @@ Vec<_Tp, cn> VecCommaInitializer<_Tp, cn>::operator *() const
     /////////////////////////// short scaled vector (sVec) /////////////////////////////
     
     template<typename _Tp, int cn> inline sVec<_Tp, cn>::sVec()
-    :scale(1.0), Matx<_Tp, cn, 1>()
+    : Matx<_Tp, cn, 1>(), scale(1.0)
     {}
     
     template<typename _Tp, int cn> inline sVec<_Tp, cn>::sVec(float _scale, _Tp v0)
-    : scale(_scale), Matx<_Tp, cn, 1>(v0)
+    : Matx<_Tp, cn, 1>(v0), scale(_scale)
     {}
     
     template<typename _Tp, int cn> inline sVec<_Tp, cn>::sVec(float _scale, _Tp v0, _Tp v1)

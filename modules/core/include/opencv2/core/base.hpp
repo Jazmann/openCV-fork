@@ -247,6 +247,7 @@ template<typename _Tp> static inline _Tp saturate_cast(unsigned v) { return _Tp(
 template<typename _Tp> static inline _Tp saturate_cast(int v)      { return _Tp(v); }
 template<typename _Tp> static inline _Tp saturate_cast(float v)    { return _Tp(v); }
 template<typename _Tp> static inline _Tp saturate_cast(double v)   { return _Tp(v); }
+template<typename _Tp> static inline _Tp saturate_cast(_Tp v)      { return _Tp(v); }
 
 template<> inline uchar saturate_cast<uchar>(schar v)        { return (uchar)std::max((int)v, 0); }
 template<> inline uchar saturate_cast<uchar>(ushort v)       { return (uchar)std::min((unsigned)v, (unsigned)UCHAR_MAX); }

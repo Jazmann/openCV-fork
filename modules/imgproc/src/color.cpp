@@ -3377,8 +3377,6 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(cv::Vec<int, 3
     using wrkInfo = typename cv::colorSpaceConverter<src_t, dst_t>::wrkInfo;
     using wrkType = typename cv::colorSpaceConverter<src_t, dst_t>::wrkType;
     
-    const int wrk_t = cv::colorSpaceConverter<src_t, dst_t>::wrkInfo::dataType;
-    
     using dcSrcType = typename cv::depthConverter<src_t, dst_t>::srcType;
     using dcDstType = typename cv::depthConverter<src_t, dst_t>::dstType;
     using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
@@ -3477,7 +3475,7 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(cv::Vec<int, 3
                                                  a3[0]/excessWBFactor[2], a3[1]/excessWBFactor[2], a3[2]/excessWBFactor[2]);
     // Setup internal data
     printf("RGB2Rot\n");
-        cv::Matx<int, 3, 8> RGBBox({
+        cv::Matx<wrkType, 3, 8> RGBBox({
             0, 1, 0, 0, 0, 1, 1, 1,
             0, 0, 1, 0, 1, 0, 1, 1,
             0, 0, 0, 1, 1, 1, 0, 1});
@@ -3501,11 +3499,11 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(cv::Vec<int, 3
     for(int i = 0; i < dstInfo::channels; i++){
         for(int j = 0; j < srcInfo::channels; j++){
             if (j<3&&i<3) {
-                M[i][j] = Ti(i,j)
+                M[i][j] = Ti(i,j);
             }else{
                 M[i][j] = 0;// Dont add the alpha channel to the color mix.
             }
-            if (j==3&&i==3){M[i][j] = 1};// Preserve alpha channel if possible.
+            if (j==3&&i==3){M[i][j] = 1;};// Preserve alpha channel if possible.
         }
     }
     

@@ -547,7 +547,7 @@ template<int src_t, int dst_t> class RGB2Rot: public colorSpaceConverter<src_t, 
         
         RGB2Rot(Vec<int, 3> sp0, Vec<int, 3> sp1, Vec<int, 3> sp2, Vec<double, 3> g, Vec<typename depthConverter<src_t, dst_t>::srcType, 3 > c);
         
-        void operator()(const srcType* src, dstType* dst, int n) const;
+        void operator()(const typename cv::Data_Type<src_t>::type* src, typename cv::Data_Type<dst_t>::type* dst, int n) const;
     };
     
     // template class RGB2Rot<CV_8UC3,CV_8UC3>;
