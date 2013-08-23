@@ -155,11 +155,11 @@ template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf()
         using srcType = typename depthConverter<src_t, dst_t>::srcType;
         using dstType = typename depthConverter<src_t, dst_t>::dstType;
         using wrkType = typename depthConverter<src_t, dst_t>::wrkType;
-        typename cv_Data_Type<src_t>::type sMax = cv_Data_Type<src_t>::max;
-        typename cv_Data_Type<src_t>::type sMin = cv_Data_Type<src_t>::min;
+        typename cv::Data_Type<src_t>::type sMax = cv::Data_Type<src_t>::max;
+        typename cv::Data_Type<src_t>::type sMin = cv::Data_Type<src_t>::min;
         
-        typename cv_Data_Type<dst_t>::type dMax = cv_Data_Type<dst_t>::max;
-        typename cv_Data_Type<dst_t>::type dMin = cv_Data_Type<dst_t>::min;
+        typename cv::Data_Type<dst_t>::type dMax = cv::Data_Type<dst_t>::max;
+        typename cv::Data_Type<dst_t>::type dMin = cv::Data_Type<dst_t>::min;
 // g=1 c= (sMin+sMax)/2
         sRange = (sMax - sMin);
         dstType dRange = (dMax - dMin);
@@ -328,11 +328,11 @@ template<int src_t, int dst_t>  void distributeErf<src_t, dst_t>::operator()(con
         using dstType = typename depthConverter<src_t, dst_t>::dstType;
         using wrkType = typename depthConverter<src_t, dst_t>::wrkType;
         
-        typename cv_Data_Type<src_t>::type sMax = cv_Data_Type<src_t>::max;
-        typename cv_Data_Type<src_t>::type sMin = cv_Data_Type<src_t>::min;
+        typename cv::Data_Type<src_t>::type sMax = cv::Data_Type<src_t>::max;
+        typename cv::Data_Type<src_t>::type sMin = cv::Data_Type<src_t>::min;
         
-        typename cv_Data_Type<dst_t>::type dMax = cv_Data_Type<dst_t>::max;
-        typename cv_Data_Type<dst_t>::type dMin = cv_Data_Type<dst_t>::min;
+        typename cv::Data_Type<dst_t>::type dMax = cv::Data_Type<dst_t>::max;
+        typename cv::Data_Type<dst_t>::type dMin = cv::Data_Type<dst_t>::min;
         
         dstType sRange = (sMax - sMin);
         dstType dRange = (dMax - dMin);
@@ -3360,10 +3360,20 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int blue
 
 template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(cv::Vec<int, 3> sp0, cv::Vec<int, 3> sp1, cv::Vec<int, 3> sp2, cv::Vec<double, 3> g, cv::Vec<typename cv::depthConverter<src_t, dst_t>::srcType,3> c)
 {
-    using srcInfo = typename cv::colorSpaceConverter<src_t, dst_t>::srcInfo;
-    using dstInfo = typename cv::colorSpaceConverter<src_t, dst_t>::dstInfo;
-    using srcType = typename cv::colorSpaceConverter<src_t, dst_t>::srcType;
-    using dstType = typename cv::colorSpaceConverter<src_t, dst_t>::dstType;
+    
+    
+    using srcInfo = cv::Data_Type<src_t>;
+    using srcType = typename cv::Data_Type<src_t>::type;
+    using src_channel_type = srcType;
+    
+    using dstInfo = cv::Data_Type<dst_t>;
+    using dstType = typename cv::Data_Type<dst_t>::type;
+    using dst_channel_type = dstType;
+
+    using srcInfo = typename cv::Data_Type<src_t>;
+    using srcType = typename cv::Data_Type<src_t>::type;
+    using dstInfo = typename cv::Data_Type<dst_t>;
+    using dstType = typename cv::Data_Type<dst_t>::type;
     using wrkInfo = typename cv::colorSpaceConverter<src_t, dst_t>::wrkInfo;
     using wrkType = typename cv::colorSpaceConverter<src_t, dst_t>::wrkType;
     
@@ -3462,7 +3472,7 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(cv::Vec<int, 3
     };
     printf("RGB2Rot\n");
     
-    cv::Matx<int, 3, 3> Ti = cv::Matx<int, 3, 3>(a1[0]/excessWBFactor[0], a1[1]/excessWBFactor[0], a1[2]/excessWBFactor[0],
+    cv::Matx<wrkType, 3, 3> Ti = cv::Matx<wrkType, 3, 3>(a1[0]/excessWBFactor[0], a1[1]/excessWBFactor[0], a1[2]/excessWBFactor[0],
                                                  a2[0]/excessWBFactor[1], a2[1]/excessWBFactor[1], a2[2]/excessWBFactor[1],
                                                  a3[0]/excessWBFactor[2], a3[1]/excessWBFactor[2], a3[2]/excessWBFactor[2]);
     // Setup internal data
@@ -3472,49 +3482,40 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(cv::Vec<int, 3
             0, 0, 1, 0, 1, 0, 1, 1,
             0, 0, 0, 1, 1, 1, 0, 1});
     printf("RGB2Rot a\n");
-    cv::Matx<int, 3, 8> RGBBoxInNew = Ti * RGBBox;
+    cv::Matx<wrkType, 3, 8> RGBBoxInNew = Ti * RGBBox;
     printf("RGB2Rot b\n");
 
     
-    cv::Matx<int, 3, 1> RGBCubeMax = cv::MaxInRow<int, 3, 8>(RGBBoxInNew);
+    cv::Matx<wrkType, 3, 1> RGBCubeMax = cv::MaxInRow<wrkType, 3, 8>(RGBBoxInNew);
     printf("RGB2Rot c\n");
 
     
-    cv::Matx<int, 3, 1> RGBCubeMin = cv::MinInRow<int, 3, 8>(RGBBoxInNew);
+    cv::Matx<wrkType, 3, 1> RGBCubeMin = cv::MinInRow<wrkType, 3, 8>(RGBBoxInNew);
     printf("RGB2Rot d\n");
 
-    cv::Matx<int, 3, 1> RGBCubeRange = RGBCubeMax - RGBCubeMin;
+    cv::Matx<wrkType, 3, 1> RGBCubeRange = RGBCubeMax - RGBCubeMin;
     printf("RGB2Rot e\n ");
     printf("RGB2Rot dstInfo::channels = %i \n ", (int)dstInfo::channels);
     printf("RGB2Rot srcInfo::channels = %i \n ", (int)srcInfo::channels);
     
     for(int i = 0; i < dstInfo::channels; i++){
         for(int j = 0; j < srcInfo::channels; j++){
-            M[i][j] = 0;
+            if (j<3&&i<3) {
+                M[i][j] = Ti(i,j)
+            }else{
+                M[i][j] = 0;// Dont add the alpha channel to the color mix.
+            }
+            if (j==3&&i==3){M[i][j] = 1};// Preserve alpha channel if possible.
         }
     }
-
-
-    for(int i = 0; i < 3; i++){
-        for(int j = 0; j < 3; j++){
-            printf("RGB2Rot dstInfo::channels = %i \n ", (int)dstInfo::channels);
-            printf("RGB2Rot srcInfo::channels = %i \n ", (int)srcInfo::channels);
-            printf("RGB2Rot i = %i \n ", i);
-            printf("RGB2Rot j = %i \n ", j);
-            printf("RGB2Rot Ti(i,j) = %i \n ", (int)Ti(i,j));
-            M[i][j] = Ti(i,j);
-            printf("RGB2Rot M[i][j] = %i \n ", (int)M[i][j]);
-            }
-    }
     
-    
-    printf(" Ti = %i  %i  %lli \n",Ti(0,0),Ti(0,1),Ti(0,2));
-    printf("      %i  %i  %lli \n",Ti(1,0),Ti(1,1),Ti(1,2));
-    printf("      %i  %i  %lli \n",Ti(2,0),Ti(2,1),Ti(2,2));
+    printf(" Ti = %lli  %lli  %lli \n",Ti(0,0),Ti(0,1),Ti(0,2));
+    printf("      %lli  %lli  %lli \n",Ti(1,0),Ti(1,1),Ti(1,2));
+    printf("      %lli  %lli  %lli \n",Ti(2,0),Ti(2,1),Ti(2,2));
     
     printf(" M = %lli  %lli  %lli \n",M[0][0],M[0][1],M[0][2]);
-    printf("      %lli  %lli  %lli \n",M[1][0],M[1][1],M[1][2]);
-    printf("      %lli  %lli  %lli \n",M[2][0],M[2][1],M[2][2]);
+    printf("     %lli  %lli  %lli \n",M[1][0],M[1][1],M[1][2]);
+    printf("     %lli  %lli  %lli \n",M[2][0],M[2][1],M[2][2]);
     printf("RGB2Rot f\n");
 
     TMin[0] = RGBCubeMin(0,0); TRange[0] = RGBCubeRange(0,0);
@@ -3556,7 +3557,7 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(cv::Vec<int, 3
     printf("RGB2Rot out\n");
 }
 
-template<int src_t, int dst_t> inline void cv::RGB2Rot<src_t, dst_t>::operator()(const typename cv::colorSpaceConverter<src_t, dst_t>::srcType* src, typename cv::colorSpaceConverter<src_t, dst_t>::dstType* dst, int n) const
+template<int src_t, int dst_t> inline void cv::RGB2Rot<src_t, dst_t>::operator()(const typename cv::Data_Type<src_t>::type* src, typename cv::Data_Type<dst_t>::type* dst, int n) const
 {
     using cs = typename cv::colorSpaceConverter<src_t, dst_t>;
     using de = typename cv::distributeErf<src_t, dst_t>;
@@ -3596,7 +3597,7 @@ template<int src_t, int dst_t> void cv::convertColor(cv::InputArray _src, cv::Ou
     cv::Mat src = _src.getMat(), dst;
     cv::Size sz = src.size();
     int scn = src.channels(), depth = src.depth();
-    int dcn = cv::colorSpaceConverter<src_t, dst_t>::dstInfo::channels;
+    int dcn = cv::Data_Type<dst_t>::channels;
     // CV_Assert( colorConverter.srcInfo::channels == src.channels() );
     
     if (dcn <= 0) dcn = 3;

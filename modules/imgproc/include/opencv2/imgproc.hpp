@@ -466,10 +466,10 @@ template<int src_t, int dst_t>  class  depthConverter
     {
         public :
         virtual ~depthConverter<src_t, dst_t>(){};
-        using srcInfo = cv_Data_Type<src_t>;
-        using dstInfo = cv_Data_Type<dst_t>;
-        using srcType = typename cv_Data_Type<src_t>::type;
-        using dstType = typename cv_Data_Type<dst_t>::type;
+        using srcInfo = cv::Data_Type<src_t>;
+        using dstInfo = cv::Data_Type<dst_t>;
+        using srcType = typename cv::Data_Type<src_t>::type;
+        using dstType = typename cv::Data_Type<dst_t>::type;
         using wrkType = double;
         virtual void operator()(const srcType src, dstType &dst) = 0;
     };
@@ -509,17 +509,17 @@ template<int src_t, int dst_t> class colorSpaceConverter
     {
         public :
         virtual ~colorSpaceConverter<src_t, dst_t>(){};
-        using srcInfo = cv_Mat_Data_Type<src_t>;
-        using srcType = typename cv_Data_Type<src_t>::type;
+        using srcInfo = cv::Data_Type<src_t>;
+        using srcType = typename cv::Data_Type<src_t>::type;
         using src_channel_type = srcType;
         
-        using dstInfo = cv_Mat_Data_Type<dst_t>;
-        using dstType = typename cv_Data_Type<dst_t>::type;
+        using dstInfo = cv::Data_Type<dst_t>;
+        using dstType = typename cv::Data_Type<dst_t>::type;
         using dst_channel_type = dstType;
         
         
-        using wrkInfo = cv_Data_Type<CV_64S>; // ToDo Update this to construct CV_64S from src and dst types.
-        using wrkType = typename cv_Data_Type<CV_64S>::type;
+        using wrkInfo = cv::Data_Type<CV_64S>; // ToDo Update this to construct CV_64S from src and dst types.
+        using wrkType = typename cv::Data_Type<CV_64S>::type;
         
         virtual void operator()(const srcType * src, dstType* dst, int n) const = 0;
     };

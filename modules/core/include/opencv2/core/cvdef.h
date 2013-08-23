@@ -598,9 +598,10 @@ template<int cv_data_type> using cv_Type = typename cv_Data_Type<cv_data_type>::
 
 
 
-template<int t> struct cv_Mat_Data_Type: cv_Data_Type<CV_MAT_DEPTH(t)>{
+template<int t> struct cv::Data_Type: cv_Data_Type<CV_MAT_DEPTH(t)>{
     constexpr static int channels  = CV_MAT_CN(t);
 };
+
 
 /* void cv_Print_Data_Type(int type){
  printf("%llu",CV_DEPTH_BITS_MAGIC);
