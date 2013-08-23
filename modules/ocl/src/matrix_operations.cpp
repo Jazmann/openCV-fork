@@ -117,7 +117,7 @@ static void convert_C3C4(const cl_mem &src, oclMat &dst)
     args.push_back( std::make_pair( sizeof(cl_int), (void *)&dstStep_in_pixel));
     args.push_back( std::make_pair( sizeof(cl_int), (void *)&pixel_end));
 
-    size_t globalThreads[3] = {((dst.wholecols * dst.wholerows + 3) / 4 + 255) / 256 * 256, 1, 1};
+    size_t globalThreads[3] = {static_cast<size_t>(((dst.wholecols * dst.wholerows + 3) / 4 + 255) / 256 * 256), 1, 1};
     size_t localThreads[3] = {256, 1, 1};
 
     openCLExecuteKernel(clCxt, &convertC3C4, kernelName, globalThreads, localThreads, args, -1, -1, compile_option);
@@ -166,7 +166,7 @@ static void convert_C4C3(const oclMat &src, cl_mem &dst)
     args.push_back( std::make_pair( sizeof(cl_int), (void *)&srcStep_in_pixel));
     args.push_back( std::make_pair( sizeof(cl_int), (void *)&pixel_end));
 
-    size_t globalThreads[3] = {((src.wholecols * src.wholerows + 3) / 4 + 255) / 256 * 256, 1, 1};
+    size_t globalThreads[3] = {static_cast<size_t>(((src.wholecols * src.wholerows + 3) / 4 + 255) / 256 * 256), 1, 1};
     size_t localThreads[3] = {256, 1, 1};
 
     openCLExecuteKernel(clCxt, &convertC3C4, kernelName, globalThreads, localThreads, args, -1, -1, compile_option);

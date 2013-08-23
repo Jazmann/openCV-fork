@@ -174,6 +174,7 @@ template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf(double
         using srcType = typename depthConverter<src_t, dst_t>::srcType;
         using dstType = typename depthConverter<src_t, dst_t>::dstType;
         using wrkType = typename depthConverter<src_t, dst_t>::wrkType;
+        printf("distributeErf (int)sMin = %i (int)c = %i (int)sMax = %i (int)dMin = %i (int)dMax = %i \n",(int)sMin, (int)c,(int)sMax,(int)dMin, (int)dMax);
         
         CV_Assert((int)sMin <= (int)c && (int)c <= (int)sMax && (int)dMin <= (int)dMax);
         sRange = (sMax - sMin);
@@ -3432,62 +3433,127 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(cv::Vec<int, 3
         }
     // Rescale to avoid bit overflow during transform.
     
-    cv::Matx<int, 3, 3> Tit = cv::Matx<int, 3, 3>(a1[0],a1[1],a1[2],a2[0],a2[1],a2[2],a3[0],a3[1],a3[2]);
+    printf("RGB2Rot\n");
+//    cv::Matx<int, 3, 3> Tit = cv::Matx<int, 3, 3>(a1[0],a1[1],a1[2],a2[0],a2[1],a2[2],a3[0],a3[1],a3[2]);
+    printf("RGB2Rot\n");
     int TitRowSum[3] = {
         std::abs(a1[0])+std::abs(a1[1])+std::abs(a1[2]),
         std::abs(a2[0])+std::abs(a2[1])+std::abs(a2[2]),
         std::abs(a3[0])+std::abs(a3[1])+std::abs(a3[2])
     };
+    printf("RGB2Rot\n");
     int TitRowLog2Sum[3] = {0,0,0};
+    printf("RGB2Rot\n");
     for (int i=0; i<=2; i++) {
         while (TitRowSum[i] >>= 1) ++TitRowLog2Sum[i];
     }
+    printf("RGB2Rot\n");
     cv::Matx<int, 3, 1> MWB({
         TitRowLog2Sum[0] + CV_MAT_DEPTH_BITS(src_t),
         TitRowLog2Sum[1] + CV_MAT_DEPTH_BITS(src_t),
         TitRowLog2Sum[2] + CV_MAT_DEPTH_BITS(src_t)
     });
+    printf("RGB2Rot\n");
     
     int excessWBFactor[3] = {
         (int) ceil(pow(2, TitRowLog2Sum[0] - CV_MAT_DEPTH_BITS(src_t))),
         (int) ceil(pow(2, TitRowLog2Sum[1] - CV_MAT_DEPTH_BITS(src_t))),
         (int) ceil(pow(2, TitRowLog2Sum[2] - CV_MAT_DEPTH_BITS(src_t)))
     };
+    printf("RGB2Rot\n");
     
     cv::Matx<int, 3, 3> Ti = cv::Matx<int, 3, 3>(a1[0]/excessWBFactor[0], a1[1]/excessWBFactor[0], a1[2]/excessWBFactor[0],
                                                  a2[0]/excessWBFactor[1], a2[1]/excessWBFactor[1], a2[2]/excessWBFactor[1],
                                                  a3[0]/excessWBFactor[2], a3[1]/excessWBFactor[2], a3[2]/excessWBFactor[2]);
     // Setup internal data
+    printf("RGB2Rot\n");
         cv::Matx<int, 3, 8> RGBBox({
             0, 1, 0, 0, 0, 1, 1, 1,
             0, 0, 1, 0, 1, 0, 1, 1,
             0, 0, 0, 1, 1, 1, 0, 1});
+    printf("RGB2Rot a\n");
     cv::Matx<int, 3, 8> RGBBoxInNew = Ti * RGBBox;
+    printf("RGB2Rot b\n");
+
     
     cv::Matx<int, 3, 1> RGBCubeMax = cv::MaxInRow<int, 3, 8>(RGBBoxInNew);
+    printf("RGB2Rot c\n");
+
     
     cv::Matx<int, 3, 1> RGBCubeMin = cv::MinInRow<int, 3, 8>(RGBBoxInNew);
+    printf("RGB2Rot d\n");
+
     cv::Matx<int, 3, 1> RGBCubeRange = RGBCubeMax - RGBCubeMin;
+    printf("RGB2Rot e\n ");
+    printf("RGB2Rot dstInfo::channels = %i \n ", (int)dstInfo::channels);
+    printf("RGB2Rot srcInfo::channels = %i \n ", (int)srcInfo::channels);
+    
     for(int i = 0; i < dstInfo::channels; i++){
-            for(int j = 0; j < srcInfo::channels; j++){
-                M[i][j] = Ti(i,j);
-            }
+        for(int j = 0; j < srcInfo::channels; j++){
+            M[i][j] = 0;
         }
+    }
+
+
+    for(int i = 0; i < 3; i++){
+        for(int j = 0; j < 3; j++){
+            printf("RGB2Rot dstInfo::channels = %i \n ", (int)dstInfo::channels);
+            printf("RGB2Rot srcInfo::channels = %i \n ", (int)srcInfo::channels);
+            printf("RGB2Rot i = %i \n ", i);
+            printf("RGB2Rot j = %i \n ", j);
+            printf("RGB2Rot Ti(i,j) = %i \n ", (int)Ti(i,j));
+            M[i][j] = Ti(i,j);
+            printf("RGB2Rot M[i][j] = %i \n ", (int)M[i][j]);
+            }
+    }
+    
+    
+    printf(" Ti = %i  %i  %lli \n",Ti(0,0),Ti(0,1),Ti(0,2));
+    printf("      %i  %i  %lli \n",Ti(1,0),Ti(1,1),Ti(1,2));
+    printf("      %i  %i  %lli \n",Ti(2,0),Ti(2,1),Ti(2,2));
+    
+    printf(" M = %lli  %lli  %lli \n",M[0][0],M[0][1],M[0][2]);
+    printf("      %lli  %lli  %lli \n",M[1][0],M[1][1],M[1][2]);
+    printf("      %lli  %lli  %lli \n",M[2][0],M[2][1],M[2][2]);
+    printf("RGB2Rot f\n");
+
     TMin[0] = RGBCubeMin(0,0); TRange[0] = RGBCubeRange(0,0);
     TMin[1] = RGBCubeMin(1,0); TRange[1] = RGBCubeRange(1,0);
     TMin[2] = RGBCubeMin(2,0); TRange[2] = RGBCubeRange(2,0);
-        
+    
+    printf("RGB2Rot g\n");
+
      wrkType c1 = c[0]*M[0][0] + c[1]*M[0][1] + c[2]*M[0][2];
      wrkType c2 = c[0]*M[1][0] + c[1]*M[1][1] + c[2]*M[1][2];
-     wrkType c3 = c[0]*M[2][0] + c[1]*M[2][1] + c[2]*M[2][2];
+    wrkType c3 = c[0]*M[2][0] + c[1]*M[2][1] + c[2]*M[2][2];
+    printf(" wrkInfo::max = %lli \n", wrkInfo::max);
+    printf(" wrkInfo::min = %lli \n", wrkInfo::min);
+
+
+       printf(" c = %lli, %i \n",c1,(int)c[0]);
+       printf("     %lli, %i \n",c2,(int)c[1]);
+       printf("     %lli, %i \n",c3,(int)c[2]);
+
+    
+    printf("RGBCubeMin (int)sMin = %i (int)c = %i (int)sMax = %i (int)dMin = %i (int)dMax = %i \n",(int)wrkType((srcInfo::max - srcInfo::min) * TMin[0]), (int)c1,(int)wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(0,0)),(int)dcDstType(dstInfo::min), (int)dcDstType(dstInfo::max));
+
     
     redScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (   g[indxA], c1, wrkType((srcInfo::max - srcInfo::min) * TMin[0]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(0,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
+    
+    printf("RGBCubeMin (int)sMin = %i (int)c = %i (int)sMax = %i (int)dMin = %i (int)dMax = %i \n",(int)wrkType((srcInfo::max - srcInfo::min) * TMin[1]), (int)c2,(int)wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(1,0)),(int)dcDstType(dstInfo::min), (int)dcDstType(dstInfo::max));
+
+    
     greenScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> ( g[indxB], c2, wrkType((srcInfo::max - srcInfo::min) * TMin[1]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(1,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
+    
+    
+    printf("RGBCubeMin (int)sMin = %i (int)c = %i (int)sMax = %i (int)dMin = %i (int)dMax = %i \n",(int)wrkType((srcInfo::max - srcInfo::min) * TMin[2]), (int)c3,(int)wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(2,0)),(int)dcDstType(dstInfo::min), (int)dcDstType(dstInfo::max));
+
     blueScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (  g[indxC], c3, wrkType((srcInfo::max - srcInfo::min) * TMin[2]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(2,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
     
     (*redScale)(  c1, cRot[0]);
     (*greenScale)(c2, cRot[1]);
     (*blueScale)( c3, cRot[2]);
+    printf("RGB2Rot out\n");
 }
 
 template<int src_t, int dst_t> inline void cv::RGB2Rot<src_t, dst_t>::operator()(const typename cv::colorSpaceConverter<src_t, dst_t>::srcType* src, typename cv::colorSpaceConverter<src_t, dst_t>::dstType* dst, int n) const

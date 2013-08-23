@@ -181,8 +181,8 @@ void cv::ocl::distanceToCenters(oclMat &dists, oclMat &labels, const oclMat &src
     int labels_step = (int)(labels.step/labels.elemSize());
     String kernelname = "distanceToCenters";
     int threadNum = src.rows > 256 ? 256 : src.rows;
-    size_t localThreads[3]  = {1, threadNum, 1};
-    size_t globalThreads[3] = {1, src.rows, 1};
+    size_t localThreads[3]  = {1, static_cast<size_t>(threadNum), 1};
+    size_t globalThreads[3] = {1, static_cast<size_t>(src.rows), 1};
 
     std::vector<std::pair<size_t, const void *> > args;
     args.push_back(std::make_pair(sizeof(cl_int), (void *)&labels_step));

@@ -69,7 +69,7 @@ void cv::ocl::blendLinear(const oclMat &img1, const oclMat &img2, const oclMat &
     int cols = img1.cols;
     int istep = img1.step1();
     int wstep = weights1.step1();
-    size_t globalSize[] = {cols * channels / 4, rows, 1};
+    size_t globalSize[] = {static_cast<size_t>(cols * channels / 4), static_cast<size_t>(rows), 1};
     size_t localSize[] = {256, 1, 1};
 
     std::vector< std::pair<size_t, const void *> > args;

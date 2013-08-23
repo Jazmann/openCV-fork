@@ -537,8 +537,8 @@ template<int src_t, int dst_t> class RGB2Rot: public colorSpaceConverter<src_t, 
         using wrkInfo = typename colorSpaceConverter<src_t, dst_t>::wrkInfo;
         using wrkType = typename colorSpaceConverter<src_t, dst_t>::wrkType;
         
-        int M[dstInfo::channels][srcInfo::channels];
-        int TRange[dstInfo::channels], TMin[dstInfo::channels];
+        wrkType M[dstInfo::channels][srcInfo::channels];
+        wrkType TRange[dstInfo::channels], TMin[dstInfo::channels];
         dstType cRot[dstInfo::channels];
         
         distributeErf<wrkInfo::dataType, dstInfo::dataType> *redScale, *greenScale, *blueScale;

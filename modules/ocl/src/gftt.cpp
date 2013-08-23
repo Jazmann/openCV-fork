@@ -112,7 +112,7 @@ struct Sorter<BITONIC>
     static void sortCorners_caller(const EigType& eig_tex, oclMat& corners, const int count)
     {
         Context * cxt = Context::getContext();
-        size_t globalThreads[3] = {count / 2, 1, 1};
+        size_t globalThreads[3] = {static_cast<size_t>(count / 2), 1, 1};
         size_t localThreads[3]  = {GROUP_SIZE, 1, 1};
 
         // 2^numStages should be equal to count or the output is invalid
@@ -148,7 +148,7 @@ struct Sorter<SELECTION>
     {
         Context * cxt = Context::getContext();
 
-        size_t globalThreads[3] = {count, 1, 1};
+        size_t globalThreads[3] = {static_cast<size_t>(count), 1, 1};
         size_t localThreads[3]  = {GROUP_SIZE, 1, 1};
 
         std::vector< std::pair<size_t, const void *> > args;
@@ -197,7 +197,7 @@ int findCorners_caller(
     args.push_back(std::make_pair( sizeof(cl_int), (void*)&max_count ));
     args.push_back(std::make_pair( sizeof(cl_mem), (void*)&g_counter.data ));
 
-    size_t globalThreads[3] = {eig.cols, eig.rows, 1};
+    size_t globalThreads[3] = {static_cast<size_t>(eig.cols), static_cast<size_t>(eig.rows), 1};
     size_t localThreads[3]  = {16, 16, 1};
 
     const char * opt = mask.empty() ? "" : "-D WITH_MASK";

@@ -438,7 +438,7 @@ static void pyrdown_run_cus(const oclMat &src, const oclMat &dst)
     String kernelName = "pyrDown";
 
     size_t localThreads[3]  = { 256, 1, 1 };
-    size_t globalThreads[3] = { src.cols, dst.rows, 1};
+    size_t globalThreads[3] = { static_cast<size_t>(src.cols), static_cast<size_t>(dst.rows), 1};
 
     std::vector<std::pair<size_t , const void *> > args;
     args.push_back( std::make_pair( sizeof(cl_mem), (void *)&src.data ));
@@ -469,8 +469,8 @@ static void lkSparse_run(oclMat &I, oclMat &J,
     int elemCntPerRow = I.step / I.elemSize();
     String kernelName = "lkSparse";
     bool isImageSupported = support_image2d();
-    size_t localThreads[3]  = { 8, isImageSupported ? 8 : 32, 1 };
-    size_t globalThreads[3] = { 8 * ptcount, isImageSupported ? 8 : 32, 1};
+    size_t localThreads[3]  = { 8, static_cast<size_t>(isImageSupported ? 8 : 32), 1 };
+    size_t globalThreads[3] = { static_cast<size_t>(8 * ptcount), static_cast<size_t>(isImageSupported ? 8 : 32), 1};
     int cn = I.oclchannels();
     char calcErr = level==0?1:0;
 
@@ -620,7 +620,7 @@ static void lkDense_run(oclMat &I, oclMat &J, oclMat &u, oclMat &v,
     String kernelName = "lkDense";
 
     size_t localThreads[3]  = { 16, 16, 1 };
-    size_t globalThreads[3] = { I.cols, I.rows, 1};
+    size_t globalThreads[3] = { static_cast<size_t>(I.cols), static_cast<size_t>(I.rows), 1};
 
     bool calcErr;
     if (err)

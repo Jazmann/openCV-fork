@@ -273,7 +273,7 @@ void ocl_tvl1flow::centeredGradient(const oclMat &src, oclMat &dx, oclMat &dy)
 {
     Context  *clCxt = src.clCxt;
     size_t localThreads[3] = {32, 8, 1};
-    size_t globalThreads[3] = {src.cols, src.rows, 1};
+    size_t globalThreads[3] = {static_cast<size_t>(src.cols), static_cast<size_t>(src.rows), 1};
 
     int srcElementSize = src.elemSize();
     int src_step = src.step/srcElementSize;
@@ -301,8 +301,8 @@ void ocl_tvl1flow::estimateDualVariables(oclMat &u1, oclMat &u2, oclMat &p11, oc
     size_t localThread[] = {32, 8, 1};
     size_t globalThread[] =
     {
-        u1.cols,
-        u1.rows,
+        static_cast<size_t>(u1.cols),
+        static_cast<size_t>(u1.rows),
         1
     };
 
@@ -355,8 +355,8 @@ void ocl_tvl1flow::estimateU(oclMat &I1wx, oclMat &I1wy, oclMat &grad,
     size_t localThread[] = {32, 8, 1};
     size_t globalThread[] =
     {
-        I1wx.cols,
-        I1wx.rows,
+        static_cast<size_t>(I1wx.cols),
+        static_cast<size_t>(I1wx.rows),
         1
     };
 
@@ -435,8 +435,8 @@ void ocl_tvl1flow::warpBackward(const oclMat &I0, const oclMat &I1, oclMat &I1x,
     size_t localThread[] = {32, 8, 1};
     size_t globalThread[] =
     {
-        I0.cols,
-        I0.rows,
+        static_cast<size_t>(I0.cols),
+        static_cast<size_t>(I0.rows),
         1
     };
 

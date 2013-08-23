@@ -84,7 +84,7 @@ static void pyrdown_run(const oclMat &src, const oclMat &dst)
     //int offset_cols = (dst.offset / dst.elemSize1()) & (vector_length - 1);
 
     size_t localThreads[3]  = { 256, 1, 1 };
-    size_t globalThreads[3] = { src.cols, dst.rows, 1};
+    size_t globalThreads[3] = { static_cast<size_t>(src.cols), static_cast<size_t>(dst.rows), 1};
 
     //int dst_step1 = dst.cols * dst.elemSize();
     std::vector<std::pair<size_t , const void *> > args;

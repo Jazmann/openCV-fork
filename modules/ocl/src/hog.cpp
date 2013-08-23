@@ -1730,7 +1730,7 @@ void cv::ocl::device::hog::compute_hists(int nbins,
     float scale = 1.f / (2.f * sigma * sigma);
 
     int blocks_in_group = 4;
-    size_t localThreads[3] = { blocks_in_group * 24, 2, 1 };
+    size_t localThreads[3] = { static_cast<size_t>(blocks_in_group * 24), 2, 1 };
     size_t globalThreads[3] = {
         divUp(img_block_width * img_block_height, blocks_in_group) * localThreads[0], 2, 1 };
 
@@ -1774,8 +1774,8 @@ void cv::ocl::device::hog::normalize_hists(int nbins,
 
     int img_block_width = (width - CELLS_PER_BLOCK_X * CELL_WIDTH + block_stride_x) / block_stride_x;
     int img_block_height = (height - CELLS_PER_BLOCK_Y * CELL_HEIGHT + block_stride_y) / block_stride_y;
-    size_t globalThreads[3] = { img_block_width * nthreads, img_block_height, 1 };
-    size_t localThreads[3] = { nthreads, 1, 1  };
+    size_t globalThreads[3] = { static_cast<size_t>(img_block_width * nthreads), static_cast<size_t>(img_block_height), 1 };
+    size_t localThreads[3] = { static_cast<size_t>(nthreads), 1, 1  };
 
     if ( nbins == 9 )
     {
@@ -1864,8 +1864,8 @@ void cv::ocl::device::hog::classify_hists(int win_height, int win_width,
     int img_block_width = (width - CELLS_PER_BLOCK_X * CELL_WIDTH + block_stride_x) /
         block_stride_x;
 
-    size_t globalThreads[3] = { img_win_width * nthreads, img_win_height, 1 };
-    size_t localThreads[3] = { nthreads, 1, 1 };
+    size_t globalThreads[3] = { static_cast<size_t>(img_win_width * nthreads), static_cast<size_t>(img_win_height), 1 };
+    size_t localThreads[3] = { static_cast<size_t>(nthreads), 1, 1 };
     args.push_back( std::make_pair( sizeof(cl_int), (void *)&cblock_hist_size));
     args.push_back( std::make_pair( sizeof(cl_int), (void *)&img_win_width));
     args.push_back( std::make_pair( sizeof(cl_int), (void *)&img_block_width));
@@ -1910,7 +1910,7 @@ void cv::ocl::device::hog::extract_descrs_by_rows(int win_height, int win_width,
         block_stride_x;
     int descriptors_quadstep = descriptors.step >> 2;
 
-    size_t globalThreads[3] = { img_win_width * NTHREADS, img_win_height, 1 };
+    size_t globalThreads[3] = { static_cast<size_t>(img_win_width * NTHREADS), static_cast<size_t>(img_win_height), 1 };
     size_t localThreads[3] = { NTHREADS, 1, 1 };
 
     args.push_back( std::make_pair( sizeof(cl_int), (void *)&cblock_hist_size));
@@ -1946,7 +1946,7 @@ void cv::ocl::device::hog::extract_descrs_by_cols(int win_height, int win_width,
         block_stride_x;
     int descriptors_quadstep = descriptors.step >> 2;
 
-    size_t globalThreads[3] = { img_win_width * NTHREADS, img_win_height, 1 };
+    size_t globalThreads[3] = { static_cast<size_t>(img_win_width * NTHREADS), static_cast<size_t>(img_win_height), 1 };
     size_t localThreads[3] = { NTHREADS, 1, 1 };
 
     args.push_back( std::make_pair( sizeof(cl_int), (void *)&cblock_hist_size));
@@ -1976,7 +1976,7 @@ void cv::ocl::device::hog::compute_gradients_8UC1(int height, int width,
     std::vector< std::pair<size_t, const void *> > args;
 
     size_t localThreads[3] = { NTHREADS, 1, 1 };
-    size_t globalThreads[3] = { width, height, 1 };
+    size_t globalThreads[3] = { static_cast<size_t>(width), static_cast<size_t>(height), 1 };
     char correctGamma = (correct_gamma) ? 1 : 0;
     int img_step = img.step;
     int grad_quadstep = grad.step >> 3;
@@ -2010,7 +2010,7 @@ void cv::ocl::device::hog::compute_gradients_8UC4(int height, int width,
     std::vector< std::pair<size_t, const void *> > args;
 
     size_t localThreads[3] = { NTHREADS, 1, 1 };
-    size_t globalThreads[3] = { width, height, 1 };
+    size_t globalThreads[3] = { static_cast<size_t>(width), static_cast<size_t>(height), 1 };
 
     char correctGamma = (correct_gamma) ? 1 : 0;
     int img_step = img.step >> 2;

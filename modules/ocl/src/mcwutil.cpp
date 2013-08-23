@@ -213,14 +213,14 @@ namespace cv
                     &err);
             }
             size_t origin[] = { 0, 0, 0 };
-            size_t region[] = { mat.cols, mat.rows, 1 };
+            size_t region[] = { static_cast<size_t>(mat.cols), static_cast<size_t>(mat.rows), 1 };
 
             cl_mem devData;
             if (mat.cols * mat.elemSize() != mat.step)
             {
                 devData = clCreateBuffer((cl_context)mat.clCxt->oclContext(), CL_MEM_READ_ONLY, mat.cols * mat.rows
                     * mat.elemSize(), NULL, NULL);
-                const size_t regin[3] = {mat.cols * mat.elemSize(), mat.rows, 1};
+                const size_t regin[3] = {mat.cols * mat.elemSize(), static_cast<size_t>(mat.rows), 1};
                 clEnqueueCopyBufferRect((cl_command_queue)mat.clCxt->oclCommandQueue(), (cl_mem)mat.data, devData, origin, origin,
                     regin, mat.step, 0, mat.cols * mat.elemSize(), 0, 0, NULL, NULL);
                 clFlush((cl_command_queue)mat.clCxt->oclCommandQueue());

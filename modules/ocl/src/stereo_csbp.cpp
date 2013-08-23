@@ -169,7 +169,7 @@ namespace cv
 
                 const int threadsNum = 256;
                 //size_t blockSize = threadsNum;
-                size_t localThreads[3]  = {win_size, 1, threadsNum / win_size};
+                size_t localThreads[3]  = {static_cast<size_t>(win_size), 1, static_cast<size_t>(threadsNum / win_size)};
                 size_t globalThreads[3] = {w *localThreads[0],
                     h * divUp(rthis.ndisp, localThreads[2]) *localThreads[1], 1 * localThreads[2]
                 };
@@ -359,7 +359,7 @@ namespace cv
 
                 const size_t threadsNum = 256;
                 //size_t blockSize = threadsNum;
-                size_t localThreads[3]  = {win_size, 1, threadsNum / win_size};
+                size_t localThreads[3]  = {static_cast<size_t>(win_size), 1, threadsNum / win_size};
                 size_t globalThreads[3] = {w *localThreads[0],
                     h * divUp(nr_plane, localThreads[2]) *localThreads[1], 1 * localThreads[2]
                 };

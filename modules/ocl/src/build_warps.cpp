@@ -97,7 +97,7 @@ void cv::ocl::buildWarpPlaneMaps(Size /*src_size*/, Rect dst_roi, const Mat &K, 
     args.push_back( std::make_pair( sizeof(cl_int), (void *)&map_y.step));
     args.push_back( std::make_pair( sizeof(cl_float), (void *)&scale));
 
-    size_t globalThreads[3] = {map_x.cols, map_x.rows, 1};
+    size_t globalThreads[3] = {static_cast<size_t>(map_x.cols), static_cast<size_t>(map_x.rows), 1};
     size_t localThreads[3]  = {32, 8, 1};
     openCLExecuteKernel(clCxt, &build_warps, kernelName, globalThreads, localThreads, args, -1, -1);
 }
@@ -137,7 +137,7 @@ void cv::ocl::buildWarpCylindricalMaps(Size /*src_size*/, Rect dst_roi, const Ma
     args.push_back( std::make_pair( sizeof(cl_int), (void *)&map_y.step));
     args.push_back( std::make_pair( sizeof(cl_float), (void *)&scale));
 
-    size_t globalThreads[3] = {map_x.cols, map_x.rows, 1};
+    size_t globalThreads[3] = {static_cast<size_t>(map_x.cols), static_cast<size_t>(map_x.rows), 1};
     size_t localThreads[3]  = {32, 8, 1};
     openCLExecuteKernel(clCxt, &build_warps, kernelName, globalThreads, localThreads, args, -1, -1);
 }
@@ -176,7 +176,7 @@ void cv::ocl::buildWarpSphericalMaps(Size /*src_size*/, Rect dst_roi, const Mat 
     args.push_back( std::make_pair( sizeof(cl_int), (void *)&map_y.step));
     args.push_back( std::make_pair( sizeof(cl_float), (void *)&scale));
 
-    size_t globalThreads[3] = {map_x.cols, map_x.rows, 1};
+    size_t globalThreads[3] = {static_cast<size_t>(map_x.cols), static_cast<size_t>(map_x.rows), 1};
     size_t localThreads[3]  = {32, 8, 1};
     openCLExecuteKernel(clCxt, &build_warps, kernelName, globalThreads, localThreads, args, -1, -1);
 }
@@ -216,7 +216,7 @@ void cv::ocl::buildWarpAffineMaps(const Mat &M, bool inverse, Size dsize, oclMat
     args.push_back( std::make_pair( sizeof(cl_int), (void *)&xmap.step));
     args.push_back( std::make_pair( sizeof(cl_int), (void *)&ymap.step));
 
-    size_t globalThreads[3] = {xmap.cols, xmap.rows, 1};
+    size_t globalThreads[3] = {static_cast<size_t>(xmap.cols), static_cast<size_t>(xmap.rows), 1};
     size_t localThreads[3]  = {32, 8, 1};
     openCLExecuteKernel(clCxt, &build_warps, kernelName, globalThreads, localThreads, args, -1, -1);
 }
@@ -255,7 +255,7 @@ void cv::ocl::buildWarpPerspectiveMaps(const Mat &M, bool inverse, Size dsize, o
     args.push_back( std::make_pair( sizeof(cl_int), (void *)&xmap.step));
     args.push_back( std::make_pair( sizeof(cl_int), (void *)&ymap.step));
 
-    size_t globalThreads[3] = {xmap.cols, xmap.rows, 1};
+    size_t globalThreads[3] = {static_cast<size_t>(xmap.cols), static_cast<size_t>(xmap.rows), 1};
     size_t localThreads[3]  = {32, 8, 1};
     openCLExecuteKernel(clCxt, &build_warps, kernelName, globalThreads, localThreads, args, -1, -1);
 }

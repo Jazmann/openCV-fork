@@ -991,7 +991,7 @@ void OclCascadeClassifier::detectMultiScale(oclMat &gimg, CV_OUT std::vector<cv:
             args1.push_back ( std::make_pair(sizeof(cl_float) , (void *)&correction[i] ));
             args1.push_back ( std::make_pair(sizeof(cl_int) , (void *)&startnodenum ));
 
-            size_t globalThreads2[3] = {nodenum, 1, 1};
+            size_t globalThreads2[3] = {static_cast<size_t>(nodenum), 1, 1};
             openCLExecuteKernel(gsum.clCxt, &haarobjectdetect_scaled2, "gpuscaleclassifier", globalThreads2, NULL/*localThreads2*/, args1, -1, -1);
         }
 

@@ -1286,7 +1286,7 @@ JNIEXPORT void JNICALL Java_org_opencv_core_Mat_locateROI_10
         Size wholeSize;
         Point ofs;
         me->locateROI( wholeSize, ofs );
-        jdouble tmp_wholeSize[2] = {wholeSize.width, wholeSize.height}; env->SetDoubleArrayRegion(wholeSize_out, 0, 2, tmp_wholeSize);  jdouble tmp_ofs[2] = {ofs.x, ofs.y}; env->SetDoubleArrayRegion(ofs_out, 0, 2, tmp_ofs);
+        jdouble tmp_wholeSize[2] = {static_cast<jdouble>(wholeSize.width), static_cast<jdouble>(wholeSize.height)}; env->SetDoubleArrayRegion(wholeSize_out, 0, 2, tmp_wholeSize);  jdouble tmp_ofs[2] = {static_cast<jdouble>(ofs.x), static_cast<jdouble>(ofs.y)}; env->SetDoubleArrayRegion(ofs_out, 0, 2, tmp_ofs);
         return;
     } catch(cv::Exception e) {
         LOGD("Mat::locateROI_10() caught cv::Exception: %s", e.what());
@@ -1794,7 +1794,7 @@ JNIEXPORT jdoubleArray JNICALL Java_org_opencv_core_Mat_n_1size
         LOGD("Mat::n_1size()");
         Mat* me = (Mat*) self; //TODO: check for NULL
         Size _retval_ = me->size(  );
-        jdoubleArray _da_retval_ = env->NewDoubleArray(2);  jdouble _tmp_retval_[2] = {_retval_.width, _retval_.height}; env->SetDoubleArrayRegion(_da_retval_, 0, 2, _tmp_retval_);
+        jdoubleArray _da_retval_ = env->NewDoubleArray(2);  jdouble _tmp_retval_[2] = {static_cast<jdouble>(_retval_.width), static_cast<jdouble>(_retval_.height)}; env->SetDoubleArrayRegion(_da_retval_, 0, 2, _tmp_retval_);
         return _da_retval_;
     } catch(cv::Exception e) {
         LOGD("Mat::n_1size() caught cv::Exception: %s", e.what());

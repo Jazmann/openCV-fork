@@ -78,7 +78,7 @@ namespace cv
             args.push_back( std::make_pair( sizeof(cl_int), (void *)&src.step));
             args.push_back( std::make_pair( sizeof(cl_int), (void *)&dst.step));
 
-            size_t globalThreads[3] = {dst.cols, dst.rows, 1};
+            size_t globalThreads[3] = {static_cast<size_t>(dst.cols), static_cast<size_t>(dst.rows), 1};
             size_t localThreads[3]  = {16, 16, 1};
 
 

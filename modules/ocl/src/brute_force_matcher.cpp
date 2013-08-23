@@ -77,7 +77,7 @@ void matchUnrolledCached(const oclMat &query, const oclMat &train, const oclMat 
                          const oclMat &trainIdx, const oclMat &distance, int distType)
 {
     cv::ocl::Context *ctx = query.clCxt;
-    size_t globalSize[] = {(query.rows + BLOCK_SIZE - 1) / BLOCK_SIZE * BLOCK_SIZE, BLOCK_SIZE, 1};
+    size_t globalSize[] = {static_cast<size_t>((query.rows + BLOCK_SIZE - 1) / BLOCK_SIZE * BLOCK_SIZE), BLOCK_SIZE, 1};
     size_t localSize[] = {BLOCK_SIZE, BLOCK_SIZE, 1};
     const size_t smemSize = (BLOCK_SIZE * (MAX_DESC_LEN >= 2 * BLOCK_SIZE ? MAX_DESC_LEN : 2 * BLOCK_SIZE) + BLOCK_SIZE * BLOCK_SIZE) * sizeof(int);
     int block_size = BLOCK_SIZE;
@@ -120,7 +120,7 @@ void match(const oclMat &query, const oclMat &train, const oclMat &/*mask*/,
            const oclMat &trainIdx, const oclMat &distance, int distType)
 {
     cv::ocl::Context *ctx = query.clCxt;
-    size_t globalSize[] = {(query.rows + BLOCK_SIZE - 1) / BLOCK_SIZE * BLOCK_SIZE, BLOCK_SIZE, 1};
+    size_t globalSize[] = {static_cast<size_t>((query.rows + BLOCK_SIZE - 1) / BLOCK_SIZE * BLOCK_SIZE), BLOCK_SIZE, 1};
     size_t localSize[] = {BLOCK_SIZE, BLOCK_SIZE, 1};
     const size_t smemSize = (2 * BLOCK_SIZE * BLOCK_SIZE) * sizeof(int);
     int block_size = BLOCK_SIZE;
@@ -162,7 +162,7 @@ void matchUnrolledCached(const oclMat &query, const oclMat &train, float maxDist
                          const oclMat &trainIdx, const oclMat &distance, const oclMat &nMatches, int distType)
 {
     cv::ocl::Context *ctx = query.clCxt;
-    size_t globalSize[] = {(train.rows + BLOCK_SIZE - 1) / BLOCK_SIZE * BLOCK_SIZE, (query.rows + BLOCK_SIZE - 1) / BLOCK_SIZE * BLOCK_SIZE, 1};
+    size_t globalSize[] = {static_cast<size_t>((train.rows + BLOCK_SIZE - 1) / BLOCK_SIZE * BLOCK_SIZE), static_cast<size_t>((query.rows + BLOCK_SIZE - 1) / BLOCK_SIZE * BLOCK_SIZE), 1};
     size_t localSize[] = {BLOCK_SIZE, BLOCK_SIZE, 1};
     const size_t smemSize = (2 * BLOCK_SIZE * BLOCK_SIZE) * sizeof(int);
     int block_size = BLOCK_SIZE;
@@ -204,7 +204,7 @@ void radius_match(const oclMat &query, const oclMat &train, float maxDistance, c
                   const oclMat &trainIdx, const oclMat &distance, const oclMat &nMatches, int distType)
 {
     cv::ocl::Context *ctx = query.clCxt;
-    size_t globalSize[] = {(train.rows + BLOCK_SIZE - 1) / BLOCK_SIZE * BLOCK_SIZE, (query.rows + BLOCK_SIZE - 1) / BLOCK_SIZE * BLOCK_SIZE, 1};
+    size_t globalSize[] = {static_cast<size_t>((train.rows + BLOCK_SIZE - 1) / BLOCK_SIZE * BLOCK_SIZE), static_cast<size_t>((query.rows + BLOCK_SIZE - 1) / BLOCK_SIZE * BLOCK_SIZE), 1};
     size_t localSize[] = {BLOCK_SIZE, BLOCK_SIZE, 1};
     const size_t smemSize = (2 * BLOCK_SIZE * BLOCK_SIZE) * sizeof(int);
     int block_size = BLOCK_SIZE;
@@ -306,7 +306,7 @@ void knn_matchUnrolledCached(const oclMat &query, const oclMat &train, const ocl
                              const oclMat &trainIdx, const oclMat &distance, int distType)
 {
     cv::ocl::Context *ctx = query.clCxt;
-    size_t globalSize[] = {(query.rows + BLOCK_SIZE - 1) / BLOCK_SIZE * BLOCK_SIZE, BLOCK_SIZE, 1};
+    size_t globalSize[] = {static_cast<size_t>((query.rows + BLOCK_SIZE - 1) / BLOCK_SIZE * BLOCK_SIZE), BLOCK_SIZE, 1};
     size_t localSize[] = {BLOCK_SIZE, BLOCK_SIZE, 1};
     const size_t smemSize = (BLOCK_SIZE * (MAX_DESC_LEN >= BLOCK_SIZE ? MAX_DESC_LEN : BLOCK_SIZE) + BLOCK_SIZE * BLOCK_SIZE) * sizeof(int);
     int block_size = BLOCK_SIZE;
@@ -343,7 +343,7 @@ void knn_match(const oclMat &query, const oclMat &train, const oclMat &/*mask*/,
                const oclMat &trainIdx, const oclMat &distance, int distType)
 {
     cv::ocl::Context *ctx = query.clCxt;
-    size_t globalSize[] = {(query.rows + BLOCK_SIZE - 1) / BLOCK_SIZE * BLOCK_SIZE, BLOCK_SIZE, 1};
+    size_t globalSize[] = {static_cast<size_t>((query.rows + BLOCK_SIZE - 1) / BLOCK_SIZE * BLOCK_SIZE), BLOCK_SIZE, 1};
     size_t localSize[] = {BLOCK_SIZE, BLOCK_SIZE, 1};
     const size_t smemSize = (2 * BLOCK_SIZE * BLOCK_SIZE) * sizeof(int);
     int block_size = BLOCK_SIZE;
@@ -378,7 +378,7 @@ template < int BLOCK_SIZE, int MAX_DESC_LEN/*, typename Mask*/ >
 void calcDistanceUnrolled(const oclMat &query, const oclMat &train, const oclMat &/*mask*/, const oclMat &allDist, int distType)
 {
     cv::ocl::Context *ctx = query.clCxt;
-    size_t globalSize[] = {(query.rows + BLOCK_SIZE - 1) / BLOCK_SIZE * BLOCK_SIZE, BLOCK_SIZE, 1};
+    size_t globalSize[] = {static_cast<size_t>(static_cast<size_t>((query.rows + BLOCK_SIZE - 1) / BLOCK_SIZE * BLOCK_SIZE)), BLOCK_SIZE, 1};
     size_t localSize[] = {BLOCK_SIZE, BLOCK_SIZE, 1};
     const size_t smemSize = (2 * BLOCK_SIZE * BLOCK_SIZE) * sizeof(int);
     int block_size = BLOCK_SIZE;
@@ -415,7 +415,7 @@ template < int BLOCK_SIZE/*, typename Mask*/ >
 void calcDistance(const oclMat &query, const oclMat &train, const oclMat &/*mask*/, const oclMat &allDist, int distType)
 {
     cv::ocl::Context *ctx = query.clCxt;
-    size_t globalSize[] = {(query.rows + BLOCK_SIZE - 1) / BLOCK_SIZE * BLOCK_SIZE, BLOCK_SIZE, 1};
+    size_t globalSize[] = {static_cast<size_t>((query.rows + BLOCK_SIZE - 1) / BLOCK_SIZE * BLOCK_SIZE), BLOCK_SIZE, 1};
     size_t localSize[] = {BLOCK_SIZE, BLOCK_SIZE, 1};
     const size_t smemSize = (2 * BLOCK_SIZE * BLOCK_SIZE) * sizeof(int);
     int block_size = BLOCK_SIZE;
@@ -487,7 +487,7 @@ template <int BLOCK_SIZE>
 void findKnnMatch(int k, const oclMat &trainIdx, const oclMat &distance, const oclMat &allDist, int /*distType*/)
 {
     cv::ocl::Context *ctx = trainIdx.clCxt;
-    size_t globalSize[] = {trainIdx.rows * BLOCK_SIZE, 1, 1};
+    size_t globalSize[] = {static_cast<size_t>(trainIdx.rows * BLOCK_SIZE), 1, 1};
     size_t localSize[] = {BLOCK_SIZE, 1, 1};
     int block_size = BLOCK_SIZE;
     String kernelName = "BruteForceMatch_findBestMatch";

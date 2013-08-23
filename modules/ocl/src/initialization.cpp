@@ -286,7 +286,7 @@ namespace cv
             return (total + grain - 1) / grain;
         }
 
-        int getDevice(std::vector<Info> &oclinfo, int devicetype)
+        int getDevice(std::vector<Info> &oclinfo, unsigned int devicetype)
         {
             //TODO: cache oclinfo vector
             oclinfo.clear();

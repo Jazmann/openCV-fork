@@ -88,7 +88,7 @@ static void gaussianBlurOcl(const oclMat &src, int ksizeHalf, oclMat &dst)
 {
     string kernelName("gaussianBlur");
     size_t localThreads[3] = { 256, 1, 1 };
-    size_t globalThreads[3] = { divUp(src.cols, localThreads[0]) * localThreads[0], src.rows, 1 };
+    size_t globalThreads[3] = { divUp(src.cols, localThreads[0]) * localThreads[0], static_cast<size_t>(src.rows), 1 };
     int smem_size = (localThreads[0] + 2*ksizeHalf) * sizeof(float);
 
     CV_Assert(dst.size() == src.size());
@@ -111,7 +111,7 @@ static void polynomialExpansionOcl(const oclMat &src, int polyN, oclMat &dst)
 {
     string kernelName("polynomialExpansion");
     size_t localThreads[3] = { 256, 1, 1 };
-    size_t globalThreads[3] = { divUp(src.cols, localThreads[0] - 2*polyN) * localThreads[0], src.rows, 1 };
+    size_t globalThreads[3] = { divUp(src.cols, localThreads[0] - 2*polyN) * localThreads[0], static_cast<size_t>(src.rows), 1 };
     int smem_size = 3 * localThreads[0] * sizeof(float);
 
     std::vector< std::pair<size_t, const void *> > args;
@@ -166,7 +166,7 @@ static void boxFilter5Ocl(const oclMat &src, int ksizeHalf, oclMat &dst)
     string kernelName("boxFilter5");
     int height = src.rows / 5;
     size_t localThreads[3] = { 256, 1, 1 };
-    size_t globalThreads[3] = { divUp(src.cols, localThreads[0]) * localThreads[0], height, 1 };
+    size_t globalThreads[3] = { divUp(src.cols, localThreads[0]) * localThreads[0], static_cast<size_t>(height), 1 };
     int smem_size = (localThreads[0] + 2*ksizeHalf) * 5 * sizeof(float);
 
     std::vector< std::pair<size_t, const void *> > args;
@@ -213,7 +213,7 @@ static void gaussianBlur5Ocl(const oclMat &src, int ksizeHalf, oclMat &dst)
     int height = src.rows / 5;
     int width = src.cols;
     size_t localThreads[3] = { 256, 1, 1 };
-    size_t globalThreads[3] = { divUp(width, localThreads[0]) * localThreads[0], height, 1 };
+    size_t globalThreads[3] = { divUp(width, localThreads[0]) * localThreads[0], static_cast<size_t>(height), 1 };
     int smem_size = (localThreads[0] + 2*ksizeHalf) * 5 * sizeof(float);
 
     std::vector< std::pair<size_t, const void *> > args;

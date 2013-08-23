@@ -487,7 +487,7 @@ namespace cv
             args.push_back( std::make_pair( sizeof(cl_int), (void *)&srcStep));
             args.push_back( std::make_pair( sizeof(cl_int), (void *)&dstStep));
 
-            size_t globalThreads[3] = {(src.cols + 18) / 16 * 16, (src.rows + 15) / 16 * 16, 1};
+            size_t globalThreads[3] = {static_cast<size_t>((src.cols + 18) / 16 * 16), static_cast<size_t>((src.rows + 15) / 16 * 16), 1};
             size_t localThreads[3] = {16, 16, 1};
 
             if(m == 3)
@@ -1057,7 +1057,7 @@ namespace cv
             args.push_back( std::make_pair( sizeof(cl_int) , (void *)&src.cols ));
             args.push_back( std::make_pair( sizeof(cl_int) , (void *)&src.step ));
             args.push_back( std::make_pair( sizeof(cl_int) , (void *)&t_sum.step));
-            size_t gt[3] = {((vcols + 1) / 2) * 256, 1, 1}, lt[3] = {256, 1, 1};
+            size_t gt[3] = {static_cast<size_t>(((vcols + 1) / 2) * 256), 1, 1}, lt[3] = {256, 1, 1};
             openCLExecuteKernel(src.clCxt, &imgproc_integral, "integral_cols", gt, lt, args, -1, depth);
             args.clear();
             args.push_back( std::make_pair( sizeof(cl_mem) , (void *)&t_sum.data ));
@@ -1071,7 +1071,7 @@ namespace cv
             args.push_back( std::make_pair( sizeof(cl_int) , (void *)&sqsum.step));
             args.push_back( std::make_pair( sizeof(cl_int) , (void *)&sum_offset));
             args.push_back( std::make_pair( sizeof(cl_int) , (void *)&sqsum_offset));
-            size_t gt2[3] = {t_sum.cols  * 32, 1, 1}, lt2[3] = {256, 1, 1};
+            size_t gt2[3] = {static_cast<size_t>(t_sum.cols  * 32), 1, 1}, lt2[3] = {256, 1, 1};
             openCLExecuteKernel(src.clCxt, &imgproc_integral, "integral_rows", gt2, lt2, args, -1, depth);
         }
 
@@ -1107,7 +1107,7 @@ namespace cv
             args.push_back( std::make_pair( sizeof(cl_int) , (void *)&src.cols ));
             args.push_back( std::make_pair( sizeof(cl_int) , (void *)&src.step ));
             args.push_back( std::make_pair( sizeof(cl_int) , (void *)&t_sum.step));
-            size_t gt[3] = {((vcols + 1) / 2) * 256, 1, 1}, lt[3] = {256, 1, 1};
+            size_t gt[3] = {static_cast<size_t>(((vcols + 1) / 2) * 256), 1, 1}, lt[3] = {256, 1, 1};
             openCLExecuteKernel(src.clCxt, &imgproc_integral_sum, "integral_sum_cols", gt, lt, args, -1, depth);
             args.clear();
             args.push_back( std::make_pair( sizeof(cl_mem) , (void *)&t_sum.data ));
@@ -1117,7 +1117,7 @@ namespace cv
             args.push_back( std::make_pair( sizeof(cl_int) , (void *)&t_sum.step ));
             args.push_back( std::make_pair( sizeof(cl_int) , (void *)&sum.step));
             args.push_back( std::make_pair( sizeof(cl_int) , (void *)&sum_offset));
-            size_t gt2[3] = {t_sum.cols  * 32, 1, 1}, lt2[3] = {256, 1, 1};
+            size_t gt2[3] = {static_cast<size_t>(t_sum.cols  * 32), 1, 1}, lt2[3] = {256, 1, 1};
             openCLExecuteKernel(src.clCxt, &imgproc_integral_sum, "integral_sum_rows", gt2, lt2, args, -1, depth);
             //std::cout << "tested" << std::endl;
         }
@@ -1262,8 +1262,8 @@ namespace cv
             if(src.rows % lty != 0)
                 row = (row / lty + 1) * lty;
 
-            size_t globalThreads[3] = {col, row, 1};
-            size_t localThreads[3]  = {ltx, lty, 1};
+            size_t globalThreads[3] = {static_cast<size_t>(col), static_cast<size_t>(row), 1};
+            size_t localThreads[3]  = {static_cast<size_t>(ltx), static_cast<size_t>(lty), 1};
 
             //set args
             std::vector<std::pair<size_t , const void *> > args;
@@ -1322,8 +1322,8 @@ namespace cv
             if(src.rows % lty != 0)
                 row = (row / lty + 1) * lty;
 
-            size_t globalThreads[3] = {col, row, 1};
-            size_t localThreads[3]  = {ltx, lty, 1};
+            size_t globalThreads[3] = {static_cast<size_t>(col), static_cast<size_t>(row), 1};
+            size_t localThreads[3]  = {static_cast<size_t>(ltx), static_cast<size_t>(lty), 1};
 
             //set args
             std::vector<std::pair<size_t , const void *> > args;
@@ -1577,7 +1577,7 @@ namespace cv
 
                 String kernelName = "transform";
                 size_t localThreads[3]  = { 32, 8, 1 };
-                size_t globalThreads[3] = { divUp(src.cols, localThreads[0]), divUp(src.rows, localThreads[1]), 1 };
+                size_t globalThreads[3] = { static_cast<size_t>(divUp(src.cols, localThreads[0])), static_cast<size_t>(divUp(src.rows, localThreads[1])), 1 };
 
                 openCLExecuteKernel(Context::getContext(), &imgproc_clahe, kernelName, globalThreads, localThreads, args, -1, -1);
             }
@@ -1802,7 +1802,7 @@ void cv::ocl::mulSpectrums(const oclMat &a, const oclMat &b, oclMat &c, int /*fl
     c.create(a.size(), CV_32FC2);
 
     size_t lt[3]  = { 16, 16, 1 };
-    size_t gt[3]  = { a.cols, a.rows, 1 };
+    size_t gt[3]  = { static_cast<size_t>(a.cols), static_cast<size_t>(a.rows), 1 };
 
     String kernelName = conjB ? "mulAndScaleSpectrumsKernel_CONJ":"mulAndScaleSpectrumsKernel";
 

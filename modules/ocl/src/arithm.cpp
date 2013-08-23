@@ -603,7 +603,7 @@ static void arithmetic_sum_buffer_run(const oclMat &src, cl_mem &dst, int vlen ,
     args.push_back( std::make_pair( sizeof(cl_int) , (void *)&groupnum));
     args.push_back( std::make_pair( sizeof(cl_mem) , (void *)&src.data));
     args.push_back( std::make_pair( sizeof(cl_mem) , (void *)&dst ));
-    size_t gt[3] = {groupnum * 256, 1, 1}, lt[3] = {256, 1, 1};
+    size_t gt[3] = {static_cast<size_t>(groupnum * 256), 1, 1}, lt[3] = {256, 1, 1};
     if(src.oclchannels() != 3)
         openCLExecuteKernel(src.clCxt, &arithm_sum, "arithm_op_sum", gt, lt, args, -1, -1, build_options);
     else
@@ -747,7 +747,7 @@ static void arithmetic_minMax_run(const oclMat &src, const oclMat &mask, cl_mem 
         args.push_back( std::make_pair( sizeof(cl_mem) , (void *)&mask.data ));
     }
     args.push_back( std::make_pair( sizeof(cl_mem) , (void *)&dst ));
-    size_t gt[3] = {groupnum * 256, 1, 1}, lt[3] = {256, 1, 1};
+    size_t gt[3] = {static_cast<size_t>(groupnum * 256), 1, 1}, lt[3] = {256, 1, 1};
     openCLExecuteKernel(src.clCxt, &arithm_minMax, kernelName, gt, lt, args, -1, -1, build_options);
 }
 
@@ -755,7 +755,7 @@ static void arithmetic_minMax_run(const oclMat &src, const oclMat &mask, cl_mem 
 static void arithmetic_minMax_mask_run(const oclMat &src, const oclMat &mask, cl_mem &dst, int vlen, int groupnum, String kernelName)
 {
     std::vector<std::pair<size_t , const void *> > args;
-    size_t gt[3] = {groupnum * 256, 1, 1}, lt[3] = {256, 1, 1};
+    size_t gt[3] = {static_cast<size_t>(groupnum * 256), 1, 1}, lt[3] = {256, 1, 1};
     char build_options[50];
     if(src.oclchannels() == 1)
     {
@@ -1437,14 +1437,14 @@ static void arithmetic_minMaxLoc_run(const oclMat &src, cl_mem &dst, int vlen , 
     args.push_back( std::make_pair( sizeof(cl_mem) , (void *)&dst ));
     char build_options[50];
     sprintf(build_options, "-D DEPTH_%d -D REPEAT_S%d -D REPEAT_E%d", src.depth(), repeat_s, repeat_e);
-    size_t gt[3] = {groupnum * 256, 1, 1}, lt[3] = {256, 1, 1};
+    size_t gt[3] = {static_cast<size_t>(groupnum * 256), 1, 1}, lt[3] = {256, 1, 1};
     openCLExecuteKernel(src.clCxt, &arithm_minMaxLoc, "arithm_op_minMaxLoc", gt, lt, args, -1, -1, build_options);
 }
 
 static void arithmetic_minMaxLoc_mask_run(const oclMat &src, const oclMat &mask, cl_mem &dst, int vlen, int groupnum)
 {
     std::vector<std::pair<size_t , const void *> > args;
-    size_t gt[3] = {groupnum * 256, 1, 1}, lt[3] = {256, 1, 1};
+    size_t gt[3] = {static_cast<size_t>(groupnum * 256), 1, 1}, lt[3] = {256, 1, 1};
     char build_options[50];
     if(src.oclchannels() == 1)
     {
@@ -1577,7 +1577,7 @@ static void arithmetic_countNonZero_run(const oclMat &src, cl_mem &dst, int vlen
     args.push_back( std::make_pair( sizeof(cl_int) , (void *)&groupnum));
     args.push_back( std::make_pair( sizeof(cl_mem) , (void *)&src.data));
     args.push_back( std::make_pair( sizeof(cl_mem) , (void *)&dst ));
-    size_t gt[3] = {groupnum * 256, 1, 1}, lt[3] = {256, 1, 1};
+    size_t gt[3] = {static_cast<size_t>(groupnum * 256), 1, 1}, lt[3] = {256, 1, 1};
     openCLExecuteKernel(src.clCxt, &arithm_nonzero, kernelName, gt, lt, args, -1, -1, build_options);
 }
 

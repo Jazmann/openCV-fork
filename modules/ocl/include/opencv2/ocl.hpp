@@ -111,7 +111,7 @@ namespace cv
         //the function must be called before any other cv::ocl::functions, it initialize ocl runtime
         //each Info relates to an OpenCL platform
         //there is one or more devices in each platform, each one has a separate name
-        CV_EXPORTS int getDevice(std::vector<Info> &oclinfo, int devicetype = CVCL_DEVICE_TYPE_GPU);
+        CV_EXPORTS int getDevice(std::vector<Info> &oclinfo, unsigned int devicetype = CVCL_DEVICE_TYPE_GPU);
 
         //set device you want to use, optional function after getDevice be called
         //the devnum is the index of the selected device in DeviceName vector of INfo
