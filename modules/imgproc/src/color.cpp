@@ -3441,21 +3441,20 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(cv::Vec<int, 3
         }
     // Rescale to avoid bit overflow during transform.
     
-    printf("RGB2Rot\n");
-//    cv::Matx<int, 3, 3> Tit = cv::Matx<int, 3, 3>(a1[0],a1[1],a1[2],a2[0],a2[1],a2[2],a3[0],a3[1],a3[2]);
-    printf("RGB2Rot\n");
     int TitRowSum[3] = {
         std::abs(a1[0])+std::abs(a1[1])+std::abs(a1[2]),
         std::abs(a2[0])+std::abs(a2[1])+std::abs(a2[2]),
         std::abs(a3[0])+std::abs(a3[1])+std::abs(a3[2])
     };
-    printf("RGB2Rot\n");
+    // Find left most bit.
     int TitRowLog2Sum[3] = {0,0,0};
-    printf("RGB2Rot\n");
     for (int i=0; i<=2; i++) {
         while (TitRowSum[i] >>= 1) ++TitRowLog2Sum[i];
     }
-    printf("RGB2Rot\n");
+    
+    // MWB is the number of bits needed for the Working Type storage.
+    // a[0] srcMax + a[1] srcMax + a[2] srcMax  = ( a[0] + a[1] + a[2]) * srcMax
+    // MWB = log2(( a[0] + a[1] + a[2]) * srcMax) = log2( a[0] + a[1] + a[2]) + log2( srcMax )
     cv::Matx<int, 3, 1> MWB({
         TitRowLog2Sum[0] + CV_MAT_DEPTH_BITS(src_t),
         TitRowLog2Sum[1] + CV_MAT_DEPTH_BITS(src_t),
@@ -3479,22 +3478,10 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(cv::Vec<int, 3
             0, 1, 0, 0, 0, 1, 1, 1,
             0, 0, 1, 0, 1, 0, 1, 1,
             0, 0, 0, 1, 1, 1, 0, 1});
-    printf("RGB2Rot a\n");
     cv::Matx<wrkType, 3, 8> RGBBoxInNew = Ti * RGBBox;
-    printf("RGB2Rot b\n");
-
-    
     cv::Matx<wrkType, 3, 1> RGBCubeMax = cv::MaxInRow<wrkType, 3, 8>(RGBBoxInNew);
-    printf("RGB2Rot c\n");
-
-    
     cv::Matx<wrkType, 3, 1> RGBCubeMin = cv::MinInRow<wrkType, 3, 8>(RGBBoxInNew);
-    printf("RGB2Rot d\n");
-
     cv::Matx<wrkType, 3, 1> RGBCubeRange = RGBCubeMax - RGBCubeMin;
-    printf("RGB2Rot e\n ");
-    printf("RGB2Rot dstInfo::channels = %i \n ", (int)dstInfo::channels);
-    printf("RGB2Rot srcInfo::channels = %i \n ", (int)srcInfo::channels);
     
     for(int i = 0; i < dstInfo::channels; i++){
         for(int j = 0; j < srcInfo::channels; j++){

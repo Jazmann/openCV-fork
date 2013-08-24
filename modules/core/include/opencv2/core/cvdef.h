@@ -250,7 +250,8 @@ typedef signed char schar;
 #define CV_CN_SHIFT   4
 // CV_DEPTH_MAX is the maximum number of Data types allowed.
 #define CV_DEPTH_MAX  (1 << CV_CN_SHIFT)
-
+// The order is
+// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S, CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
 #define CV_2U   0
 #define CV_2U_DEPTH_BITS_LOG2   1
 #define CV_2U_DEPTH_BYTES_LOG2   0

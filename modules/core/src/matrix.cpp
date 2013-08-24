@@ -1310,7 +1310,17 @@ int _InputArray::depth(int i) const
 {
     return CV_MAT_DEPTH(type(i));
 }
-
+    
+int _InputArray::bytes(int i) const
+{
+    return CV_MAT_DEPTH_BYTES(type(i));
+}
+    
+int _InputArray::bits(int i) const
+{
+    return CV_MAT_DEPTH_BITS(type(i));
+}
+    
 int _InputArray::channels(int i) const
 {
     return CV_MAT_CN(type(i));

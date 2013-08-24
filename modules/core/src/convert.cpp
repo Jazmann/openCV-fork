@@ -195,53 +195,79 @@ typedef void (*SplitFunc)(const uchar* src, uchar** dst, int len, int cn);
 typedef void (*MergeFunc)(const uchar** src, uchar* dst, int len, int cn);
 
 static SplitFunc splitTab[] =
-{
-    (SplitFunc)GET_OPTIMIZED(split8u), (SplitFunc)GET_OPTIMIZED(split8u), (SplitFunc)GET_OPTIMIZED(split16u), (SplitFunc)GET_OPTIMIZED(split16u),
-    (SplitFunc)GET_OPTIMIZED(split32s), (SplitFunc)GET_OPTIMIZED(split32s), (SplitFunc)GET_OPTIMIZED(split64s), 0
+{ // {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S, CV_32F, CV_64F, ...}
+    (SplitFunc)GET_OPTIMIZED(split8u), (SplitFunc)GET_OPTIMIZED(split8u),
+    (SplitFunc)GET_OPTIMIZED(split8u), (SplitFunc)GET_OPTIMIZED(split8u),
+    (SplitFunc)GET_OPTIMIZED(split16u), (SplitFunc)GET_OPTIMIZED(split16u),
+    (SplitFunc)GET_OPTIMIZED(split32s), (SplitFunc)GET_OPTIMIZED(split32s),
+    (SplitFunc)GET_OPTIMIZED(split64s), (SplitFunc)GET_OPTIMIZED(split64s), 0, 0, 0, 0, 0, 0
 };
 
 static MergeFunc mergeTab[] =
 {
-    (MergeFunc)GET_OPTIMIZED(merge8u), (MergeFunc)GET_OPTIMIZED(merge8u), (MergeFunc)GET_OPTIMIZED(merge16u), (MergeFunc)GET_OPTIMIZED(merge16u),
-    (MergeFunc)GET_OPTIMIZED(merge32s), (MergeFunc)GET_OPTIMIZED(merge32s), (MergeFunc)GET_OPTIMIZED(merge64s), 0
+    (MergeFunc)GET_OPTIMIZED(merge8u),  (MergeFunc)GET_OPTIMIZED(merge8u),
+    (MergeFunc)GET_OPTIMIZED(merge8u),  (MergeFunc)GET_OPTIMIZED(merge8u),
+    (MergeFunc)GET_OPTIMIZED(merge16u), (MergeFunc)GET_OPTIMIZED(merge16u),
+    (MergeFunc)GET_OPTIMIZED(merge32s), (MergeFunc)GET_OPTIMIZED(merge32s),
+    (MergeFunc)GET_OPTIMIZED(merge64s), (MergeFunc)GET_OPTIMIZED(merge64s), 0, 0, 0, 0, 0, 0
 };
 
 }
 
 void cv::split(const Mat& src, Mat* mv)
 {
+    printf("split in\n");
     int k, depth = src.depth(), cn = src.channels();
+    printf("split a : depth = %i\n", depth);
     if( cn == 1 )
     {
         src.copyTo(mv[0]);
         return;
     }
+    printf("split b\n");
 
     SplitFunc func = splitTab[depth];
+    printf("split c\n");
     CV_Assert( func != 0 );
+    printf("split d\n");
 
     int esz = (int)src.elemSize(), esz1 = (int)src.elemSize1();
+    printf("split e\n");
     int blocksize0 = (BLOCK_SIZE + esz-1)/esz;
+    printf("split f\n");
     AutoBuffer<uchar> _buf((cn+1)*(sizeof(Mat*) + sizeof(uchar*)) + 16);
+    printf("split g\n");
     const Mat** arrays = (const Mat**)(uchar*)_buf;
+    printf("split h\n");
     uchar** ptrs = (uchar**)alignPtr(arrays + cn + 1, 16);
+    printf("split i\n");
 
     arrays[0] = &src;
+    printf("split j\n");
     for( k = 0; k < cn; k++ )
     {
         mv[k].create(src.dims, src.size, depth);
         arrays[k+1] = &mv[k];
     }
+    printf("split k\n");
 
     NAryMatIterator it(arrays, ptrs, cn+1);
+    printf("split l\n");
     int total = (int)it.size, blocksize = cn <= 4 ? total : std::min(total, blocksize0);
+    printf("split m\n");
 
     for( size_t i = 0; i < it.nplanes; i++, ++it )
     {
         for( int j = 0; j < total; j += blocksize )
         {
+            printf("split : bsz = std::min(%i - %i, %i)\n",total, j, blocksize);
+
             int bsz = std::min(total - j, blocksize);
+            printf("split n : bsz = %i\n",bsz);
+            printf("split n : func( %i, %i, %i, %i )\n", ptrs[0], &ptrs[1], bsz, cn );
+
             func( ptrs[0], &ptrs[1], bsz, cn );
+            printf("split o : bsz = %i\n",bsz);
 
             if( j + blocksize < total )
             {
@@ -251,6 +277,7 @@ void cv::split(const Mat& src, Mat* mv)
             }
         }
     }
+    printf("split out\n");
 }
 
 void cv::split(InputArray _m, OutputArrayOfArrays _mv)

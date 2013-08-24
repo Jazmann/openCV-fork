@@ -642,6 +642,10 @@ public:
     int type() const;
     //! returns element type, similar to CV_MAT_DEPTH(cvmat->type)
     int depth() const;
+    //! returns element type, similar to CV_MAT_DEPTH_BYTES(cvmat->type)
+    int bytes() const;
+    //! returns element type, similar to CV_MAT_DEPTH_BITS(cvmat->type)
+    int bits() const;
     //! returns element type, similar to CV_MAT_CN(cvmat->type)
     int channels() const;
     //! returns step/elemSize1()
