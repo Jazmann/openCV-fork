@@ -1510,48 +1510,33 @@ LUT8u_( const uchar* src, const T* lut, T* dst, int len, int cn, int lutcn )
                 dst[i+k] = lut[src[i+k]*cn+k];
     }
 }
-
-static void LUT8u_8u( const uchar* src, const uchar* lut, uchar* dst, int len, int cn, int lutcn )
-{
-    LUT8u_( src, lut, dst, len, cn, lutcn );
+    
+#define DEF_LUT_FUNC(suffix, dtype) \
+static void LUT8u_##suffix( const uchar* src, const dtype* lut, dtype* dst, int len, int cn, int lutcn) \
+{ \
+LUT8u_( src, lut, dst, len, cn, lutcn ); \
 }
 
-static void LUT8u_8s( const uchar* src, const schar* lut, schar* dst, int len, int cn, int lutcn )
-{
-    LUT8u_( src, lut, dst, len, cn, lutcn );
-}
-
-static void LUT8u_16u( const uchar* src, const ushort* lut, ushort* dst, int len, int cn, int lutcn )
-{
-    LUT8u_( src, lut, dst, len, cn, lutcn );
-}
-
-static void LUT8u_16s( const uchar* src, const short* lut, short* dst, int len, int cn, int lutcn )
-{
-    LUT8u_( src, lut, dst, len, cn, lutcn );
-}
-
-static void LUT8u_32s( const uchar* src, const int* lut, int* dst, int len, int cn, int lutcn )
-{
-    LUT8u_( src, lut, dst, len, cn, lutcn );
-}
-
-static void LUT8u_32f( const uchar* src, const float* lut, float* dst, int len, int cn, int lutcn )
-{
-    LUT8u_( src, lut, dst, len, cn, lutcn );
-}
-
-static void LUT8u_64f( const uchar* src, const double* lut, double* dst, int len, int cn, int lutcn )
-{
-    LUT8u_( src, lut, dst, len, cn, lutcn );
-}
+    DEF_LUT_FUNC(2u,  CV_2U_TYPE);
+    DEF_LUT_FUNC(4u,  CV_4U_TYPE);
+    DEF_LUT_FUNC(8u,  CV_8U_TYPE);
+    DEF_LUT_FUNC(8s,  CV_8S_TYPE);
+    DEF_LUT_FUNC(16u, CV_16U_TYPE);
+    DEF_LUT_FUNC(16s, CV_16S_TYPE);
+    DEF_LUT_FUNC(32u, CV_32U_TYPE);
+    DEF_LUT_FUNC(32s, CV_32S_TYPE);
+    DEF_LUT_FUNC(64u, CV_64U_TYPE);
+    DEF_LUT_FUNC(64s, CV_64S_TYPE);
+    DEF_LUT_FUNC(32f, CV_32F_TYPE);
+    DEF_LUT_FUNC(64f, CV_64F_TYPE);
 
 typedef void (*LUTFunc)( const uchar* src, const uchar* lut, uchar* dst, int len, int cn, int lutcn );
 
 static LUTFunc lutTab[] =
-{
-    (LUTFunc)LUT8u_8u, (LUTFunc)LUT8u_8s, (LUTFunc)LUT8u_16u, (LUTFunc)LUT8u_16s,
-    (LUTFunc)LUT8u_32s, (LUTFunc)LUT8u_32f, (LUTFunc)LUT8u_64f, 0
+    {// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
+     //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
+    (LUTFunc)LUT8u_2u, (LUTFunc)LUT8u_4u, (LUTFunc)LUT8u_8u, (LUTFunc)LUT8u_8s, (LUTFunc)LUT8u_16u, (LUTFunc)LUT8u_16s,
+    (LUTFunc)LUT8u_32u,(LUTFunc)LUT8u_32s,(LUTFunc)LUT8u_64u,(LUTFunc)LUT8u_64s, (LUTFunc)LUT8u_32f, (LUTFunc)LUT8u_64f, 0,0,0,0
 };
 
 }
