@@ -107,6 +107,8 @@ public:
     virtual size_t total(int i=-1) const;
     virtual int type(int i=-1) const;
     virtual int depth(int i=-1) const;
+    virtual int bytes(int i=-1) const;
+    virtual int bits(int i=-1) const;
     virtual int channels(int i=-1) const;
     virtual bool empty() const;
 
