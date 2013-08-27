@@ -285,6 +285,56 @@ template<> inline int saturate_cast<int>(double v)           { return cvRound(v)
 template<> inline unsigned saturate_cast<unsigned>(float v)  { return cvRound(v); }
 template<> inline unsigned saturate_cast<unsigned>(double v) { return cvRound(v); }
 
+    
+    
+    
+/////////////// saturate_cast (used in image & signal processing) ///////////////////
+    
+    template<typename _Tp> static inline _Tp saturate_cast(CV_8U_TYPE v)    { return _Tp(v); }
+    template<typename _Tp> static inline _Tp saturate_cast(CV_8S_TYPE v)    { return _Tp(v); }
+    template<typename _Tp> static inline _Tp saturate_cast(CV_16U_TYPE v)   { return _Tp(v); }
+    template<typename _Tp> static inline _Tp saturate_cast(CV_16S_TYPE v)   { return _Tp(v); }
+    template<typename _Tp> static inline _Tp saturate_cast(CV_32U_TYPE v)   { return _Tp(v); }
+    template<typename _Tp> static inline _Tp saturate_cast(CV_32S_TYPE v)   { return _Tp(v); }
+    template<typename _Tp> static inline _Tp saturate_cast(CV_32F_TYPE v)   { return _Tp(v); }
+    template<typename _Tp> static inline _Tp saturate_cast(CV_64F_TYPE v)   { return _Tp(v); }
+    template<typename _Tp> static inline _Tp saturate_cast(_Tp v)           { return _Tp(v); }
+    
+    template<> inline CV_8U_TYPE saturate_cast<CV_8U_TYPE>(CV_8S_TYPE v)      { return (CV_8U_TYPE)std::max((CV_32S_TYPE)v, 0); }
+    template<> inline CV_8U_TYPE saturate_cast<CV_8U_TYPE>(CV_16U_TYPE v)     { return (CV_8U_TYPE)std::min((CV_32U_TYPE)v, (CV_32U_TYPE)UCHAR_MAX); }
+    template<> inline CV_8U_TYPE saturate_cast<CV_8U_TYPE>(CV_16S_TYPE v)     { return saturate_cast<CV_8U_TYPE>((CV_32S_TYPE)v); }
+    template<> inline CV_8U_TYPE saturate_cast<CV_8U_TYPE>(CV_32U_TYPE v)     { return (CV_8U_TYPE)std::min(v, (CV_32U_TYPE)UCHAR_MAX); }
+    template<> inline CV_8U_TYPE saturate_cast<CV_8U_TYPE>(CV_32S_TYPE v)     { return (CV_8U_TYPE)((CV_32U_TYPE)v <= UCHAR_MAX ? v : v > 0 ? UCHAR_MAX : 0); }
+    template<> inline CV_8U_TYPE saturate_cast<CV_8U_TYPE>(CV_32F_TYPE v)     { CV_32S_TYPE iv = cvRound(v); return saturate_cast<CV_8U_TYPE>(iv); }
+    template<> inline CV_8U_TYPE saturate_cast<CV_8U_TYPE>(CV_64F_TYPE v)     { CV_32S_TYPE iv = cvRound(v); return saturate_cast<CV_8U_TYPE>(iv); }
+    
+    template<> inline CV_8S_TYPE saturate_cast<CV_8S_TYPE>(CV_8U_TYPE v)      { return (CV_8S_TYPE)std::min((CV_32S_TYPE)v, SCHAR_MAX); }
+    template<> inline CV_8S_TYPE saturate_cast<CV_8S_TYPE>(CV_16U_TYPE v)     { return (CV_8S_TYPE)std::min((CV_32U_TYPE)v, (CV_32U_TYPE)SCHAR_MAX); }
+    template<> inline CV_8S_TYPE saturate_cast<CV_8S_TYPE>(CV_32S_TYPE v)     { return (CV_8S_TYPE)((CV_32U_TYPE)(v-SCHAR_MIN) <= (CV_32U_TYPE)UCHAR_MAX ? v : v > 0 ? SCHAR_MAX : SCHAR_MIN); }
+    template<> inline CV_8S_TYPE saturate_cast<CV_8S_TYPE>(CV_16S_TYPE v)     { return saturate_cast<CV_8S_TYPE>((CV_32S_TYPE)v); }
+    template<> inline CV_8S_TYPE saturate_cast<CV_8S_TYPE>(CV_32U_TYPE v)     { return (CV_8S_TYPE)std::min(v, (CV_32U_TYPE)SCHAR_MAX); }
+    template<> inline CV_8S_TYPE saturate_cast<CV_8S_TYPE>(CV_32F_TYPE v)     { CV_32S_TYPE iv = cvRound(v); return saturate_cast<CV_8S_TYPE>(iv); }
+    template<> inline CV_8S_TYPE saturate_cast<CV_8S_TYPE>(CV_64F_TYPE v)     { CV_32S_TYPE iv = cvRound(v); return saturate_cast<CV_8S_TYPE>(iv); }
+    
+    template<> inline CV_16U_TYPE saturate_cast<CV_16U_TYPE>(CV_8S_TYPE v)    { return (CV_16U_TYPE)std::max((CV_32S_TYPE)v, 0); }
+    template<> inline CV_16U_TYPE saturate_cast<CV_16U_TYPE>(CV_16S_TYPE v)   { return (CV_16U_TYPE)std::max((CV_32S_TYPE)v, 0); }
+    template<> inline CV_16U_TYPE saturate_cast<CV_16U_TYPE>(CV_32S_TYPE v)   { return (CV_16U_TYPE)((CV_32U_TYPE)v <= (CV_32U_TYPE)USHRT_MAX ? v : v > 0 ? USHRT_MAX : 0); }
+    template<> inline CV_16U_TYPE saturate_cast<CV_16U_TYPE>(CV_32U_TYPE v)   { return (CV_16U_TYPE)std::min(v, (CV_32U_TYPE)USHRT_MAX); }
+    template<> inline CV_16U_TYPE saturate_cast<CV_16U_TYPE>(CV_32F_TYPE v)   { CV_32S_TYPE iv = cvRound(v); return saturate_cast<CV_16U_TYPE>(iv); }
+    template<> inline CV_16U_TYPE saturate_cast<CV_16U_TYPE>(CV_64F_TYPE v)   { CV_32S_TYPE iv = cvRound(v); return saturate_cast<CV_16U_TYPE>(iv); }
+    
+    template<> inline CV_16S_TYPE saturate_cast<CV_16S_TYPE>(CV_16U_TYPE v)   { return (CV_16S_TYPE)std::min((CV_32S_TYPE)v, SHRT_MAX); }
+    template<> inline CV_16S_TYPE saturate_cast<CV_16S_TYPE>(CV_32S_TYPE v)   { return (CV_16S_TYPE)((CV_32U_TYPE)(v - SHRT_MIN) <= (CV_32U_TYPE)USHRT_MAX ? v : v > 0 ? SHRT_MAX : SHRT_MIN); }
+    template<> inline CV_16S_TYPE saturate_cast<CV_16S_TYPE>(CV_32U_TYPE v)   { return (CV_16S_TYPE)std::min(v, (CV_32U_TYPE)SHRT_MAX); }
+    template<> inline CV_16S_TYPE saturate_cast<CV_16S_TYPE>(CV_32F_TYPE v)   { CV_32S_TYPE iv = cvRound(v); return saturate_cast<CV_16S_TYPE>(iv); }
+    template<> inline CV_16S_TYPE saturate_cast<CV_16S_TYPE>(CV_64F_TYPE v)   { CV_32S_TYPE iv = cvRound(v); return saturate_cast<CV_16S_TYPE>(iv); }
+    
+    template<> inline CV_32S_TYPE saturate_cast<CV_32S_TYPE>(CV_32F_TYPE v)   { return cvRound(v); }
+    template<> inline CV_32S_TYPE saturate_cast<CV_32S_TYPE>(CV_64F_TYPE v)   { return cvRound(v); }
+    
+    // we intentionally do not clip negative numbers, to make -1 become 0xffffffff etc.
+    template<> inline CV_32U_TYPE saturate_cast<CV_32U_TYPE>(CV_32F_TYPE v)   { return cvRound(v); }
+    template<> inline CV_32U_TYPE saturate_cast<CV_32U_TYPE>(CV_64F_TYPE v)   { return cvRound(v); }
 
 
 //////////////////////////////// low-level functions ////////////////////////////////

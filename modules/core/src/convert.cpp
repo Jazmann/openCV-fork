@@ -776,7 +776,7 @@ cvt_( const T* src, size_t sstep,
         for( ; x <= size.width - 4; x += 4 )
         {
             DT t0, t1;
-            t0 = saturate_cast<DT>(src[x]);
+            t0 = saturate_cast<DT>((T) src[x]);
             t1 = saturate_cast<DT>(src[x+1]);
             dst[x] = t0; dst[x+1] = t1;
             t0 = saturate_cast<DT>(src[x+2]);
@@ -863,9 +863,9 @@ stype* dst, size_t dstep, Size size, double*) \
     
     // ***************  DEF_CVT_SCALE_ABS_FUNC  ***************
     
-    DEF_CVT_SCALE_ABS_FUNC(8u,    cvtScaleAbs_,  CV_2U_TYPE, CV_8U_TYPE, CV_32F_TYPE);
+    DEF_CVT_SCALE_ABS_FUNC(2u8u,  cvtScaleAbs_,  CV_2U_TYPE, CV_8U_TYPE, CV_32F_TYPE);
     DEF_CVT_SCALE_ABS_FUNC(4u8u,  cvtScaleAbs_,  CV_4U_TYPE, CV_8U_TYPE, CV_32F_TYPE);
-    DEF_CVT_SCALE_ABS_FUNC(8u8u,  cvtScaleAbs_,  CV_8U_TYPE, CV_8U_TYPE, CV_32F_TYPE);
+    DEF_CVT_SCALE_ABS_FUNC(8u,    cvtScaleAbs_,  CV_8U_TYPE, CV_8U_TYPE, CV_32F_TYPE);
     DEF_CVT_SCALE_ABS_FUNC(8s8u,  cvtScaleAbs_,  CV_8S_TYPE, CV_8U_TYPE, CV_32F_TYPE);
     DEF_CVT_SCALE_ABS_FUNC(16u8u, cvtScaleAbs_, CV_16U_TYPE, CV_8U_TYPE, CV_32F_TYPE);
     DEF_CVT_SCALE_ABS_FUNC(16s8u, cvtScaleAbs_, CV_16S_TYPE, CV_8U_TYPE, CV_32F_TYPE);
@@ -1277,7 +1277,7 @@ static BinaryFunc cvtScaleTab[][16] =
         0, 0, 0, 0
     },
     {
-        (BinaryFunc)GET_OPTIMIZED(cvtScale2u32sf), (BinaryFunc)GET_OPTIMIZED(cvtScale4u32f),(BinaryFunc)GET_OPTIMIZED(cvtScale8u32f),
+        (BinaryFunc)GET_OPTIMIZED(cvtScale2u32f), (BinaryFunc)GET_OPTIMIZED(cvtScale4u32f),(BinaryFunc)GET_OPTIMIZED(cvtScale8u32f),
         (BinaryFunc)GET_OPTIMIZED(cvtScale8s32f), (BinaryFunc)GET_OPTIMIZED(cvtScale16u32f),(BinaryFunc)GET_OPTIMIZED(cvtScale16s32f),
         (BinaryFunc)GET_OPTIMIZED(cvtScale32u32f),(BinaryFunc)GET_OPTIMIZED(cvtScale32s32f),(BinaryFunc)GET_OPTIMIZED(cvtScale64u32f),
         (BinaryFunc)GET_OPTIMIZED(cvtScale64s32f),(BinaryFunc)GET_OPTIMIZED(cvtScale32f),   (BinaryFunc)GET_OPTIMIZED(cvtScale64f32f),
@@ -1377,7 +1377,7 @@ static BinaryFunc cvtScaleTab[][16] =
             0, 0, 0, 0
         },
         {
-            (BinaryFunc)GET_OPTIMIZED(cvt2u32sf),(BinaryFunc)GET_OPTIMIZED(cvt4u32f), (BinaryFunc)GET_OPTIMIZED(cvt8u32f),
+            (BinaryFunc)GET_OPTIMIZED(cvt2u32f),(BinaryFunc)GET_OPTIMIZED(cvt4u32f), (BinaryFunc)GET_OPTIMIZED(cvt8u32f),
             (BinaryFunc)GET_OPTIMIZED(cvt8s32f), (BinaryFunc)GET_OPTIMIZED(cvt16u32f),(BinaryFunc)GET_OPTIMIZED(cvt16s32f),
             (BinaryFunc)GET_OPTIMIZED(cvt32u32f),(BinaryFunc)GET_OPTIMIZED(cvt32s32f),(BinaryFunc)GET_OPTIMIZED(cvt64u32f),
             (BinaryFunc)GET_OPTIMIZED(cvt64s32f),(BinaryFunc)(cvt32f),                (BinaryFunc)GET_OPTIMIZED(cvt64f32f),
