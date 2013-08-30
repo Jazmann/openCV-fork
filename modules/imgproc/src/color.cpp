@@ -162,7 +162,7 @@ template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf()
         typename cv::Data_Type<dst_t>::type dMin = cv::Data_Type<dst_t>::min;
 // g=1 c= (sMin+sMax)/2
         sRange = (sMax - sMin);
-        dstType dRange = (dMax - dMin);
+        dstType dRange = dstType(dMax - dMin);
         wrkType ErfA = erf(0.5);
         wrkType ErfB = erf(0.5) + ErfA;
         shift = dstType(dMin + dRange * ErfA / ErfB);
@@ -178,7 +178,7 @@ template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf(double
         
         CV_Assert((int)sMin <= (int)c && (int)c <= (int)sMax && (int)dMin <= (int)dMax);
         sRange = (sMax - sMin);
-        dstType dRange = (dMax - dMin);
+        dstType dRange = dstType(dMax - dMin);
         double ErfA = erf((g*(c - sMin)), double(sRange));
         double ErfB = erf((g*(sMax - c)), double(sRange)) + ErfA;
         shift = wrkType(dMin + dRange * ErfA / ErfB);

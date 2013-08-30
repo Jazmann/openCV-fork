@@ -252,20 +252,6 @@ typedef signed char schar;
 #define CV_DEPTH_MAX  (1 << CV_CN_SHIFT)
 // The order is
 // {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S, CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
-#define CV_2U   0
-#define CV_2U_DEPTH_BITS_LOG2   1
-#define CV_2U_DEPTH_BYTES_LOG2   0
-#define CV_2U_TYPE   std::uint8_t
-#define CV_2U_MAX   0xf
-#define CV_2U_MIN   0x0
-
-
-#define CV_4U   1
-#define CV_4U_DEPTH_BITS_LOG2 2
-#define CV_4U_DEPTH_BYTES_LOG2 0
-#define CV_4U_TYPE   std::uint8_t
-#define CV_4U_MAX   0xff
-#define CV_4U_MIN   0x00
 
 #define CV_8U   2
 #define CV_8U_DEPTH_BITS_LOG2 3
@@ -341,6 +327,124 @@ typedef signed char schar;
 #define CV_USRTYPE2 13
 #define CV_USRTYPE3 14
 #define CV_USRTYPE4 15
+
+
+#define CV_2U   0
+#define CV_2U_DEPTH_BITS_LOG2   1
+#define CV_2U_DEPTH_BYTES_LOG2   0
+//struct CV_2U_TYPE {
+//    union{
+//        struct{
+//            unsigned char val : 2;
+//            unsigned char     : 6;
+//        };
+//        unsigned char raw;
+//    };
+//};
+struct CV_2U_TYPE {
+    union{
+        struct{
+            unsigned char val : 2;
+            unsigned char     : 6;
+        };
+        unsigned char raw;
+    };
+    explicit constexpr CV_2U_TYPE(unsigned char a_):raw(a_){};
+    CV_2U_TYPE()=default;
+    operator CV_8U_TYPE() const {return CV_8U_TYPE(raw);};
+    CV_2U_TYPE& operator=(CV_8U_TYPE a_){raw = a_;return *this;}
+    CV_2U_TYPE& operator=(CV_8S_TYPE a_){raw = a_;return *this;}
+    CV_2U_TYPE& operator=(CV_16U_TYPE a_){raw = a_;return *this;}
+    CV_2U_TYPE& operator=(CV_16S_TYPE a_){raw = a_;return *this;}
+    CV_2U_TYPE& operator=(CV_32U_TYPE a_){raw = a_;return *this;}
+    CV_2U_TYPE& operator=(CV_32S_TYPE a_){raw = a_;return *this;}
+    CV_2U_TYPE& operator=(CV_64U_TYPE a_){raw = a_;return *this;}
+    CV_2U_TYPE& operator=(CV_64S_TYPE a_){raw = a_;return *this;}
+//    operator CV_8S_TYPE() const {return CV_8S_TYPE(raw);};
+//    operator CV_16U_TYPE() const {return CV_16U_TYPE(raw);};
+//    operator CV_16S_TYPE() const {return CV_16S_TYPE(raw);};
+//    operator CV_32U_TYPE() const {return CV_32U_TYPE(raw);};
+//    operator CV_32S_TYPE() const {return CV_32S_TYPE(raw);};
+//    operator CV_64U_TYPE() const {return CV_64U_TYPE(raw);};
+//    operator CV_64S_TYPE() const {return CV_64S_TYPE(raw);};
+//    operator CV_32F_TYPE() const {return CV_32F_TYPE(raw);};
+//    operator CV_64F_TYPE() const {return CV_64F_TYPE(raw);};
+//    float operator *(float);
+//    double operator *(double);
+    
+};
+#define CV_2U_MAX   0xf
+#define CV_2U_MIN   0x0
+
+
+#define CV_4U   1
+#define CV_4U_DEPTH_BITS_LOG2 2
+#define CV_4U_DEPTH_BYTES_LOG2 0
+//struct CV_4U_TYPE {
+//    union{
+//    struct{
+//    unsigned char val : 4;
+//    unsigned char     : 4;
+//    };
+//    unsigned char raw;
+//    };
+//};
+
+struct CV_4U_TYPE {
+    union{
+        struct{
+            unsigned char val : 4;
+            unsigned char     : 4;
+        };
+        unsigned char raw;
+    };
+    explicit constexpr CV_4U_TYPE(unsigned char a_):val(a_){};
+    CV_4U_TYPE()=default;
+    operator CV_8U_TYPE() const {return CV_8U_TYPE(raw);};
+    CV_4U_TYPE& operator=(CV_8U_TYPE  a_){raw = a_;return *this;}
+    CV_4U_TYPE& operator=(CV_8S_TYPE  a_){raw = a_;return *this;}
+    CV_4U_TYPE& operator=(CV_16U_TYPE a_){raw = a_;return *this;}
+    CV_4U_TYPE& operator=(CV_16S_TYPE a_){raw = a_;return *this;}
+    CV_4U_TYPE& operator=(CV_32U_TYPE a_){raw = a_;return *this;}
+    CV_4U_TYPE& operator=(CV_32S_TYPE a_){raw = a_;return *this;}
+    CV_4U_TYPE& operator=(CV_64U_TYPE a_){raw = a_;return *this;}
+    CV_4U_TYPE& operator=(CV_64S_TYPE a_){raw = a_;return *this;}
+//    operator CV_8S_TYPE() const {return CV_8S_TYPE(raw);};
+//    operator CV_16U_TYPE() const {return CV_16U_TYPE(raw);};
+//    operator CV_16S_TYPE() const {return CV_16S_TYPE(raw);};
+//    operator CV_32U_TYPE() const {return CV_32U_TYPE(raw);};
+//    operator CV_32S_TYPE() const {return CV_32S_TYPE(raw);};
+//    operator CV_64U_TYPE() const {return CV_64U_TYPE(raw);};
+//    operator CV_64S_TYPE() const {return CV_64S_TYPE(raw);};
+//    operator CV_32F_TYPE() const {return CV_32F_TYPE(raw);};
+//    operator CV_64F_TYPE() const {return CV_64F_TYPE(raw);};
+//    unsigned char operator +(CV_4U_TYPE);
+//    unsigned char operator +(CV_2U_TYPE);
+//    //    float operator *(float);
+//    //    double operator *(double);
+//    unsigned char operator *(CV_4U_TYPE);
+//    unsigned char operator *(CV_2U_TYPE);
+};
+
+//CV_4U_TYPE operator +(CV_2U_TYPE a, CV_2U_TYPE b){return {a.raw + b.raw};};
+//unsigned char operator +(CV_2U_TYPE a, CV_4U_TYPE b){return {static_cast<unsigned char>(a.raw + b.raw)};};
+//unsigned char operator +(CV_4U_TYPE a, CV_2U_TYPE b){return {static_cast<unsigned char>(a.raw + b.raw)};};
+//unsigned char operator +(CV_4U_TYPE a, CV_4U_TYPE b){return {static_cast<unsigned char>(a.raw + b.raw)};};
+//CV_4U_TYPE operator *(CV_2U_TYPE a, CV_2U_TYPE b){return {a.raw * b.raw};};
+////float operator *(float a, CV_2U_TYPE b){return {a * b.raw};};
+////float operator *(float a, CV_4U_TYPE b){return {a * b.raw};};
+////float operator *(CV_2U_TYPE a, float b){return {a.raw * b};};
+////float operator *(CV_4U_TYPE a, float b){return {a.raw * b};};
+////double operator *(double a, CV_2U_TYPE b){return double(a * b.raw);};
+////double operator *(double a, CV_4U_TYPE b){return {a * b.raw};};
+////double operator *(CV_2U_TYPE a, double b){return double(a.raw * b);};
+////double operator *(CV_4U_TYPE a, double b){return {a.raw * b};};
+//
+//unsigned char operator *(CV_2U_TYPE a, CV_4U_TYPE b){return {static_cast<unsigned char>(a.raw * b.raw)};};
+//unsigned char operator *(CV_4U_TYPE a, CV_2U_TYPE b){return {static_cast<unsigned char>(a.raw * b.raw)};};
+//unsigned char operator *(CV_4U_TYPE a, CV_4U_TYPE b){return {static_cast<unsigned char>(a.raw * b.raw)};};
+#define CV_4U_MAX   0xff
+#define CV_4U_MIN   0x00
 
 
 
@@ -491,8 +595,8 @@ template<> struct cv_Data_Type<CV_2U>{
     const static int dataType = CV_2U;
     constexpr static int bitDepth  = CV_MAT_DEPTH_BITS(CV_2U);
     constexpr static int byteDepth = CV_MAT_DEPTH_BYTES(CV_2U);
-    constexpr static type max  = CV_2U_MAX;
-    constexpr static type min  = CV_2U_MIN;
+    constexpr static type max  = CV_2U_TYPE(CV_2U_MAX);
+    constexpr static type min  = CV_2U_TYPE(CV_2U_MIN);
     const char* fmt = "hhu";
 };
 template<> struct cv_Data_Type<CV_4U>{
@@ -500,8 +604,8 @@ template<> struct cv_Data_Type<CV_4U>{
     const static int dataType = CV_4U;
     constexpr static int bitDepth  = CV_MAT_DEPTH_BITS(CV_4U);
     constexpr static int byteDepth = CV_MAT_DEPTH_BYTES(CV_4U);
-    constexpr static type max  = CV_4U_MAX;
-    constexpr static type min  = CV_4U_MIN;
+    constexpr static type max  = CV_4U_TYPE(CV_4U_MAX);
+    constexpr static type min  = CV_4U_TYPE(CV_4U_MIN);
     const char* fmt = "hhu";
 };
 template<> struct cv_Data_Type<CV_8U>{
