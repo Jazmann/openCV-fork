@@ -1787,17 +1787,31 @@ diagtransform_64f(const double* src, double* dst, const double* m, int len, int 
 typedef void (*TransformFunc)( const uchar* src, uchar* dst, const uchar* m, int, int, int );
 
 static TransformFunc transformTab[] =
-{
-    (TransformFunc)transform_8u, (TransformFunc)transform_8s, (TransformFunc)transform_16u,
-    (TransformFunc)transform_16s, (TransformFunc)transform_32s, (TransformFunc)transform_32f,
-    (TransformFunc)transform_64f, 0
+    {// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
+     //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
+     (TransformFunc)transform_8u,  (TransformFunc)transform_8u, // Fix for transform_2u, transform_4u
+     (TransformFunc)transform_8u,  (TransformFunc)transform_8s,
+     (TransformFunc)transform_16u, (TransformFunc)transform_16s,
+     0,                            (TransformFunc)transform_32s,
+//   (TransformFunc)transform_32u, (TransformFunc)transform_32s, // Fix for transform_32u
+     0,                            0
+//   (TransformFunc)transform_64u, (TransformFunc)transform_64s, // Fix for transform_64u, transform_64s
+     (TransformFunc)transform_32f, (TransformFunc)transform_64f,
+     0, 0, 0, 0
 };
 
 static TransformFunc diagTransformTab[] =
-{
-    (TransformFunc)diagtransform_8u, (TransformFunc)diagtransform_8s, (TransformFunc)diagtransform_16u,
-    (TransformFunc)diagtransform_16s, (TransformFunc)diagtransform_32s, (TransformFunc)diagtransform_32f,
-    (TransformFunc)diagtransform_64f, 0
+{// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
+ //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
+    (TransformFunc) diagtransform_8u,  (TransformFunc) diagtransform_8u, // Fix for  diagtransform_2u,  diagtransform_4u
+    (TransformFunc) diagtransform_8u,  (TransformFunc) diagtransform_8s,
+    (TransformFunc) diagtransform_16u, (TransformFunc) diagtransform_16s,
+    0,                                 (TransformFunc) diagtransform_32s,
+//  (TransformFunc) diagtransform_32u, (TransformFunc) diagtransform_32s, // Fix for  diagtransform_32u
+    0,                            0
+//  (TransformFunc) diagtransform_64u, (TransformFunc) diagtransform_64s, // Fix for  diagtransform_64u,  diagtransform_64s
+    (TransformFunc) diagtransform_32f, (TransformFunc) diagtransform_64f,
+    0, 0, 0, 0
 };
 
 }
