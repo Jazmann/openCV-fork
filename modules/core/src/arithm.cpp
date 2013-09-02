@@ -1223,9 +1223,9 @@ static BinaryFunc maxTab[] =
     (BinaryFunc)GET_OPTIMIZED(max16u), (BinaryFunc)GET_OPTIMIZED(max16s),
     0,                                 (BinaryFunc)GET_OPTIMIZED(max32s),
 //  (BinaryFunc)GET_OPTIMIZED(max32u), (BinaryFunc)GET_OPTIMIZED(max32s), // Fix for max32u
-    0,                                 0
+    0,                                 0,
 //  (BinaryFunc)GET_OPTIMIZED(max64u), (BinaryFunc)GET_OPTIMIZED(max64s), // Fix for max64u, max64s
-    (BinaryFunc)GET_OPTIMIZED(max32f), (BinaryFunc)max64f,
+    (BinaryFunc)GET_OPTIMIZED(max32f), (BinaryFunc)(max64f),
     0, 0, 0, 0
 };
 
@@ -1238,9 +1238,9 @@ static BinaryFunc minTab[] =
     (BinaryFunc)GET_OPTIMIZED(min16u), (BinaryFunc)GET_OPTIMIZED(min16s),
     0,                                 (BinaryFunc)GET_OPTIMIZED(min32s),
 //  (BinaryFunc)GET_OPTIMIZED(min32u), (BinaryFunc)GET_OPTIMIZED(min32s), // Fix for min32u
-    0,                                 0
+    0,                                 0,
 //  (BinaryFunc)GET_OPTIMIZED(min64u), (BinaryFunc)GET_OPTIMIZED(min64s), // Fix for min64u, min64s
-    (BinaryFunc)GET_OPTIMIZED(min32f), (BinaryFunc)min64f,
+    (BinaryFunc)GET_OPTIMIZED(min32f), (BinaryFunc)(min64f),
     0, 0, 0, 0
 };
 
@@ -1585,7 +1585,7 @@ static BinaryFunc addTab[] =
     (BinaryFunc)GET_OPTIMIZED(add16u), (BinaryFunc)GET_OPTIMIZED(add16s),
     0,                                 (BinaryFunc)GET_OPTIMIZED(add32s),
 //  (BinaryFunc)GET_OPTIMIZED(add32u), (BinaryFunc)GET_OPTIMIZED(add32s), // Fix for add32u
-    0,                                 0
+    0,                                 0,
 //  (BinaryFunc)GET_OPTIMIZED(add64u), (BinaryFunc)GET_OPTIMIZED(add64s), // Fix for add64u, add64s
     (BinaryFunc)GET_OPTIMIZED(add32f), (BinaryFunc)add64f,
     0, 0, 0, 0
@@ -1599,7 +1599,7 @@ static BinaryFunc subTab[] =
     (BinaryFunc)GET_OPTIMIZED(sub16u), (BinaryFunc)GET_OPTIMIZED(sub16s),
     0,                                 (BinaryFunc)GET_OPTIMIZED(sub32s),
 //  (BinaryFunc)GET_OPTIMIZED(sub32u), (BinaryFunc)GET_OPTIMIZED(sub32s), // Fix for sub32u
-    0,                                 0
+    0,                                 0,
 //  (BinaryFunc)GET_OPTIMIZED(sub64u), (BinaryFunc)GET_OPTIMIZED(sub64s), // Fix for sub64u, sub64s
     (BinaryFunc)GET_OPTIMIZED(sub32f), (BinaryFunc)sub64f,
     0, 0, 0, 0
@@ -1613,7 +1613,7 @@ static BinaryFunc absdiffTab[] =
     (BinaryFunc)GET_OPTIMIZED(absdiff16u), (BinaryFunc)GET_OPTIMIZED(absdiff16s),
     0,                                     (BinaryFunc)GET_OPTIMIZED(absdiff32s),
 //  (BinaryFunc)GET_OPTIMIZED(absdiff32u), (BinaryFunc)GET_OPTIMIZED(absdiff32s), // Fix for absdiff32u
-    0,                                     0
+    0,                                     0,
 //  (BinaryFunc)GET_OPTIMIZED(absdiff64u), (BinaryFunc)GET_OPTIMIZED(absdiff64s), // Fix for absdiff64u, absdiff64s
     (BinaryFunc)GET_OPTIMIZED(absdiff32f), (BinaryFunc)absdiff64f,
     0, 0, 0, 0
@@ -1961,7 +1961,7 @@ static BinaryFunc mulTab[] =
     (BinaryFunc)mul8u, (BinaryFunc)mul8s,
     (BinaryFunc)mul16u, (BinaryFunc)mul16s,
     0, (BinaryFunc)mul32s, // (BinaryFunc)mul32u, (BinaryFunc)mul32s, // Fix for mul32u
-    0, 0 // (BinaryFunc)mul64u, (BinaryFunc)mul64s, // Fix for mul64u, mul64s
+    0, 0, // (BinaryFunc)mul64u, (BinaryFunc)mul64s, // Fix for mul64u, mul64s
     (BinaryFunc)mul32f, (BinaryFunc)mul64f,
     0, 0, 0, 0
 };
@@ -1973,7 +1973,7 @@ static BinaryFunc divTab[] =
     (BinaryFunc)div8u, (BinaryFunc)div8s,
     (BinaryFunc)div16u, (BinaryFunc)div16s,
     0, (BinaryFunc)div32s, // (BinaryFunc)div32u, (BinaryFunc)div32s, // Fix for div32u
-    0, 0 // (BinaryFunc)div64u, (BinaryFunc)div64s, // Fix for div64u, div64s
+    0, 0, // (BinaryFunc)div64u, (BinaryFunc)div64s, // Fix for div64u, div64s
     (BinaryFunc)div32f, (BinaryFunc)div64f,
     0, 0, 0, 0
 };
@@ -1985,7 +1985,7 @@ static BinaryFunc recipTab[] =
     (BinaryFunc)recip8u, (BinaryFunc)recip8s,
     (BinaryFunc)recip16u, (BinaryFunc)recip16s,
     0, (BinaryFunc)recip32s, // (BinaryFunc)recip32u, (BinaryFunc)recip32s, // Fix for recip32u
-    0, 0 // (BinaryFunc)recip64u, (BinaryFunc)recip64s, // Fix for recip64u, recip64s
+    0, 0, // (BinaryFunc)recip64u, (BinaryFunc)recip64s, // Fix for recip64u, recip64s
     (BinaryFunc)recip32f, (BinaryFunc)recip64f,
     0, 0, 0, 0
 };
@@ -2158,8 +2158,9 @@ static BinaryFunc addWeightedTab[] =
     (BinaryFunc)GET_OPTIMIZED(addWeighted8u),  (BinaryFunc)GET_OPTIMIZED(addWeighted8s),
     (BinaryFunc)GET_OPTIMIZED(addWeighted16u), (BinaryFunc)GET_OPTIMIZED(addWeighted16s),
     0,                                         (BinaryFunc)GET_OPTIMIZED(addWeighted32s),
-    // (BinaryFunc)GET_OPTIMIZED(addWeighted32u), (BinaryFunc)GET_OPTIMIZED(addWeighted32s), // Fix for addWeighted32u
-    0, 0 // (BinaryFunc)GET_OPTIMIZED(addWeighted64u), (BinaryFunc)GET_OPTIMIZED(addWeighted64s), // Fix for addWeighted64u, addWeighted64s
+//  (BinaryFunc)GET_OPTIMIZED(addWeighted32u), (BinaryFunc)GET_OPTIMIZED(addWeighted32s), // Fix for addWeighted32u
+    0,                                         0,
+//  (BinaryFunc)GET_OPTIMIZED(addWeighted64u), (BinaryFunc)GET_OPTIMIZED(addWeighted64s), // Fix for addWeighted64u, addWeighted64s
     (BinaryFunc)GET_OPTIMIZED(addWeighted32f), (BinaryFunc)addWeighted64f,
     0, 0, 0, 0
 };
@@ -2438,7 +2439,7 @@ static BinaryFunc cmpTab[] =
     (BinaryFunc)GET_OPTIMIZED(cmp16u), (BinaryFunc)GET_OPTIMIZED(cmp16s),
     0,                                 (BinaryFunc)GET_OPTIMIZED(cmp32s),
 //  (BinaryFunc)GET_OPTIMIZED(cmp32u), (BinaryFunc)GET_OPTIMIZED(cmp32s), // Fix for cmp32u
-    0,                                 0
+    0,                                 0,
 //  (BinaryFunc)GET_OPTIMIZED(cmp64u), (BinaryFunc)GET_OPTIMIZED(cmp64s), // Fix for cmp64u, cmp64s
     (BinaryFunc)GET_OPTIMIZED(cmp32f), (BinaryFunc)cmp64f,
     0, 0, 0, 0
@@ -2696,7 +2697,7 @@ static InRangeFunc inRangeTab[] =
     (InRangeFunc)GET_OPTIMIZED(inRange16u), (InRangeFunc)GET_OPTIMIZED(inRange16s),
     0,                                      (InRangeFunc)GET_OPTIMIZED(inRange32s),
 //  (InRangeFunc)GET_OPTIMIZED(inRange32u), (InRangeFunc)GET_OPTIMIZED(inRange32s), // Fix for inRange32u
-    0,                                      0
+    0,                                      0,
 //  (InRangeFunc)GET_OPTIMIZED(inRange64u), (InRangeFunc)GET_OPTIMIZED(inRange64s), // Fix for inRange64u, inRange64s
     (InRangeFunc)GET_OPTIMIZED(inRange32f), (InRangeFunc)inRange64f,
     0, 0, 0, 0
