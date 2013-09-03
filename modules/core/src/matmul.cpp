@@ -1794,7 +1794,7 @@ static TransformFunc transformTab[] =
      (TransformFunc)transform_16u, (TransformFunc)transform_16s,
      0,                            (TransformFunc)transform_32s,
 //   (TransformFunc)transform_32u, (TransformFunc)transform_32s, // Fix for transform_32u
-     0,                            0
+     0,                            0,
 //   (TransformFunc)transform_64u, (TransformFunc)transform_64s, // Fix for transform_64u, transform_64s
      (TransformFunc)transform_32f, (TransformFunc)transform_64f,
      0, 0, 0, 0
@@ -1808,7 +1808,7 @@ static TransformFunc diagTransformTab[] =
     (TransformFunc) diagtransform_16u, (TransformFunc) diagtransform_16s,
     0,                                 (TransformFunc) diagtransform_32s,
 //  (TransformFunc) diagtransform_32u, (TransformFunc) diagtransform_32s, // Fix for  diagtransform_32u
-    0,                            0
+    0,                            0,
 //  (TransformFunc) diagtransform_64u, (TransformFunc) diagtransform_64s, // Fix for  diagtransform_64u,  diagtransform_64s
     (TransformFunc) diagtransform_32f, (TransformFunc) diagtransform_64f,
     0, 0, 0, 0
