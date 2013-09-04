@@ -349,6 +349,7 @@ struct CV_2U_TYPE {
         };
         unsigned char raw;
     };
+#ifdef __cplusplus
     explicit constexpr CV_2U_TYPE(unsigned char a_):raw(a_){};
     CV_2U_TYPE()=default;
     operator CV_8U_TYPE() const {return CV_8U_TYPE(raw);};
@@ -360,18 +361,7 @@ struct CV_2U_TYPE {
     CV_2U_TYPE& operator=(CV_32S_TYPE a_){raw = a_;return *this;}
     CV_2U_TYPE& operator=(CV_64U_TYPE a_){raw = a_;return *this;}
     CV_2U_TYPE& operator=(CV_64S_TYPE a_){raw = a_;return *this;}
-//    operator CV_8S_TYPE() const {return CV_8S_TYPE(raw);};
-//    operator CV_16U_TYPE() const {return CV_16U_TYPE(raw);};
-//    operator CV_16S_TYPE() const {return CV_16S_TYPE(raw);};
-//    operator CV_32U_TYPE() const {return CV_32U_TYPE(raw);};
-//    operator CV_32S_TYPE() const {return CV_32S_TYPE(raw);};
-//    operator CV_64U_TYPE() const {return CV_64U_TYPE(raw);};
-//    operator CV_64S_TYPE() const {return CV_64S_TYPE(raw);};
-//    operator CV_32F_TYPE() const {return CV_32F_TYPE(raw);};
-//    operator CV_64F_TYPE() const {return CV_64F_TYPE(raw);};
-//    float operator *(float);
-//    double operator *(double);
-    
+#endif
 };
 #define CV_2U_MAX   0xf
 #define CV_2U_MIN   0x0
@@ -398,6 +388,7 @@ struct CV_4U_TYPE {
         };
         unsigned char raw;
     };
+#  if defined __cplusplus
     explicit constexpr CV_4U_TYPE(unsigned char a_):val(a_){};
     CV_4U_TYPE()=default;
     operator CV_8U_TYPE() const {return CV_8U_TYPE(raw);};
@@ -409,40 +400,7 @@ struct CV_4U_TYPE {
     CV_4U_TYPE& operator=(CV_32S_TYPE a_){raw = a_;return *this;}
     CV_4U_TYPE& operator=(CV_64U_TYPE a_){raw = a_;return *this;}
     CV_4U_TYPE& operator=(CV_64S_TYPE a_){raw = a_;return *this;}
-//    operator CV_8S_TYPE() const {return CV_8S_TYPE(raw);};
-//    operator CV_16U_TYPE() const {return CV_16U_TYPE(raw);};
-//    operator CV_16S_TYPE() const {return CV_16S_TYPE(raw);};
-//    operator CV_32U_TYPE() const {return CV_32U_TYPE(raw);};
-//    operator CV_32S_TYPE() const {return CV_32S_TYPE(raw);};
-//    operator CV_64U_TYPE() const {return CV_64U_TYPE(raw);};
-//    operator CV_64S_TYPE() const {return CV_64S_TYPE(raw);};
-//    operator CV_32F_TYPE() const {return CV_32F_TYPE(raw);};
-//    operator CV_64F_TYPE() const {return CV_64F_TYPE(raw);};
-//    unsigned char operator +(CV_4U_TYPE);
-//    unsigned char operator +(CV_2U_TYPE);
-//    //    float operator *(float);
-//    //    double operator *(double);
-//    unsigned char operator *(CV_4U_TYPE);
-//    unsigned char operator *(CV_2U_TYPE);
-};
-
-//CV_4U_TYPE operator +(CV_2U_TYPE a, CV_2U_TYPE b){return {a.raw + b.raw};};
-//unsigned char operator +(CV_2U_TYPE a, CV_4U_TYPE b){return {static_cast<unsigned char>(a.raw + b.raw)};};
-//unsigned char operator +(CV_4U_TYPE a, CV_2U_TYPE b){return {static_cast<unsigned char>(a.raw + b.raw)};};
-//unsigned char operator +(CV_4U_TYPE a, CV_4U_TYPE b){return {static_cast<unsigned char>(a.raw + b.raw)};};
-//CV_4U_TYPE operator *(CV_2U_TYPE a, CV_2U_TYPE b){return {a.raw * b.raw};};
-////float operator *(float a, CV_2U_TYPE b){return {a * b.raw};};
-////float operator *(float a, CV_4U_TYPE b){return {a * b.raw};};
-////float operator *(CV_2U_TYPE a, float b){return {a.raw * b};};
-////float operator *(CV_4U_TYPE a, float b){return {a.raw * b};};
-////double operator *(double a, CV_2U_TYPE b){return double(a * b.raw);};
-////double operator *(double a, CV_4U_TYPE b){return {a * b.raw};};
-////double operator *(CV_2U_TYPE a, double b){return double(a.raw * b);};
-////double operator *(CV_4U_TYPE a, double b){return {a.raw * b};};
-//
-//unsigned char operator *(CV_2U_TYPE a, CV_4U_TYPE b){return {static_cast<unsigned char>(a.raw * b.raw)};};
-//unsigned char operator *(CV_4U_TYPE a, CV_2U_TYPE b){return {static_cast<unsigned char>(a.raw * b.raw)};};
-//unsigned char operator *(CV_4U_TYPE a, CV_4U_TYPE b){return {static_cast<unsigned char>(a.raw * b.raw)};};
+#  endif
 #define CV_4U_MAX   0xff
 #define CV_4U_MIN   0x00
 
@@ -580,7 +538,7 @@ struct CV_4U_TYPE {
 #define CV_MAT_MAGIC_VAL    0x42420000
 #define CV_TYPE_NAME_MAT    "opencv-matrix"
 
-
+#  if defined __cplusplus
 template<int t> struct cv_Data_Type{
     using type = unsigned char;
     const static int dataType = t;
@@ -707,7 +665,7 @@ namespace cv {
         constexpr static int channels  = CV_MAT_CN(t);
     };
 }
-
+#  endif
 
 
 /* void cv_Print_Data_Type(int type){
