@@ -1884,9 +1884,17 @@ static void iPow64f(const double* src, double* dst, int len, int power)
 typedef void (*IPowFunc)( const uchar* src, uchar* dst, int len, int power );
 
 static IPowFunc ipowTab[] =
-{
-    (IPowFunc)iPow8u, (IPowFunc)iPow8s, (IPowFunc)iPow16u, (IPowFunc)iPow16s,
-    (IPowFunc)iPow32s, (IPowFunc)iPow32f, (IPowFunc)iPow64f, 0
+{// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
+//  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
+    (IPowFunc)iPow8u,  (IPowFunc)iPow8u, // Fix for iPow2u, iPow4u
+    (IPowFunc)iPow8u,  (IPowFunc)iPow8s,
+    (IPowFunc)iPow16u, (IPowFunc)iPow16s,
+    0,                 (IPowFunc)iPow32s,
+//  (IPowFunc)iPow32u, (IPowFunc)iPow32s, // Fix for iPow32u
+    0,                 0,
+//  (IPowFunc)iPow64u, (IPowFunc)iPow64s, // Fix for iPow64u, iPow64s
+    (IPowFunc)iPow32f, (IPowFunc)iPow64f,
+    0, 0, 0, 0
 };
 
 

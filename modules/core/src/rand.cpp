@@ -305,15 +305,31 @@ randf_64f( double* arr, int len, uint64* state, const Vec2d* p, bool )
 typedef void (*RandFunc)(uchar* arr, int len, uint64* state, const void* p, bool small_flag);
 
 
-static RandFunc randTab[][8] =
+static RandFunc randTab[][16] =
 {
-    {
-        (RandFunc)randi_8u, (RandFunc)randi_8s, (RandFunc)randi_16u, (RandFunc)randi_16s,
-        (RandFunc)randi_32s, (RandFunc)randf_32f, (RandFunc)randf_64f, 0
+    {// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
+    //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
+        (RandFunc)randi_8u,      (RandFunc)randi_8u, // Fix for randi_2u, randi_4u
+        (RandFunc)randi_8u,      (RandFunc)randi_8s,
+        (RandFunc)randi_16u,     (RandFunc)randi_16s,
+        0,                       (RandFunc)randi_32s,
+    //  (RandFunc)randi_32u,     (RandFunc)randi_32s, // Fix for randi_32u
+        0,                       0,
+    //  (RandFunc)randi_64u,     (RandFunc)randi_64s, // Fix for randi_64u, randi_64s
+        (RandFunc)randf_32f,     (RandFunc)randf_64f,
+        0, 0, 0, 0
     },
-    {
-        (RandFunc)randBits_8u, (RandFunc)randBits_8s, (RandFunc)randBits_16u, (RandFunc)randBits_16s,
-        (RandFunc)randBits_32s, 0, 0, 0
+    {// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
+    //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
+        (RandFunc)randBits_8u,   (RandFunc)randBits_8u, // Fix for randBits_2u, randBits_4u
+        (RandFunc)randBits_8u,   (RandFunc)randBits_8s,
+        (RandFunc)randBits_16u,  (RandFunc)randBits_16s,
+        0,                       (RandFunc)randBits_32s,
+    //  (RandFunc)randBits_32u,  (RandFunc)randBits_32s, // Fix for randBits_32u
+        0,                       0,
+    //  (RandFunc)randBits_64u,  (RandFunc)randBits_64s, // Fix for randBits_64u, randBits_64s
+        0,                       0,
+        0, 0, 0, 0
     }
 };
 
@@ -472,10 +488,17 @@ typedef void (*RandnScaleFunc)(const float* src, uchar* dst, int len, int cn,
                                const uchar*, const uchar*, bool);
 
 static RandnScaleFunc randnScaleTab[] =
-{
-    (RandnScaleFunc)randnScale_8u, (RandnScaleFunc)randnScale_8s, (RandnScaleFunc)randnScale_16u,
-    (RandnScaleFunc)randnScale_16s, (RandnScaleFunc)randnScale_32s, (RandnScaleFunc)randnScale_32f,
-    (RandnScaleFunc)randnScale_64f, 0
+{// {CV_2U,  CV_4U,  CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
+ //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
+    (RandnScaleFunc)randnScale_8u,      (RandnScaleFunc)randnScale_8u, // Fix for randnScale_2u, randnScale_4u
+    (RandnScaleFunc)randnScale_8u,      (RandnScaleFunc)randnScale_8s,
+    (RandnScaleFunc)randnScale_16u,     (RandnScaleFunc)randnScale_16s,
+    0,                                  (RandnScaleFunc)randnScale_32s,
+//  (RandnScaleFunc)randnScale_32u,     (RandnScaleFunc)randnScale_32s, // Fix for randnScale_32u
+    0,                                  0,
+//  (RandnScaleFunc)randnScale_64u,     (RandnScaleFunc)randnScale_64s, // Fix for randnScale_64u, randnScale_64s
+    (RandnScaleFunc)randnScale_32f,     (RandnScaleFunc)randnScale_64f,
+    0, 0, 0, 0
 };
 
 void RNG::fill( InputOutputArray _mat, int disttype,

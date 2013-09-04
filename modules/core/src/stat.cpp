@@ -201,12 +201,17 @@ static int sum64f( const double* src, const uchar* mask, double* dst, int len, i
 typedef int (*SumFunc)(const uchar*, const uchar* mask, uchar*, int, int);
 
 static SumFunc sumTab[] =
-{
-    (SumFunc)GET_OPTIMIZED(sum8u), (SumFunc)sum8s,
-    (SumFunc)sum16u, (SumFunc)sum16s,
-    (SumFunc)sum32s,
-    (SumFunc)GET_OPTIMIZED(sum32f), (SumFunc)sum64f,
-    0
+{// {CV_2U,  CV_4U,  CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
+ //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
+        (SumFunc)GET_OPTIMIZED(sum8u), (SumFunc)GET_OPTIMIZED(sum8u), // Fix for sum2u, sum4u
+        (SumFunc)GET_OPTIMIZED(sum8u), (SumFunc)sum8s,
+        (SumFunc)sum16u,               (SumFunc)sum16s,
+        0,                             (SumFunc)sum32s,
+    //  (SumFunc)sum32u,               (SumFunc)sum32s, // Fix for sum32u
+        0,                             0,
+    //  (SumFunc)sum64u,               (SumFunc)sum64s, // Fix for sum64u, sum64s
+        (SumFunc)GET_OPTIMIZED(sum32f),(SumFunc)sum64f,
+        0, 0, 0, 0
 };
 
 template<typename T>
@@ -273,11 +278,16 @@ static int countNonZero64f( const double* src, int len )
 typedef int (*CountNonZeroFunc)(const uchar*, int);
 
 static CountNonZeroFunc countNonZeroTab[] =
-{
-    (CountNonZeroFunc)GET_OPTIMIZED(countNonZero8u), (CountNonZeroFunc)GET_OPTIMIZED(countNonZero8u),
+{// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
+//  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
+    (CountNonZeroFunc)GET_OPTIMIZED(countNonZero8u),  (CountNonZeroFunc)GET_OPTIMIZED(countNonZero8u), // Fix for countNonZero2u, countNonZero4u
+    (CountNonZeroFunc)GET_OPTIMIZED(countNonZero8u),  (CountNonZeroFunc)GET_OPTIMIZED(countNonZero8u),
     (CountNonZeroFunc)GET_OPTIMIZED(countNonZero16u), (CountNonZeroFunc)GET_OPTIMIZED(countNonZero16u),
-    (CountNonZeroFunc)GET_OPTIMIZED(countNonZero32s), (CountNonZeroFunc)GET_OPTIMIZED(countNonZero32f),
-    (CountNonZeroFunc)GET_OPTIMIZED(countNonZero64f), 0
+    0,                                                (CountNonZeroFunc)GET_OPTIMIZED(countNonZero32s),
+    0,                                                0,
+//  (CountNonZeroFunc)GET_OPTIMIZED(countNonZero64u), (CountNonZeroFunc)GET_OPTIMIZED(countNonZero64u), // Fix for countNonZero64u, countNonZero64u
+    (CountNonZeroFunc)GET_OPTIMIZED(countNonZero32f), (CountNonZeroFunc)(countNonZero64f),
+    0, 0, 0, 0
 };
 
 
@@ -429,10 +439,18 @@ static int sqsum64f( const double* src, const uchar* mask, double* sum, double* 
 typedef int (*SumSqrFunc)(const uchar*, const uchar* mask, uchar*, uchar*, int, int);
 
 static SumSqrFunc sumSqrTab[] =
-{
-    (SumSqrFunc)GET_OPTIMIZED(sqsum8u), (SumSqrFunc)sqsum8s, (SumSqrFunc)sqsum16u, (SumSqrFunc)sqsum16s,
-    (SumSqrFunc)sqsum32s, (SumSqrFunc)GET_OPTIMIZED(sqsum32f), (SumSqrFunc)sqsum64f, 0
-};
+    {// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
+    //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
+        (SumSqrFunc)GET_OPTIMIZED(sqsum8u),  (SumSqrFunc)GET_OPTIMIZED(sqsum8u), // Fix for sqsum2u, sqsum4u
+        (SumSqrFunc)GET_OPTIMIZED(sqsum8u),  (SumSqrFunc)sqsum8s,
+        (SumSqrFunc)sqsum16u,                (SumSqrFunc)sqsum16s,
+        0,                                   (SumSqrFunc)sqsum32s,
+    //  (SumSqrFunc)GET_OPTIMIZED(sqsum32u), (SumSqrFunc)sqsum32s, // Fix for sqsum32u
+        0,                                   0,
+    //  (SumSqrFunc)GET_OPTIMIZED(sqsum64u), (SumSqrFunc)GET_OPTIMIZED(sqsum64s), // Fix for sqsum64u, sqsum64s
+        (SumSqrFunc)GET_OPTIMIZED(sqsum32f), (SumSqrFunc)sqsum64f,
+        0, 0, 0, 0
+    };
 
 }
 
@@ -747,13 +765,18 @@ static void minMaxIdx_64f(const double* src, const uchar* mask, double* minval, 
 typedef void (*MinMaxIdxFunc)(const uchar*, const uchar*, int*, int*, size_t*, size_t*, int, size_t);
 
 static MinMaxIdxFunc minmaxTab[] =
-{
-    (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_8u), (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_8s),
-    (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_16u), (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_16s),
-    (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_32s),
-    (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_32f), (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_64f),
-    0
-};
+    {// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
+        //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
+        (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_8u),  (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_8u), // Fix for minMaxIdx_2u, minMaxIdx_4u
+        (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_8u),  (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_8s),
+        (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_16u), (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_16s),
+        0,                                           (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_32s),
+//      (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_32u), (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_32s), // Fix for minMaxIdx_32u
+        0,                                         0,
+//      (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_64u), (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_64s),// Fix for minMaxIdx_64u, minMaxIdx_64s
+        (MinMaxIdxFunc)GET_OPTIMIZED(minMaxIdx_32f), (MinMaxIdxFunc)minMaxIdx_64f,
+        0, 0, 0, 0
+    };
 
 static void ofs2idx(const Mat& a, size_t ofs, int* idx)
 {
@@ -1251,41 +1274,83 @@ CV_DEF_NORM_ALL(64f, double, double, double, double)
 typedef int (*NormFunc)(const uchar*, const uchar*, uchar*, int, int);
 typedef int (*NormDiffFunc)(const uchar*, const uchar*, const uchar*, uchar*, int, int);
 
-static NormFunc normTab[3][8] =
+static NormFunc normTab[3][16] =
 {
-    {
-        (NormFunc)GET_OPTIMIZED(normInf_8u), (NormFunc)GET_OPTIMIZED(normInf_8s), (NormFunc)GET_OPTIMIZED(normInf_16u), (NormFunc)GET_OPTIMIZED(normInf_16s),
-        (NormFunc)GET_OPTIMIZED(normInf_32s), (NormFunc)GET_OPTIMIZED(normInf_32f), (NormFunc)normInf_64f, 0
+    {// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
+    //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
+        (NormFunc)GET_OPTIMIZED(normInf_8u),  (NormFunc)GET_OPTIMIZED(normInf_8u), // Fix for normInf_2u, normInf_4u
+        (NormFunc)GET_OPTIMIZED(normInf_8u),  (NormFunc)GET_OPTIMIZED(normInf_8s),
+        (NormFunc)GET_OPTIMIZED(normInf_16u), (NormFunc)GET_OPTIMIZED(normInf_16s),
+        0,                                    (NormFunc)GET_OPTIMIZED(normInf_32s),
+    //  (NormFunc)GET_OPTIMIZED(normInf_32u), (NormFunc)GET_OPTIMIZED(normInf_32s), // Fix for normInf_32u
+        0,                                    0,
+    //  (NormFunc)GET_OPTIMIZED(normInf_64u), (NormFunc)GET_OPTIMIZED(normInf_64s), // Fix for normInf_64u, normInf_64s
+        (NormFunc)GET_OPTIMIZED(normInf_32f), (NormFunc)normInf_64f,
+        0, 0, 0, 0
     },
-    {
-        (NormFunc)GET_OPTIMIZED(normL1_8u), (NormFunc)GET_OPTIMIZED(normL1_8s), (NormFunc)GET_OPTIMIZED(normL1_16u), (NormFunc)GET_OPTIMIZED(normL1_16s),
-        (NormFunc)GET_OPTIMIZED(normL1_32s), (NormFunc)GET_OPTIMIZED(normL1_32f), (NormFunc)normL1_64f, 0
+    {// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
+    //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
+        (NormFunc)GET_OPTIMIZED(normL1_8u),  (NormFunc)GET_OPTIMIZED(normL1_8u), // Fix for normL1_2u, normL1_4u
+        (NormFunc)GET_OPTIMIZED(normL1_8u),  (NormFunc)GET_OPTIMIZED(normL1_8s),
+        (NormFunc)GET_OPTIMIZED(normL1_16u), (NormFunc)GET_OPTIMIZED(normL1_16s),
+        0,                                   (NormFunc)GET_OPTIMIZED(normL1_32s),
+    //  (NormFunc)GET_OPTIMIZED(normL1_32u), (NormFunc)GET_OPTIMIZED(normL1_32s), // Fix for normL1_32u
+        0,                                   0,
+    //  (NormFunc)GET_OPTIMIZED(normL1_64u), (NormFunc)GET_OPTIMIZED(normL1_64s), // Fix for normL1_64u, normL1_64s
+        (NormFunc)GET_OPTIMIZED(normL1_32f), (NormFunc)normL1_64f,
+        0, 0, 0, 0
     },
-    {
-        (NormFunc)GET_OPTIMIZED(normL2_8u), (NormFunc)GET_OPTIMIZED(normL2_8s), (NormFunc)GET_OPTIMIZED(normL2_16u), (NormFunc)GET_OPTIMIZED(normL2_16s),
-        (NormFunc)GET_OPTIMIZED(normL2_32s), (NormFunc)GET_OPTIMIZED(normL2_32f), (NormFunc)normL2_64f, 0
+    {// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
+    //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
+        (NormFunc)GET_OPTIMIZED(normL2_8u),  (NormFunc)GET_OPTIMIZED(normL2_8u), // Fix for normL2_2u, normL2_4u
+        (NormFunc)GET_OPTIMIZED(normL2_8u),  (NormFunc)GET_OPTIMIZED(normL2_8s),
+        (NormFunc)GET_OPTIMIZED(normL2_16u), (NormFunc)GET_OPTIMIZED(normL2_16s),
+        0,                                   (NormFunc)GET_OPTIMIZED(normL2_32s),
+    //  (NormFunc)GET_OPTIMIZED(normL2_32u), (NormFunc)GET_OPTIMIZED(normL2_32s), // Fix for normL2_32u
+        0,                                   0,
+    //  (NormFunc)GET_OPTIMIZED(normL2_64u), (NormFunc)GET_OPTIMIZED(normL2_64s), // Fix for normL2_64u, normL2_64s
+        (NormFunc)GET_OPTIMIZED(normL2_32f), (NormFunc)normL2_64f,
+        0, 0, 0, 0
     }
 };
 
-static NormDiffFunc normDiffTab[3][8] =
+static NormDiffFunc normDiffTab[3][16] =
 {
-    {
-        (NormDiffFunc)GET_OPTIMIZED(normDiffInf_8u), (NormDiffFunc)normDiffInf_8s,
-        (NormDiffFunc)normDiffInf_16u, (NormDiffFunc)normDiffInf_16s,
-        (NormDiffFunc)normDiffInf_32s, (NormDiffFunc)GET_OPTIMIZED(normDiffInf_32f),
-        (NormDiffFunc)normDiffInf_64f, 0
+    {// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
+    //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
+        (NormDiffFunc)GET_OPTIMIZED(normDiffInf_8u),  (NormDiffFunc)GET_OPTIMIZED(normDiffInf_8u), // Fix for normDiffInf_2u, normDiffInf_4u
+        (NormDiffFunc)GET_OPTIMIZED(normDiffInf_8u),  (NormDiffFunc)GET_OPTIMIZED(normDiffInf_8s),
+        (NormDiffFunc)GET_OPTIMIZED(normDiffInf_16u), (NormDiffFunc)GET_OPTIMIZED(normDiffInf_16s),
+        0,                                            (NormDiffFunc)GET_OPTIMIZED(normDiffInf_32s),
+    //  (NormDiffFunc)GET_OPTIMIZED(normDiffInf_32u), (NormDiffFunc)GET_OPTIMIZED(normDiffInf_32s), // Fix for normDiffInf_32u
+        0,                                            0,
+    //  (NormDiffFunc)GET_OPTIMIZED(normDiffInf_64u), (NormDiffFunc)GET_OPTIMIZED(normDiffInf_64s), // Fix for normDiffInf_64u, normDiffInf_64s
+        (NormDiffFunc)GET_OPTIMIZED(normDiffInf_32f), (NormDiffFunc)normDiffInf_64f,
+        0, 0, 0, 0
     },
-    {
-        (NormDiffFunc)GET_OPTIMIZED(normDiffL1_8u), (NormDiffFunc)normDiffL1_8s,
-        (NormDiffFunc)normDiffL1_16u, (NormDiffFunc)normDiffL1_16s,
-        (NormDiffFunc)normDiffL1_32s, (NormDiffFunc)GET_OPTIMIZED(normDiffL1_32f),
-        (NormDiffFunc)normDiffL1_64f, 0
+    {// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
+    //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
+        (NormDiffFunc)GET_OPTIMIZED(normDiffL1_8u),  (NormDiffFunc)GET_OPTIMIZED(normDiffL1_8u), // Fix for normDiffL1_2u, normDiffL1_4u
+        (NormDiffFunc)GET_OPTIMIZED(normDiffL1_8u),  (NormDiffFunc)GET_OPTIMIZED(normDiffL1_8s),
+        (NormDiffFunc)GET_OPTIMIZED(normDiffL1_16u), (NormDiffFunc)GET_OPTIMIZED(normDiffL1_16s),
+        0,                                           (NormDiffFunc)GET_OPTIMIZED(normDiffL1_32s),
+    //  (NormDiffFunc)GET_OPTIMIZED(normDiffL1_32u), (NormDiffFunc)GET_OPTIMIZED(normDiffL1_32s), // Fix for normDiffL1_32u
+        0,                                           0,
+    //  (NormDiffFunc)GET_OPTIMIZED(normDiffL1_64u), (NormDiffFunc)GET_OPTIMIZED(normDiffL1_64s), // Fix for normDiffL1_64u, normDiffL1_64s
+        (NormDiffFunc)GET_OPTIMIZED(normDiffL1_32f), (NormDiffFunc)normDiffL1_64f,
+        0, 0, 0, 0
     },
-    {
-        (NormDiffFunc)GET_OPTIMIZED(normDiffL2_8u), (NormDiffFunc)normDiffL2_8s,
-        (NormDiffFunc)normDiffL2_16u, (NormDiffFunc)normDiffL2_16s,
-        (NormDiffFunc)normDiffL2_32s, (NormDiffFunc)GET_OPTIMIZED(normDiffL2_32f),
-        (NormDiffFunc)normDiffL2_64f, 0
+    {// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
+    //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
+        (NormDiffFunc)GET_OPTIMIZED(normDiffL2_8u),  (NormDiffFunc)GET_OPTIMIZED(normDiffL2_8u), // Fix for normDiffL2_2u, normDiffL2_4u
+        (NormDiffFunc)GET_OPTIMIZED(normDiffL2_8u),  (NormDiffFunc)GET_OPTIMIZED(normDiffL2_8s),
+        (NormDiffFunc)GET_OPTIMIZED(normDiffL2_16u), (NormDiffFunc)GET_OPTIMIZED(normDiffL2_16s),
+        0,                                           (NormDiffFunc)GET_OPTIMIZED(normDiffL2_32s),
+    //  (NormDiffFunc)GET_OPTIMIZED(normDiffL2_32u), (NormDiffFunc)GET_OPTIMIZED(normDiffL2_32s), // Fix for normDiffL2_32u
+        0,                                           0,
+    //  (NormDiffFunc)GET_OPTIMIZED(normDiffL2_64u), (NormDiffFunc)GET_OPTIMIZED(normDiffL2_64s), // Fix for normDiffL2_64u, normDiffL2_64s
+        (NormDiffFunc)GET_OPTIMIZED(normDiffL2_32f), (NormDiffFunc)normDiffL2_64f,
+        0, 0, 0, 0
     }
 };
 

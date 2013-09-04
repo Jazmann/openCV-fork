@@ -2837,11 +2837,17 @@ static double dotProd_64f(const double* src1, const double* src2, int len)
 typedef double (*DotProdFunc)(const uchar* src1, const uchar* src2, int len);
 
 static DotProdFunc dotProdTab[] =
-{
-    (DotProdFunc)GET_OPTIMIZED(dotProd_8u), (DotProdFunc)GET_OPTIMIZED(dotProd_8s),
-    (DotProdFunc)dotProd_16u, (DotProdFunc)dotProd_16s,
-    (DotProdFunc)dotProd_32s, (DotProdFunc)GET_OPTIMIZED(dotProd_32f),
-    (DotProdFunc)dotProd_64f, 0
+{// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
+//  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
+    (DotProdFunc)GET_OPTIMIZED(dotProd_8u),  (DotProdFunc)GET_OPTIMIZED(dotProd_8u), // Fix for dotProd_2u, dotProd_4u
+    (DotProdFunc)GET_OPTIMIZED(dotProd_8u),  (DotProdFunc)GET_OPTIMIZED(dotProd_8s),
+    (DotProdFunc)dotProd_16u,                (DotProdFunc)dotProd_16s,
+    0,                                       (DotProdFunc)dotProd_32s,
+//  (DotProdFunc)dotProd_32u,                (DotProdFunc)dotProd_32s, // Fix for dotProd_32u
+    0,                                       0,
+//  (DotProdFunc)dotProd_64u,                (DotProdFunc)dotProd_64s, // Fix for dotProd_64u, dotProd_64s
+    (DotProdFunc)GET_OPTIMIZED(dotProd_32f), (DotProdFunc)dotProd_64f,
+    0, 0, 0, 0
 };
 
 double Mat::dot(InputArray _mat) const
