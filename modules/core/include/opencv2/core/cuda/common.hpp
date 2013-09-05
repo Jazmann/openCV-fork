@@ -46,6 +46,7 @@
 #include <cuda_runtime.h>
 #include "opencv2/core/gpu_types.hpp"
 #include "opencv2/core/cvdef.h"
+#include "opencv2/core/cvdef.hpp"
 #include "opencv2/core/base.hpp"
 
 #ifndef CV_PI_F

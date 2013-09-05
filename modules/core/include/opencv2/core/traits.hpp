@@ -45,6 +45,7 @@
 #define __OPENCV_CORE_TRAITS_HPP__
 
 #include "opencv2/core/cvdef.h"
+#include "opencv2/core/cvdef.hpp"
 
 namespace cv
 {
@@ -317,7 +318,21 @@ public:
     template<> class DataDepth<double> { public: enum { value = CV_64F, fmt=(int)'d' }; };
     template<typename _Tp> class DataDepth<_Tp*> { public: enum { value = CV_USRTYPE1, fmt=(int)'r' }; };
     
-
+ 
+    
+    
+    /* void cv_Print_Data_Type(int type){
+     printf("%llu",CV_DEPTH_BITS_MAGIC);
+     printf("To get back the information put into CV_MAKETYPE( depth_Type, cn) use");
+     printf("int depth_Type = %u", CV_MAT_DEPTH(type));
+     printf("int cn = %u", CV_MAT_CN(type));
+     printf("To get info on the type itself use");
+     printf("int bit_Depth  = %u",   CV_MAT_DEPTH_BITS(type));
+     printf("int byte_Depth = %u", CV_MAT_DEPTH_BYTES(type));
+     printf("int channels = %u",  CV_MAT_CN(type));
+     }
+     
+     */
 
 
 template<int _depth> class TypeDepth
