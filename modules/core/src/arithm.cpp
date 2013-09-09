@@ -1215,24 +1215,32 @@ static void binary_op(InputArray _src1, InputArray _src2, OutputArray _dst,
     }
 }
 
-static BinaryFunc maxTab[] =
-{// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
-    //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
-    (BinaryFunc)GET_OPTIMIZED(max8u),  (BinaryFunc)GET_OPTIMIZED(max8u), // Fix for max2u, max4u
-    (BinaryFunc)GET_OPTIMIZED(max8u),  (BinaryFunc)GET_OPTIMIZED(max8s),
-    (BinaryFunc)GET_OPTIMIZED(max16u), (BinaryFunc)GET_OPTIMIZED(max16s),
-    0,                                 (BinaryFunc)GET_OPTIMIZED(max32s),
-//  (BinaryFunc)GET_OPTIMIZED(max32u), (BinaryFunc)GET_OPTIMIZED(max32s), // Fix for max32u
-    0,                                 0,
-//  (BinaryFunc)GET_OPTIMIZED(max64u), (BinaryFunc)GET_OPTIMIZED(max64s), // Fix for max64u, max64s
-    (BinaryFunc)GET_OPTIMIZED(max32f), (BinaryFunc)(max64f),
-    0, 0, 0, 0
-};
 
-static BinaryFunc minTab[] =
+
+static BinaryFunc* getMaxTab()
 {
-    // {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
+    static BinaryFunc maxTab[] =
+    {// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
     //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
+        (BinaryFunc)GET_OPTIMIZED(max8u),  (BinaryFunc)GET_OPTIMIZED(max8u), // Fix for max2u, max4u
+        (BinaryFunc)GET_OPTIMIZED(max8u),  (BinaryFunc)GET_OPTIMIZED(max8s),
+        (BinaryFunc)GET_OPTIMIZED(max16u), (BinaryFunc)GET_OPTIMIZED(max16s),
+        0,                                 (BinaryFunc)GET_OPTIMIZED(max32s),
+    //  (BinaryFunc)GET_OPTIMIZED(max32u), (BinaryFunc)GET_OPTIMIZED(max32s), // Fix for max32u
+        0,                                 0,
+    //  (BinaryFunc)GET_OPTIMIZED(max64u), (BinaryFunc)GET_OPTIMIZED(max64s), // Fix for max64u, max64s
+        (BinaryFunc)GET_OPTIMIZED(max32f), (BinaryFunc)(max64f),
+        0, 0, 0, 0
+    };
+    return maxTab;
+}
+
+static BinaryFunc* getMinTab()
+{
+    static BinaryFunc minTab[] =
+    {
+// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
+//  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
     (BinaryFunc)GET_OPTIMIZED(min8u),  (BinaryFunc)GET_OPTIMIZED(min8u), // Fix for min2u, min4u
     (BinaryFunc)GET_OPTIMIZED(min8u),  (BinaryFunc)GET_OPTIMIZED(min8s),
     (BinaryFunc)GET_OPTIMIZED(min16u), (BinaryFunc)GET_OPTIMIZED(min16s),
@@ -1243,8 +1251,10 @@ static BinaryFunc minTab[] =
     (BinaryFunc)GET_OPTIMIZED(min32f), (BinaryFunc)(min64f),
     0, 0, 0, 0
 };
-
+    return minTab;
 }
+
+} // end namespace cv
 
 void cv::bitwise_and(InputArray a, InputArray b, OutputArray c, InputArray mask)
 {
@@ -1272,24 +1282,24 @@ void cv::bitwise_not(InputArray a, OutputArray c, InputArray mask)
 
 void cv::max( InputArray src1, InputArray src2, OutputArray dst )
 {
-    binary_op(src1, src2, dst, noArray(), maxTab, false );
+    binary_op(src1, src2, dst, noArray(), getMaxTab(), false );
 }
 
 void cv::min( InputArray src1, InputArray src2, OutputArray dst )
 {
-    binary_op(src1, src2, dst, noArray(), minTab, false );
+    binary_op(src1, src2, dst, noArray(), getMinTab(), false );
 }
 
 void cv::max(const Mat& src1, const Mat& src2, Mat& dst)
 {
     OutputArray _dst(dst);
-    binary_op(src1, src2, _dst, noArray(), maxTab, false );
+    binary_op(src1, src2, _dst, noArray(), getMaxTab(), false );
 }
 
 void cv::min(const Mat& src1, const Mat& src2, Mat& dst)
 {
     OutputArray _dst(dst);
-    binary_op(src1, src2, _dst, noArray(), minTab, false );
+    binary_op(src1, src2, _dst, noArray(), getMinTab(), false );
 }
 
 
@@ -1577,35 +1587,47 @@ static void arithm_op(InputArray _src1, InputArray _src2, OutputArray _dst,
     }
 }
 
-static BinaryFunc addTab[] =
-{// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
-    //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
-    (BinaryFunc)GET_OPTIMIZED(add8u),  (BinaryFunc)GET_OPTIMIZED(add8u), // Fix for add2u, add4u
-    (BinaryFunc)GET_OPTIMIZED(add8u),  (BinaryFunc)GET_OPTIMIZED(add8s),
-    (BinaryFunc)GET_OPTIMIZED(add16u), (BinaryFunc)GET_OPTIMIZED(add16s),
-    0,                                 (BinaryFunc)GET_OPTIMIZED(add32s),
-//  (BinaryFunc)GET_OPTIMIZED(add32u), (BinaryFunc)GET_OPTIMIZED(add32s), // Fix for add32u
-    0,                                 0,
-//  (BinaryFunc)GET_OPTIMIZED(add64u), (BinaryFunc)GET_OPTIMIZED(add64s), // Fix for add64u, add64s
-    (BinaryFunc)GET_OPTIMIZED(add32f), (BinaryFunc)add64f,
-    0, 0, 0, 0
-};
 
-static BinaryFunc subTab[] =
-{// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
- //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
-    (BinaryFunc)GET_OPTIMIZED(sub8u),  (BinaryFunc)GET_OPTIMIZED(sub8u), // Fix for sub2u, sub4u
-    (BinaryFunc)GET_OPTIMIZED(sub8u),  (BinaryFunc)GET_OPTIMIZED(sub8s),
-    (BinaryFunc)GET_OPTIMIZED(sub16u), (BinaryFunc)GET_OPTIMIZED(sub16s),
-    0,                                 (BinaryFunc)GET_OPTIMIZED(sub32s),
-//  (BinaryFunc)GET_OPTIMIZED(sub32u), (BinaryFunc)GET_OPTIMIZED(sub32s), // Fix for sub32u
-    0,                                 0,
-//  (BinaryFunc)GET_OPTIMIZED(sub64u), (BinaryFunc)GET_OPTIMIZED(sub64s), // Fix for sub64u, sub64s
-    (BinaryFunc)GET_OPTIMIZED(sub32f), (BinaryFunc)sub64f,
-    0, 0, 0, 0
-};
+static BinaryFunc* getAddTab()
+{
+    static BinaryFunc addTab[] =
+    {// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
+        //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
+        (BinaryFunc)GET_OPTIMIZED(add8u),  (BinaryFunc)GET_OPTIMIZED(add8u), // Fix for add2u, add4u
+        (BinaryFunc)GET_OPTIMIZED(add8u),  (BinaryFunc)GET_OPTIMIZED(add8s),
+        (BinaryFunc)GET_OPTIMIZED(add16u), (BinaryFunc)GET_OPTIMIZED(add16s),
+        0,                                 (BinaryFunc)GET_OPTIMIZED(add32s),
+        //  (BinaryFunc)GET_OPTIMIZED(add32u), (BinaryFunc)GET_OPTIMIZED(add32s), // Fix for add32u
+        0,                                 0,
+        //  (BinaryFunc)GET_OPTIMIZED(add64u), (BinaryFunc)GET_OPTIMIZED(add64s), // Fix for add64u, add64s
+        (BinaryFunc)GET_OPTIMIZED(add32f), (BinaryFunc)add64f,
+        0, 0, 0, 0
+    };
 
-static BinaryFunc absdiffTab[] =
+    return addTab;
+}
+
+static BinaryFunc* getSubTab()
+{
+    static BinaryFunc subTab[] =
+    {// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
+     //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
+        (BinaryFunc)GET_OPTIMIZED(sub8u),  (BinaryFunc)GET_OPTIMIZED(sub8u), // Fix for sub2u, sub4u
+        (BinaryFunc)GET_OPTIMIZED(sub8u),  (BinaryFunc)GET_OPTIMIZED(sub8s),
+        (BinaryFunc)GET_OPTIMIZED(sub16u), (BinaryFunc)GET_OPTIMIZED(sub16s),
+        0,                                 (BinaryFunc)GET_OPTIMIZED(sub32s),
+    //  (BinaryFunc)GET_OPTIMIZED(sub32u), (BinaryFunc)GET_OPTIMIZED(sub32s), // Fix for sub32u
+        0,                                 0,
+    //  (BinaryFunc)GET_OPTIMIZED(sub64u), (BinaryFunc)GET_OPTIMIZED(sub64s), // Fix for sub64u, sub64s
+        (BinaryFunc)GET_OPTIMIZED(sub32f), (BinaryFunc)sub64f,
+        0, 0, 0, 0
+    };
+    return subTab;
+}
+
+static BinaryFunc* getAbsDiffTab()
+{
+static BinaryFunc absDiffTab[] =
 {// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
 //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
     (BinaryFunc)GET_OPTIMIZED(absdiff8u),  (BinaryFunc)GET_OPTIMIZED(absdiff8u), // Fix for absdiff2u, absdiff4u
@@ -1619,12 +1641,15 @@ static BinaryFunc absdiffTab[] =
     0, 0, 0, 0
 };
 
+    return absDiffTab;
+}
+
 }
 
 void cv::add( InputArray src1, InputArray src2, OutputArray dst,
           InputArray mask, int dtype )
 {
-    arithm_op(src1, src2, dst, mask, dtype, addTab );
+    arithm_op(src1, src2, dst, mask, dtype, getAddTab() );
 }
 
 void cv::subtract( InputArray src1, InputArray src2, OutputArray dst,
@@ -1659,12 +1684,12 @@ void cv::subtract( InputArray src1, InputArray src2, OutputArray dst,
         }
     }
 #endif
-    arithm_op(src1, src2, dst, mask, dtype, subTab );
+    arithm_op(src1, src2, dst, mask, dtype, getSubTab() );
 }
 
 void cv::absdiff( InputArray src1, InputArray src2, OutputArray dst )
 {
-    arithm_op(src1, src2, dst, noArray(), -1, absdiffTab);
+    arithm_op(src1, src2, dst, noArray(), -1, getAbsDiffTab());
 }
 
 /****************************************************************************************\
@@ -1954,61 +1979,78 @@ static void recip64f( const double* src1, size_t step1, const double* src2, size
 }
 
 
-static BinaryFunc mulTab[] =
-{// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
-    //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
-    (BinaryFunc)mul8u, (BinaryFunc)mul8u, // Fix for mul2u, mul4u
-    (BinaryFunc)mul8u, (BinaryFunc)mul8s,
-    (BinaryFunc)mul16u, (BinaryFunc)mul16s,
-    0, (BinaryFunc)mul32s, // (BinaryFunc)mul32u, (BinaryFunc)mul32s, // Fix for mul32u
-    0, 0, // (BinaryFunc)mul64u, (BinaryFunc)mul64s, // Fix for mul64u, mul64s
-    (BinaryFunc)mul32f, (BinaryFunc)mul64f,
-    0, 0, 0, 0
-};
+static BinaryFunc* getMulTab()
+{
+    static BinaryFunc mulTab[] =
+    {// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
+        //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
+        (BinaryFunc)mul8u,  (BinaryFunc)mul8u, // Fix for mul2u, mul4u
+        (BinaryFunc)mul8u,  (BinaryFunc)mul8s,
+        (BinaryFunc)mul16u, (BinaryFunc)mul16s,
+        0,                  (BinaryFunc)mul32s,
+    //  (BinaryFunc)mul32u, (BinaryFunc)mul32s, // Fix for mul32u
+        0,                  0,
+    //  (BinaryFunc)mul64u, (BinaryFunc)mul64s, // Fix for mul64u, mul64s
+        (BinaryFunc)mul32f, (BinaryFunc)mul64f,
+        0, 0, 0, 0
+    };
+    return mulTab;
+}
 
+static BinaryFunc* getDivTab()
+{
 static BinaryFunc divTab[] =
 {// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
-    //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
-    (BinaryFunc)div8u, (BinaryFunc)div8u, // Fix for div2u, div4u
-    (BinaryFunc)div8u, (BinaryFunc)div8s,
+//  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
+    (BinaryFunc)div8u,  (BinaryFunc)div8u, // Fix for div2u, div4u
+    (BinaryFunc)div8u,  (BinaryFunc)div8s,
     (BinaryFunc)div16u, (BinaryFunc)div16s,
-    0, (BinaryFunc)div32s, // (BinaryFunc)div32u, (BinaryFunc)div32s, // Fix for div32u
-    0, 0, // (BinaryFunc)div64u, (BinaryFunc)div64s, // Fix for div64u, div64s
+    0,                  (BinaryFunc)div32s,
+//  (BinaryFunc)div32u, (BinaryFunc)div32s, // Fix for div32u
+    0,                  0,
+//  (BinaryFunc)div64u, (BinaryFunc)div64s, // Fix for div64u, div64s
     (BinaryFunc)div32f, (BinaryFunc)div64f,
     0, 0, 0, 0
 };
+    return divTab;
+}
 
-static BinaryFunc recipTab[] =
-{// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
+static BinaryFunc* getRecipTab()
+{
+    static BinaryFunc recipTab[] =
+    {// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
     //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
-    (BinaryFunc)recip8u, (BinaryFunc)recip8u, // Fix for recip2u, recip4u
-    (BinaryFunc)recip8u, (BinaryFunc)recip8s,
-    (BinaryFunc)recip16u, (BinaryFunc)recip16s,
-    0, (BinaryFunc)recip32s, // (BinaryFunc)recip32u, (BinaryFunc)recip32s, // Fix for recip32u
-    0, 0, // (BinaryFunc)recip64u, (BinaryFunc)recip64s, // Fix for recip64u, recip64s
-    (BinaryFunc)recip32f, (BinaryFunc)recip64f,
-    0, 0, 0, 0
-};
-
+        (BinaryFunc)recip8u,  (BinaryFunc)recip8u, // Fix for recip2u, recip4u
+        (BinaryFunc)recip8u,  (BinaryFunc)recip8s,
+        (BinaryFunc)recip16u, (BinaryFunc)recip16s,
+        0,                    (BinaryFunc)recip32s,
+    //  (BinaryFunc)recip32u, (BinaryFunc)recip32s, // Fix for recip32u
+        0,                    0,
+    //  (BinaryFunc)recip64u, (BinaryFunc)recip64s, // Fix for recip64u, recip64s
+        (BinaryFunc)recip32f, (BinaryFunc)recip64f,
+        0, 0, 0, 0
+    };
+    return recipTab;
+}
 
 }
 
 void cv::multiply(InputArray src1, InputArray src2,
                   OutputArray dst, double scale, int dtype)
 {
-    arithm_op(src1, src2, dst, noArray(), dtype, mulTab, true, &scale);
+    arithm_op(src1, src2, dst, noArray(), dtype, getMulTab(), true, &scale);
 }
 
 void cv::divide(InputArray src1, InputArray src2,
                 OutputArray dst, double scale, int dtype)
 {
-    arithm_op(src1, src2, dst, noArray(), dtype, divTab, true, &scale);
+    arithm_op(src1, src2, dst, noArray(), dtype, getDivTab(), true, &scale);
 }
 
 void cv::divide(double scale, InputArray src2,
                 OutputArray dst, int dtype)
 {
-    arithm_op(src2, src2, dst, noArray(), dtype, recipTab, true, &scale);
+    arithm_op(src2, src2, dst, noArray(), dtype, getRecipTab(), true, &scale);
 }
 
 /****************************************************************************************\
@@ -2151,19 +2193,24 @@ static void addWeighted64f( const double* src1, size_t step1, const double* src2
     addWeighted_<double, double>(src1, step1, src2, step2, dst, step, sz, scalars);
 }
 
-static BinaryFunc addWeightedTab[] =
-{// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
- //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
-    (BinaryFunc)GET_OPTIMIZED(addWeighted8u),  (BinaryFunc)GET_OPTIMIZED(addWeighted8u), // Fix for addWeighted2u, addWeighted4u
-    (BinaryFunc)GET_OPTIMIZED(addWeighted8u),  (BinaryFunc)GET_OPTIMIZED(addWeighted8s),
-    (BinaryFunc)GET_OPTIMIZED(addWeighted16u), (BinaryFunc)GET_OPTIMIZED(addWeighted16s),
-    0,                                         (BinaryFunc)GET_OPTIMIZED(addWeighted32s),
-//  (BinaryFunc)GET_OPTIMIZED(addWeighted32u), (BinaryFunc)GET_OPTIMIZED(addWeighted32s), // Fix for addWeighted32u
-    0,                                         0,
-//  (BinaryFunc)GET_OPTIMIZED(addWeighted64u), (BinaryFunc)GET_OPTIMIZED(addWeighted64s), // Fix for addWeighted64u, addWeighted64s
-    (BinaryFunc)GET_OPTIMIZED(addWeighted32f), (BinaryFunc)addWeighted64f,
-    0, 0, 0, 0
-};
+
+static BinaryFunc* getAddWeightedTab()
+{
+    static BinaryFunc addWeightedTab[] =
+    {// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
+    //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
+        (BinaryFunc)GET_OPTIMIZED(addWeighted8u),  (BinaryFunc)GET_OPTIMIZED(addWeighted8u), // Fix for addWeighted2u, addWeighted4u
+        (BinaryFunc)GET_OPTIMIZED(addWeighted8u),  (BinaryFunc)GET_OPTIMIZED(addWeighted8s),
+        (BinaryFunc)GET_OPTIMIZED(addWeighted16u), (BinaryFunc)GET_OPTIMIZED(addWeighted16s),
+        0,                                         (BinaryFunc)GET_OPTIMIZED(addWeighted32s),
+    //  (BinaryFunc)GET_OPTIMIZED(addWeighted32u), (BinaryFunc)GET_OPTIMIZED(addWeighted32s), // Fix for addWeighted32u
+        0,                                         0,
+    //  (BinaryFunc)GET_OPTIMIZED(addWeighted64u), (BinaryFunc)GET_OPTIMIZED(addWeighted64s), // Fix for addWeighted64u, addWeighted64s
+        (BinaryFunc)GET_OPTIMIZED(addWeighted32f), (BinaryFunc)addWeighted64f,
+        0, 0, 0, 0
+    };
+    return addWeightedTab;
+}
 
 }
 
@@ -2171,7 +2218,7 @@ void cv::addWeighted( InputArray src1, double alpha, InputArray src2,
                       double beta, double gamma, OutputArray dst, int dtype )
 {
     double scalars[] = {alpha, beta, gamma};
-    arithm_op(src1, src2, dst, noArray(), dtype, addWeightedTab, true, scalars);
+    arithm_op(src1, src2, dst, noArray(), dtype, getAddWeightedTab(), true, scalars);
 }
 
 
@@ -2241,10 +2288,30 @@ cmp_(const T* src1, size_t step1, const T* src2, size_t step2,
     }
 }
 
+#if ARITHM_USE_IPP
+inline static IppCmpOp convert_cmp(int _cmpop)
+{
+    return _cmpop == CMP_EQ ? ippCmpEq :
+        _cmpop == CMP_GT ? ippCmpGreater :
+        _cmpop == CMP_GE ? ippCmpGreaterEq :
+        _cmpop == CMP_LT ? ippCmpLess :
+        _cmpop == CMP_LE ? ippCmpLessEq :
+        (IppCmpOp)-1;
+}
+#endif
 
 static void cmp8u(const uchar* src1, size_t step1, const uchar* src2, size_t step2,
                   uchar* dst, size_t step, Size size, void* _cmpop)
 {
+#if ARITHM_USE_IPP
+    IppCmpOp op = convert_cmp(*(int *)_cmpop);
+    if( op  >= 0 )
+    {
+        fixSteps(size, sizeof(dst[0]), step1, step2, step);
+        if( ippiCompare_8u_C1R(src1, (int)step1, src2, (int)step2, dst, (int)step, (IppiSize&)size, op) >= 0 )
+            return;
+    }
+#endif
   //vz optimized  cmp_(src1, step1, src2, step2, dst, step, size, *(int*)_cmpop);
     int code = *(int*)_cmpop;
     step1 /= sizeof(src1[0]);
@@ -2319,12 +2386,30 @@ static void cmp8s(const schar* src1, size_t step1, const schar* src2, size_t ste
 static void cmp16u(const ushort* src1, size_t step1, const ushort* src2, size_t step2,
                   uchar* dst, size_t step, Size size, void* _cmpop)
 {
+#if ARITHM_USE_IPP
+    IppCmpOp op = convert_cmp(*(int *)_cmpop);
+    if( op  >= 0 )
+    {
+        fixSteps(size, sizeof(dst[0]), step1, step2, step);
+        if( ippiCompare_16u_C1R(src1, (int)step1, src2, (int)step2, dst, (int)step, (IppiSize&)size, op) >= 0 )
+            return;
+    }
+#endif
     cmp_(src1, step1, src2, step2, dst, step, size, *(int*)_cmpop);
 }
 
 static void cmp16s(const short* src1, size_t step1, const short* src2, size_t step2,
                   uchar* dst, size_t step, Size size, void* _cmpop)
 {
+#if ARITHM_USE_IPP
+    IppCmpOp op = convert_cmp(*(int *)_cmpop);
+    if( op  > 0 )
+    {
+        fixSteps(size, sizeof(dst[0]), step1, step2, step);
+        if( ippiCompare_16s_C1R(src1, (int)step1, src2, (int)step2, dst, (int)step, (IppiSize&)size, op) >= 0 )
+            return;
+    }
+#endif
    //vz optimized cmp_(src1, step1, src2, step2, dst, step, size, *(int*)_cmpop);
 
     int code = *(int*)_cmpop;
@@ -2422,6 +2507,15 @@ static void cmp32s(const int* src1, size_t step1, const int* src2, size_t step2,
 static void cmp32f(const float* src1, size_t step1, const float* src2, size_t step2,
                   uchar* dst, size_t step, Size size, void* _cmpop)
 {
+#if ARITHM_USE_IPP
+    IppCmpOp op = convert_cmp(*(int *)_cmpop);
+    if( op  >= 0 )
+    {
+        fixSteps(size, sizeof(dst[0]), step1, step2, step);
+        if( ippiCompare_32f_C1R(src1, (int)step1, src2, (int)step2, dst, (int)step, (IppiSize&)size, op) >= 0 )
+            return;
+    }
+#endif
     cmp_(src1, step1, src2, step2, dst, step, size, *(int*)_cmpop);
 }
 
@@ -2431,20 +2525,25 @@ static void cmp64f(const double* src1, size_t step1, const double* src2, size_t 
     cmp_(src1, step1, src2, step2, dst, step, size, *(int*)_cmpop);
 }
 
-static BinaryFunc cmpTab[] =
-{// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
- //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
-    (BinaryFunc)GET_OPTIMIZED(cmp8u),  (BinaryFunc)GET_OPTIMIZED(cmp8u), // Fix for cmp2u, cmp4u
-    (BinaryFunc)GET_OPTIMIZED(cmp8u),  (BinaryFunc)GET_OPTIMIZED(cmp8s),
-    (BinaryFunc)GET_OPTIMIZED(cmp16u), (BinaryFunc)GET_OPTIMIZED(cmp16s),
-    0,                                 (BinaryFunc)GET_OPTIMIZED(cmp32s),
-//  (BinaryFunc)GET_OPTIMIZED(cmp32u), (BinaryFunc)GET_OPTIMIZED(cmp32s), // Fix for cmp32u
-    0,                                 0,
-//  (BinaryFunc)GET_OPTIMIZED(cmp64u), (BinaryFunc)GET_OPTIMIZED(cmp64s), // Fix for cmp64u, cmp64s
-    (BinaryFunc)GET_OPTIMIZED(cmp32f), (BinaryFunc)cmp64f,
-    0, 0, 0, 0
-};
+static BinaryFunc getCmpFunc(int depth)
+{
+    static BinaryFunc cmpTab[] =
+    {// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
+    //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
+        (BinaryFunc)GET_OPTIMIZED(cmp8u),  (BinaryFunc)GET_OPTIMIZED(cmp8u), // Fix for cmp2u, cmp4u
+        (BinaryFunc)GET_OPTIMIZED(cmp8u),  (BinaryFunc)GET_OPTIMIZED(cmp8s),
+        (BinaryFunc)GET_OPTIMIZED(cmp16u), (BinaryFunc)GET_OPTIMIZED(cmp16s),
+        0,                                 (BinaryFunc)GET_OPTIMIZED(cmp32s),
+    //  (BinaryFunc)GET_OPTIMIZED(cmp32u), (BinaryFunc)GET_OPTIMIZED(cmp32s), // Fix for cmp32u
+        0,                                 0,
+    //  (BinaryFunc)GET_OPTIMIZED(cmp64u), (BinaryFunc)GET_OPTIMIZED(cmp64s), // Fix for cmp64u, cmp64s
+        (BinaryFunc)GET_OPTIMIZED(cmp32f), (BinaryFunc)cmp64f,
+        0, 0, 0, 0
+    };
 
+
+    return cmpTab[depth];
+}
 
 static double getMinVal(int depth)
 {
@@ -2480,7 +2579,7 @@ void cv::compare(InputArray _src1, InputArray _src2, OutputArray _dst, int op)
         _dst.create(src1.size(), CV_8UC(cn));
         Mat dst = _dst.getMat();
         Size sz = getContinuousSize(src1, src2, dst, src1.channels());
-        cmpTab[src1.depth()](src1.data, src1.step, src2.data, src2.step, dst.data, dst.step, sz, &op);
+        getCmpFunc(src1.depth())(src1.data, src1.step, src2.data, src2.step, dst.data, dst.step, sz, &op);
         return;
     }
 
@@ -2512,7 +2611,7 @@ void cv::compare(InputArray _src1, InputArray _src2, OutputArray _dst, int op)
 
     size_t esz = src1.elemSize();
     size_t blocksize0 = (size_t)(BLOCK_SIZE + esz-1)/esz;
-    BinaryFunc func = cmpTab[depth1];
+    BinaryFunc func = getCmpFunc(depth1);
 
     if( !haveScalar )
     {
@@ -2689,19 +2788,23 @@ static void inRangeReduce(const uchar* src, uchar* dst, size_t len, int cn)
 typedef void (*InRangeFunc)( const uchar* src1, size_t step1, const uchar* src2, size_t step2,
                              const uchar* src3, size_t step3, uchar* dst, size_t step, Size sz );
 
-static InRangeFunc inRangeTab[] =
-{// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
- //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
-    (InRangeFunc)GET_OPTIMIZED(inRange8u),  (InRangeFunc)GET_OPTIMIZED(inRange8u), // Fix for inRange2u, inRange4u
-    (InRangeFunc)GET_OPTIMIZED(inRange8u),  (InRangeFunc)GET_OPTIMIZED(inRange8s),
-    (InRangeFunc)GET_OPTIMIZED(inRange16u), (InRangeFunc)GET_OPTIMIZED(inRange16s),
-    0,                                      (InRangeFunc)GET_OPTIMIZED(inRange32s),
-//  (InRangeFunc)GET_OPTIMIZED(inRange32u), (InRangeFunc)GET_OPTIMIZED(inRange32s), // Fix for inRange32u
-    0,                                      0,
-//  (InRangeFunc)GET_OPTIMIZED(inRange64u), (InRangeFunc)GET_OPTIMIZED(inRange64s), // Fix for inRange64u, inRange64s
-    (InRangeFunc)GET_OPTIMIZED(inRange32f), (InRangeFunc)inRange64f,
-    0, 0, 0, 0
-};
+static InRangeFunc getInRangeFunc(int depth)
+{
+    static InRangeFunc inRangeTab[] =
+    {// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
+    //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
+        (InRangeFunc)GET_OPTIMIZED(inRange8u),  (InRangeFunc)GET_OPTIMIZED(inRange8u), // Fix for inRange2u, inRange4u
+        (InRangeFunc)GET_OPTIMIZED(inRange8u),  (InRangeFunc)GET_OPTIMIZED(inRange8s),
+        (InRangeFunc)GET_OPTIMIZED(inRange16u), (InRangeFunc)GET_OPTIMIZED(inRange16s),
+        0,                                      (InRangeFunc)GET_OPTIMIZED(inRange32s),
+    //  (InRangeFunc)GET_OPTIMIZED(inRange32u), (InRangeFunc)GET_OPTIMIZED(inRange32s), // Fix for inRange32u
+        0,                                      0,
+    //  (InRangeFunc)GET_OPTIMIZED(inRange64u), (InRangeFunc)GET_OPTIMIZED(inRange64s), // Fix for inRange64u, inRange64s
+        (InRangeFunc)GET_OPTIMIZED(inRange32f), (InRangeFunc)inRange64f,
+        0, 0, 0, 0
+    };
+    return inRangeTab[depth];
+}
 
 }
 
@@ -2740,7 +2843,7 @@ void cv::inRange(InputArray _src, InputArray _lowerb,
 
     _dst.create(src.dims, src.size, CV_8U);
     Mat dst = _dst.getMat();
-    InRangeFunc func = inRangeTab[depth];
+    InRangeFunc func = getInRangeFunc(depth);
 
     const Mat* arrays_sc[] = { &src, &dst, 0 };
     const Mat* arrays_nosc[] = { &src, &dst, &lb, &ub, 0 };

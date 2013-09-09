@@ -1786,7 +1786,9 @@ diagtransform_64f(const double* src, double* dst, const double* m, int len, int 
 
 typedef void (*TransformFunc)( const uchar* src, uchar* dst, const uchar* m, int, int, int );
 
-static TransformFunc transformTab[] =
+static TransformFunc getTransformFunc(int depth)
+{
+    static TransformFunc transformTab[] =
     {// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
      //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
      (TransformFunc)transform_8u,  (TransformFunc)transform_8u, // Fix for transform_2u, transform_4u
@@ -1798,9 +1800,14 @@ static TransformFunc transformTab[] =
 //   (TransformFunc)transform_64u, (TransformFunc)transform_64s, // Fix for transform_64u, transform_64s
      (TransformFunc)transform_32f, (TransformFunc)transform_64f,
      0, 0, 0, 0
-};
+    };
 
-static TransformFunc diagTransformTab[] =
+    return transformTab[depth];
+}
+
+static TransformFunc getDiagTransformFunc(int depth)
+{
+    static TransformFunc diagTransformTab[] =
 {// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
  //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
     (TransformFunc) diagtransform_8u,  (TransformFunc) diagtransform_8u, // Fix for  diagtransform_2u,  diagtransform_4u
@@ -1812,7 +1819,10 @@ static TransformFunc diagTransformTab[] =
 //  (TransformFunc) diagtransform_64u, (TransformFunc) diagtransform_64s, // Fix for  diagtransform_64u,  diagtransform_64s
     (TransformFunc) diagtransform_32f, (TransformFunc) diagtransform_64f,
     0, 0, 0, 0
-};
+    };
+
+    return diagTransformTab[depth];
+}
 
 }
 
@@ -1875,7 +1885,7 @@ void cv::transform( InputArray _src, OutputArray _dst, InputArray _mtx )
         }
     }
 
-    TransformFunc func = isDiag ? diagTransformTab[depth] : transformTab[depth];
+    TransformFunc func = isDiag ? getDiagTransformFunc(depth): getTransformFunc(depth);
     CV_Assert( func != 0 );
 
     const Mat* arrays[] = {&src, &dst, 0};
@@ -2836,7 +2846,9 @@ static double dotProd_64f(const double* src1, const double* src2, int len)
 
 typedef double (*DotProdFunc)(const uchar* src1, const uchar* src2, int len);
 
-static DotProdFunc dotProdTab[] =
+static DotProdFunc getDotProdFunc(int depth)
+{
+    static DotProdFunc dotProdTab[] =
 {// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
 //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
     (DotProdFunc)GET_OPTIMIZED(dotProd_8u),  (DotProdFunc)GET_OPTIMIZED(dotProd_8u), // Fix for dotProd_2u, dotProd_4u
@@ -2848,13 +2860,16 @@ static DotProdFunc dotProdTab[] =
 //  (DotProdFunc)dotProd_64u,                (DotProdFunc)dotProd_64s, // Fix for dotProd_64u, dotProd_64s
     (DotProdFunc)GET_OPTIMIZED(dotProd_32f), (DotProdFunc)dotProd_64f,
     0, 0, 0, 0
-};
+    };
+
+    return dotProdTab[depth];
+}
 
 double Mat::dot(InputArray _mat) const
 {
     Mat mat = _mat.getMat();
     int cn = channels();
-    DotProdFunc func = dotProdTab[depth()];
+    DotProdFunc func = getDotProdFunc(depth());
     CV_Assert( mat.type() == type() && mat.size == size && func != 0 );
 
     if( isContinuous() && mat.isContinuous() )
@@ -2975,6 +2990,27 @@ PCA& PCA::operator()(InputArray _data, InputArray __mean, int flags, int maxComp
         eigenvectors = eigenvectors.rowRange(0,out_count).clone();
     }
     return *this;
+}
+
+void PCA::write(FileStorage& fs ) const
+{
+    CV_Assert( fs.isOpened() );
+
+    fs << "name" << "PCA";
+    fs << "vectors" << eigenvectors;
+    fs << "values" << eigenvalues;
+    fs << "mean" << mean;
+}
+
+void PCA::read(const FileNode& fs)
+{
+    CV_Assert( !fs.empty() );
+    String name = (String)fs["name"];
+    CV_Assert( name == "PCA" );
+
+    cv::read(fs["vectors"], eigenvectors);
+    cv::read(fs["values"], eigenvalues);
+    cv::read(fs["mean"], mean);
 }
 
 template <typename T>

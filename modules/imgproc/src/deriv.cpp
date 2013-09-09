@@ -500,7 +500,6 @@ void cv::Laplacian( InputArray _src, OutputArray _dst, int ddepth, int ksize,
         ddepth = src.depth();
     _dst.create( src.size(), CV_MAKETYPE(ddepth, src.channels()) );
     Mat dst = _dst.getMat();
-    printf("Laplacian :: 1\n");
 #ifdef HAVE_TEGRA_OPTIMIZATION
     if (scale == 1.0 && delta == 0)
     {
@@ -513,22 +512,18 @@ void cv::Laplacian( InputArray _src, OutputArray _dst, int ddepth, int ksize,
     }
 #endif
     
-    printf("Laplacian :: 2\n");
     if( ksize == 1 || ksize == 3 )
     {
-        printf("Laplacian :: ksize == 1 || ksize == 3 \n");
         float K[2][9] =
         {{0, 1, 0, 1, -4, 1, 0, 1, 0},
          {2, 0, 2, 0, -8, 0, 2, 0, 2}};
         Mat kernel(3, 3, CV_32F, K[ksize == 3]);
         if( scale != 1 )
             kernel *= scale;
-        printf("Laplacian :: ksize == %i \n",ksize);
         filter2D( src, dst, ddepth, kernel, Point(-1,-1), delta, borderType );
     }
     else
     {
-        printf("Laplacian :: 4\n");
         const size_t STRIPE_SIZE = 1 << 14;
 
         int depth = src.depth();
@@ -536,31 +531,23 @@ void cv::Laplacian( InputArray _src, OutputArray _dst, int ddepth, int ksize,
         int wdepth = depth == CV_8U && ksize <= 5 ? CV_16S : depth <= CV_32F ? CV_32F : CV_64F;
         int wtype = CV_MAKETYPE(wdepth, src.channels());
         Mat kd, ks;
-        printf("Laplacian :: 5\n");
         getSobelKernels( kd, ks, 2, 0, ksize, false, ktype );
-        printf("Laplacian :: 6\n");
         if( ddepth < 0 )
             ddepth = src.depth();
         int dtype = CV_MAKETYPE(ddepth, src.channels());
-        printf("Laplacian :: 7\n");
 
         int dy0 = std::min(std::max((int)(STRIPE_SIZE/(getElemSize(src.type())*src.cols)), 1), src.rows);
-        printf("Laplacian :: 8\n");
         Ptr<FilterEngine> fx = createSeparableLinearFilter(src.type(),
                                                            wtype, kd, ks, Point(-1,-1), 0, borderType, borderType, Scalar() );
-        printf("Laplacian :: 9\n");
         Ptr<FilterEngine> fy = createSeparableLinearFilter(src.type(),
                                                            wtype, ks, kd, Point(-1,-1), 0, borderType, borderType, Scalar() );
-        printf("Laplacian :: 10\n");
 
         int y = fx->start(src), dsty = 0, dy = 0;
         fy->start(src);
         const uchar* sptr = src.data + y*src.step;
-        printf("Laplacian :: 11\n");
 
         Mat d2x( dy0 + kd.rows - 1, src.cols, wtype );
         Mat d2y( dy0 + kd.rows - 1, src.cols, wtype );
-        printf("Laplacian :: 12\n");
 
         for( ; dsty < src.rows; sptr += dy0*src.step, dsty += dy )
         {
