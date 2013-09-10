@@ -9,6 +9,11 @@
 #ifndef OpenCV_cvdef_hpp
 #define OpenCV_cvdef_hpp
 
+
+#ifndef __cplusplus
+#  error core.hpp header must be compiled as C++
+#endif
+
 namespace cv
 {
     

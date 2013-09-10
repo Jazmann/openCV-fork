@@ -57,7 +57,6 @@
 #endif
 
 #include "opencv2/core/cvdef.h"
-#include "opencv2/core/cvdef.hpp"
 
 #ifndef SKIP_INCLUDES
 #include <assert.h>
