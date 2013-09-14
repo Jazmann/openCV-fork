@@ -3541,43 +3541,107 @@ typedef void (*ConvertScaleData)(const void* from, void* to, int cn, double alph
 
 static ConvertData getConvertElem(int fromType, int toType)
 {
-    static ConvertData tab[][8] =
-    {{ convertData_<uchar, uchar>, convertData_<uchar, schar>,
-      convertData_<uchar, ushort>, convertData_<uchar, short>,
-      convertData_<uchar, int>, convertData_<uchar, float>,
-      convertData_<uchar, double>, 0 },
-
-    { convertData_<schar, uchar>, convertData_<schar, schar>,
-      convertData_<schar, ushort>, convertData_<schar, short>,
-      convertData_<schar, int>, convertData_<schar, float>,
-      convertData_<schar, double>, 0 },
-
-    { convertData_<ushort, uchar>, convertData_<ushort, schar>,
-      convertData_<ushort, ushort>, convertData_<ushort, short>,
-      convertData_<ushort, int>, convertData_<ushort, float>,
-      convertData_<ushort, double>, 0 },
-
-    { convertData_<short, uchar>, convertData_<short, schar>,
-      convertData_<short, ushort>, convertData_<short, short>,
-      convertData_<short, int>, convertData_<short, float>,
-      convertData_<short, double>, 0 },
-
-    { convertData_<int, uchar>, convertData_<int, schar>,
-      convertData_<int, ushort>, convertData_<int, short>,
-      convertData_<int, int>, convertData_<int, float>,
-      convertData_<int, double>, 0 },
-
-    { convertData_<float, uchar>, convertData_<float, schar>,
-      convertData_<float, ushort>, convertData_<float, short>,
-      convertData_<float, int>, convertData_<float, float>,
-      convertData_<float, double>, 0 },
-
-    { convertData_<double, uchar>, convertData_<double, schar>,
-      convertData_<double, ushort>, convertData_<double, short>,
-      convertData_<double, int>, convertData_<double, float>,
-      convertData_<double, double>, 0 },
-
-    { 0, 0, 0, 0, 0, 0, 0, 0 }};
+    static ConvertData tab[][16] =
+    {// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
+    //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
+    {   convertData_<CV_2U_TYPE, CV_2U_TYPE>,  convertData_<CV_2U_TYPE, CV_4U_TYPE>,
+        convertData_<CV_2U_TYPE, CV_8U_TYPE>,  convertData_<CV_2U_TYPE, CV_8S_TYPE>,
+        convertData_<CV_2U_TYPE, CV_16U_TYPE>, convertData_<CV_2U_TYPE, CV_16S_TYPE>,
+        convertData_<CV_2U_TYPE, CV_32U_TYPE>, convertData_<CV_2U_TYPE, CV_32S_TYPE>,
+        convertData_<CV_2U_TYPE, CV_64U_TYPE>, convertData_<CV_2U_TYPE, CV_64S_TYPE>,
+        convertData_<CV_2U_TYPE, CV_32F_TYPE>, convertData_<CV_2U_TYPE, CV_64F_TYPE>,
+        0, 0, 0, 0 },
+    {   convertData_<CV_4U_TYPE, CV_2U_TYPE>,  convertData_<CV_4U_TYPE, CV_4U_TYPE>,
+        convertData_<CV_4U_TYPE, CV_8U_TYPE>,  convertData_<CV_4U_TYPE, CV_8S_TYPE>,
+        convertData_<CV_4U_TYPE, CV_16U_TYPE>, convertData_<CV_4U_TYPE, CV_16S_TYPE>,
+        convertData_<CV_4U_TYPE, CV_32U_TYPE>, convertData_<CV_4U_TYPE, CV_32S_TYPE>,
+        convertData_<CV_4U_TYPE, CV_64U_TYPE>, convertData_<CV_4U_TYPE, CV_64S_TYPE>,
+        convertData_<CV_4U_TYPE, CV_32F_TYPE>, convertData_<CV_4U_TYPE, CV_64F_TYPE>,
+        0, 0, 0, 0 },
+    {   convertData_<CV_8U_TYPE, CV_2U_TYPE>,  convertData_<CV_8U_TYPE, CV_4U_TYPE>,
+        convertData_<CV_8U_TYPE, CV_8U_TYPE>,  convertData_<CV_8U_TYPE, CV_8S_TYPE>,
+        convertData_<CV_8U_TYPE, CV_16U_TYPE>, convertData_<CV_8U_TYPE, CV_16S_TYPE>,
+        convertData_<CV_8U_TYPE, CV_32U_TYPE>, convertData_<CV_8U_TYPE, CV_32S_TYPE>,
+        convertData_<CV_8U_TYPE, CV_64U_TYPE>, convertData_<CV_8U_TYPE, CV_64S_TYPE>,
+        convertData_<CV_8U_TYPE, CV_32F_TYPE>, convertData_<CV_8U_TYPE, CV_64F_TYPE>,
+        0, 0, 0, 0 },
+    
+    {   convertData_<CV_8S_TYPE, CV_2U_TYPE>,  convertData_<CV_8S_TYPE, CV_4U_TYPE>,
+        convertData_<CV_8S_TYPE, CV_8U_TYPE>,  convertData_<CV_8S_TYPE, CV_8S_TYPE>,
+        convertData_<CV_8S_TYPE, CV_16U_TYPE>, convertData_<CV_8S_TYPE, CV_16S_TYPE>,
+        convertData_<CV_8S_TYPE, CV_32U_TYPE>, convertData_<CV_8S_TYPE, CV_32S_TYPE>,
+        convertData_<CV_8S_TYPE, CV_64U_TYPE>, convertData_<CV_8S_TYPE, CV_64S_TYPE>,
+        convertData_<CV_8S_TYPE, CV_32F_TYPE>, convertData_<CV_8S_TYPE, CV_64F_TYPE>,
+        0, 0, 0, 0 },
+    
+    {   convertData_<CV_16U_TYPE, CV_2U_TYPE>,  convertData_<CV_16U_TYPE, CV_4U_TYPE>,
+        convertData_<CV_16U_TYPE, CV_8U_TYPE>,  convertData_<CV_16U_TYPE, CV_8S_TYPE>,
+        convertData_<CV_16U_TYPE, CV_16U_TYPE>, convertData_<CV_16U_TYPE, CV_16S_TYPE>,
+        convertData_<CV_16U_TYPE, CV_32U_TYPE>, convertData_<CV_16U_TYPE, CV_32S_TYPE>,
+        convertData_<CV_16U_TYPE, CV_64U_TYPE>, convertData_<CV_16U_TYPE, CV_64S_TYPE>,
+        convertData_<CV_16U_TYPE, CV_32F_TYPE>, convertData_<CV_16U_TYPE, CV_64F_TYPE>,
+        0, 0, 0, 0 },
+    
+    {   convertData_<CV_16S_TYPE, CV_2U_TYPE>,  convertData_<CV_16S_TYPE, CV_4U_TYPE>,
+        convertData_<CV_16S_TYPE, CV_8U_TYPE>,  convertData_<CV_16S_TYPE, CV_8S_TYPE>,
+        convertData_<CV_16S_TYPE, CV_16U_TYPE>, convertData_<CV_16S_TYPE, CV_16S_TYPE>,
+        convertData_<CV_16S_TYPE, CV_32U_TYPE>, convertData_<CV_16S_TYPE, CV_32S_TYPE>,
+        convertData_<CV_16S_TYPE, CV_64U_TYPE>, convertData_<CV_16S_TYPE, CV_64S_TYPE>,
+        convertData_<CV_16S_TYPE, CV_32F_TYPE>, convertData_<CV_16S_TYPE, CV_64F_TYPE>,
+        0, 0, 0, 0 },
+    
+    {   convertData_<CV_32U_TYPE, CV_2U_TYPE>,  convertData_<CV_32U_TYPE, CV_4U_TYPE>,
+        convertData_<CV_32U_TYPE, CV_8U_TYPE>,  convertData_<CV_32U_TYPE, CV_8S_TYPE>,
+        convertData_<CV_32U_TYPE, CV_16U_TYPE>, convertData_<CV_32U_TYPE, CV_16S_TYPE>,
+        convertData_<CV_32U_TYPE, CV_32U_TYPE>, convertData_<CV_32U_TYPE, CV_32S_TYPE>,
+        convertData_<CV_32U_TYPE, CV_64U_TYPE>, convertData_<CV_32U_TYPE, CV_64S_TYPE>,
+        convertData_<CV_32U_TYPE, CV_32F_TYPE>, convertData_<CV_32U_TYPE, CV_64F_TYPE>,
+        0, 0, 0, 0 },
+    
+    {   convertData_<CV_32S_TYPE, CV_2U_TYPE>,  convertData_<CV_32S_TYPE, CV_4U_TYPE>,
+        convertData_<CV_32S_TYPE, CV_8U_TYPE>,  convertData_<CV_32S_TYPE, CV_8S_TYPE>,
+        convertData_<CV_32S_TYPE, CV_16U_TYPE>, convertData_<CV_32S_TYPE, CV_16S_TYPE>,
+        convertData_<CV_32S_TYPE, CV_32U_TYPE>, convertData_<CV_32S_TYPE, CV_32S_TYPE>,
+        convertData_<CV_32S_TYPE, CV_64U_TYPE>, convertData_<CV_32S_TYPE, CV_64S_TYPE>,
+        convertData_<CV_32S_TYPE, CV_32F_TYPE>, convertData_<CV_32S_TYPE, CV_64F_TYPE>,
+        0, 0, 0, 0 },
+    
+    {   convertData_<CV_64U_TYPE, CV_2U_TYPE>,  convertData_<CV_64U_TYPE, CV_4U_TYPE>,
+        convertData_<CV_64U_TYPE, CV_8U_TYPE>,  convertData_<CV_64U_TYPE, CV_8S_TYPE>,
+        convertData_<CV_64U_TYPE, CV_16U_TYPE>, convertData_<CV_64U_TYPE, CV_16S_TYPE>,
+        convertData_<CV_64U_TYPE, CV_32U_TYPE>, convertData_<CV_64U_TYPE, CV_32S_TYPE>,
+        convertData_<CV_64U_TYPE, CV_64U_TYPE>, convertData_<CV_64U_TYPE, CV_64S_TYPE>,
+        convertData_<CV_64U_TYPE, CV_32F_TYPE>, convertData_<CV_64U_TYPE, CV_64F_TYPE>,
+        0, 0, 0, 0 },
+    
+    {   convertData_<CV_64S_TYPE, CV_2U_TYPE>,  convertData_<CV_64S_TYPE, CV_4U_TYPE>,
+        convertData_<CV_64S_TYPE, CV_8U_TYPE>,  convertData_<CV_64S_TYPE, CV_8S_TYPE>,
+        convertData_<CV_64S_TYPE, CV_16U_TYPE>, convertData_<CV_64S_TYPE, CV_16S_TYPE>,
+        convertData_<CV_64S_TYPE, CV_32U_TYPE>, convertData_<CV_64S_TYPE, CV_32S_TYPE>,
+        convertData_<CV_64S_TYPE, CV_64U_TYPE>, convertData_<CV_64S_TYPE, CV_64S_TYPE>,
+        convertData_<CV_64S_TYPE, CV_32F_TYPE>, convertData_<CV_64S_TYPE, CV_64F_TYPE>,
+        0, 0, 0, 0 },
+    
+    {   convertData_<CV_32F_TYPE, CV_2U_TYPE>,  convertData_<CV_32F_TYPE, CV_4U_TYPE>,
+        convertData_<CV_32F_TYPE, CV_8U_TYPE>,  convertData_<CV_32F_TYPE, CV_8S_TYPE>,
+        convertData_<CV_32F_TYPE, CV_16U_TYPE>, convertData_<CV_32F_TYPE, CV_16S_TYPE>,
+        convertData_<CV_32F_TYPE, CV_32U_TYPE>, convertData_<CV_32F_TYPE, CV_32S_TYPE>,
+        convertData_<CV_32F_TYPE, CV_64U_TYPE>, convertData_<CV_32F_TYPE, CV_64S_TYPE>,
+        convertData_<CV_32F_TYPE, CV_32F_TYPE>, convertData_<CV_32F_TYPE, CV_64F_TYPE>,
+        0, 0, 0, 0 },
+    
+    {   convertData_<CV_64F_TYPE, CV_2U_TYPE>,  convertData_<CV_64F_TYPE, CV_4U_TYPE>,
+        convertData_<CV_64F_TYPE, CV_8U_TYPE>,  convertData_<CV_64F_TYPE, CV_8S_TYPE>,
+        convertData_<CV_64F_TYPE, CV_16U_TYPE>, convertData_<CV_64F_TYPE, CV_16S_TYPE>,
+        convertData_<CV_64F_TYPE, CV_32U_TYPE>, convertData_<CV_64F_TYPE, CV_32S_TYPE>,
+        convertData_<CV_64F_TYPE, CV_64U_TYPE>, convertData_<CV_64F_TYPE, CV_64S_TYPE>,
+        convertData_<CV_64F_TYPE, CV_32F_TYPE>, convertData_<CV_64F_TYPE, CV_64F_TYPE>,
+        0, 0, 0, 0 },
+    {   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    {   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    {   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    {   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
+};
 
     ConvertData func = tab[CV_MAT_DEPTH(fromType)][CV_MAT_DEPTH(toType)];
     CV_Assert( func != 0 );
@@ -3586,43 +3650,107 @@ static ConvertData getConvertElem(int fromType, int toType)
 
 static ConvertScaleData getConvertScaleElem(int fromType, int toType)
 {
-    static ConvertScaleData tab[][8] =
-    {{ convertScaleData_<uchar, uchar>, convertScaleData_<uchar, schar>,
-      convertScaleData_<uchar, ushort>, convertScaleData_<uchar, short>,
-      convertScaleData_<uchar, int>, convertScaleData_<uchar, float>,
-      convertScaleData_<uchar, double>, 0 },
-
-    { convertScaleData_<schar, uchar>, convertScaleData_<schar, schar>,
-      convertScaleData_<schar, ushort>, convertScaleData_<schar, short>,
-      convertScaleData_<schar, int>, convertScaleData_<schar, float>,
-      convertScaleData_<schar, double>, 0 },
-
-    { convertScaleData_<ushort, uchar>, convertScaleData_<ushort, schar>,
-      convertScaleData_<ushort, ushort>, convertScaleData_<ushort, short>,
-      convertScaleData_<ushort, int>, convertScaleData_<ushort, float>,
-      convertScaleData_<ushort, double>, 0 },
-
-    { convertScaleData_<short, uchar>, convertScaleData_<short, schar>,
-      convertScaleData_<short, ushort>, convertScaleData_<short, short>,
-      convertScaleData_<short, int>, convertScaleData_<short, float>,
-      convertScaleData_<short, double>, 0 },
-
-    { convertScaleData_<int, uchar>, convertScaleData_<int, schar>,
-      convertScaleData_<int, ushort>, convertScaleData_<int, short>,
-      convertScaleData_<int, int>, convertScaleData_<int, float>,
-      convertScaleData_<int, double>, 0 },
-
-    { convertScaleData_<float, uchar>, convertScaleData_<float, schar>,
-      convertScaleData_<float, ushort>, convertScaleData_<float, short>,
-      convertScaleData_<float, int>, convertScaleData_<float, float>,
-      convertScaleData_<float, double>, 0 },
-
-    { convertScaleData_<double, uchar>, convertScaleData_<double, schar>,
-      convertScaleData_<double, ushort>, convertScaleData_<double, short>,
-      convertScaleData_<double, int>, convertScaleData_<double, float>,
-      convertScaleData_<double, double>, 0 },
-
-    { 0, 0, 0, 0, 0, 0, 0, 0 }};
+    static ConvertScaleData tab[][16] =
+    {// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
+        //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
+        {   convertScaleData_<CV_2U_TYPE, CV_2U_TYPE>,  convertScaleData_<CV_2U_TYPE, CV_4U_TYPE>,
+            convertScaleData_<CV_2U_TYPE, CV_8U_TYPE>,  convertScaleData_<CV_2U_TYPE, CV_8S_TYPE>,
+            convertScaleData_<CV_2U_TYPE, CV_16U_TYPE>, convertScaleData_<CV_2U_TYPE, CV_16S_TYPE>,
+            convertScaleData_<CV_2U_TYPE, CV_32U_TYPE>, convertScaleData_<CV_2U_TYPE, CV_32S_TYPE>,
+            convertScaleData_<CV_2U_TYPE, CV_64U_TYPE>, convertScaleData_<CV_2U_TYPE, CV_64S_TYPE>,
+            convertScaleData_<CV_2U_TYPE, CV_32F_TYPE>, convertScaleData_<CV_2U_TYPE, CV_64F_TYPE>,
+            0, 0, 0, 0 },
+        {   convertScaleData_<CV_4U_TYPE, CV_2U_TYPE>,  convertScaleData_<CV_4U_TYPE, CV_4U_TYPE>,
+            convertScaleData_<CV_4U_TYPE, CV_8U_TYPE>,  convertScaleData_<CV_4U_TYPE, CV_8S_TYPE>,
+            convertScaleData_<CV_4U_TYPE, CV_16U_TYPE>, convertScaleData_<CV_4U_TYPE, CV_16S_TYPE>,
+            convertScaleData_<CV_4U_TYPE, CV_32U_TYPE>, convertScaleData_<CV_4U_TYPE, CV_32S_TYPE>,
+            convertScaleData_<CV_4U_TYPE, CV_64U_TYPE>, convertScaleData_<CV_4U_TYPE, CV_64S_TYPE>,
+            convertScaleData_<CV_4U_TYPE, CV_32F_TYPE>, convertScaleData_<CV_4U_TYPE, CV_64F_TYPE>,
+            0, 0, 0, 0 },
+        {   convertScaleData_<CV_8U_TYPE, CV_2U_TYPE>,  convertScaleData_<CV_8U_TYPE, CV_4U_TYPE>,
+            convertScaleData_<CV_8U_TYPE, CV_8U_TYPE>,  convertScaleData_<CV_8U_TYPE, CV_8S_TYPE>,
+            convertScaleData_<CV_8U_TYPE, CV_16U_TYPE>, convertScaleData_<CV_8U_TYPE, CV_16S_TYPE>,
+            convertScaleData_<CV_8U_TYPE, CV_32U_TYPE>, convertScaleData_<CV_8U_TYPE, CV_32S_TYPE>,
+            convertScaleData_<CV_8U_TYPE, CV_64U_TYPE>, convertScaleData_<CV_8U_TYPE, CV_64S_TYPE>,
+            convertScaleData_<CV_8U_TYPE, CV_32F_TYPE>, convertScaleData_<CV_8U_TYPE, CV_64F_TYPE>,
+            0, 0, 0, 0 },
+        
+        {   convertScaleData_<CV_8S_TYPE, CV_2U_TYPE>,  convertScaleData_<CV_8S_TYPE, CV_4U_TYPE>,
+            convertScaleData_<CV_8S_TYPE, CV_8U_TYPE>,  convertScaleData_<CV_8S_TYPE, CV_8S_TYPE>,
+            convertScaleData_<CV_8S_TYPE, CV_16U_TYPE>, convertScaleData_<CV_8S_TYPE, CV_16S_TYPE>,
+            convertScaleData_<CV_8S_TYPE, CV_32U_TYPE>, convertScaleData_<CV_8S_TYPE, CV_32S_TYPE>,
+            convertScaleData_<CV_8S_TYPE, CV_64U_TYPE>, convertScaleData_<CV_8S_TYPE, CV_64S_TYPE>,
+            convertScaleData_<CV_8S_TYPE, CV_32F_TYPE>, convertScaleData_<CV_8S_TYPE, CV_64F_TYPE>,
+            0, 0, 0, 0 },
+        
+        {   convertScaleData_<CV_16U_TYPE, CV_2U_TYPE>,  convertScaleData_<CV_16U_TYPE, CV_4U_TYPE>,
+            convertScaleData_<CV_16U_TYPE, CV_8U_TYPE>,  convertScaleData_<CV_16U_TYPE, CV_8S_TYPE>,
+            convertScaleData_<CV_16U_TYPE, CV_16U_TYPE>, convertScaleData_<CV_16U_TYPE, CV_16S_TYPE>,
+            convertScaleData_<CV_16U_TYPE, CV_32U_TYPE>, convertScaleData_<CV_16U_TYPE, CV_32S_TYPE>,
+            convertScaleData_<CV_16U_TYPE, CV_64U_TYPE>, convertScaleData_<CV_16U_TYPE, CV_64S_TYPE>,
+            convertScaleData_<CV_16U_TYPE, CV_32F_TYPE>, convertScaleData_<CV_16U_TYPE, CV_64F_TYPE>,
+            0, 0, 0, 0 },
+        
+        {   convertScaleData_<CV_16S_TYPE, CV_2U_TYPE>,  convertScaleData_<CV_16S_TYPE, CV_4U_TYPE>,
+            convertScaleData_<CV_16S_TYPE, CV_8U_TYPE>,  convertScaleData_<CV_16S_TYPE, CV_8S_TYPE>,
+            convertScaleData_<CV_16S_TYPE, CV_16U_TYPE>, convertScaleData_<CV_16S_TYPE, CV_16S_TYPE>,
+            convertScaleData_<CV_16S_TYPE, CV_32U_TYPE>, convertScaleData_<CV_16S_TYPE, CV_32S_TYPE>,
+            convertScaleData_<CV_16S_TYPE, CV_64U_TYPE>, convertScaleData_<CV_16S_TYPE, CV_64S_TYPE>,
+            convertScaleData_<CV_16S_TYPE, CV_32F_TYPE>, convertScaleData_<CV_16S_TYPE, CV_64F_TYPE>,
+            0, 0, 0, 0 },
+        
+        {   convertScaleData_<CV_32U_TYPE, CV_2U_TYPE>,  convertScaleData_<CV_32U_TYPE, CV_4U_TYPE>,
+            convertScaleData_<CV_32U_TYPE, CV_8U_TYPE>,  convertScaleData_<CV_32U_TYPE, CV_8S_TYPE>,
+            convertScaleData_<CV_32U_TYPE, CV_16U_TYPE>, convertScaleData_<CV_32U_TYPE, CV_16S_TYPE>,
+            convertScaleData_<CV_32U_TYPE, CV_32U_TYPE>, convertScaleData_<CV_32U_TYPE, CV_32S_TYPE>,
+            convertScaleData_<CV_32U_TYPE, CV_64U_TYPE>, convertScaleData_<CV_32U_TYPE, CV_64S_TYPE>,
+            convertScaleData_<CV_32U_TYPE, CV_32F_TYPE>, convertScaleData_<CV_32U_TYPE, CV_64F_TYPE>,
+            0, 0, 0, 0 },
+        
+        {   convertScaleData_<CV_32S_TYPE, CV_2U_TYPE>,  convertScaleData_<CV_32S_TYPE, CV_4U_TYPE>,
+            convertScaleData_<CV_32S_TYPE, CV_8U_TYPE>,  convertScaleData_<CV_32S_TYPE, CV_8S_TYPE>,
+            convertScaleData_<CV_32S_TYPE, CV_16U_TYPE>, convertScaleData_<CV_32S_TYPE, CV_16S_TYPE>,
+            convertScaleData_<CV_32S_TYPE, CV_32U_TYPE>, convertScaleData_<CV_32S_TYPE, CV_32S_TYPE>,
+            convertScaleData_<CV_32S_TYPE, CV_64U_TYPE>, convertScaleData_<CV_32S_TYPE, CV_64S_TYPE>,
+            convertScaleData_<CV_32S_TYPE, CV_32F_TYPE>, convertScaleData_<CV_32S_TYPE, CV_64F_TYPE>,
+            0, 0, 0, 0 },
+        
+        {   convertScaleData_<CV_64U_TYPE, CV_2U_TYPE>,  convertScaleData_<CV_64U_TYPE, CV_4U_TYPE>,
+            convertScaleData_<CV_64U_TYPE, CV_8U_TYPE>,  convertScaleData_<CV_64U_TYPE, CV_8S_TYPE>,
+            convertScaleData_<CV_64U_TYPE, CV_16U_TYPE>, convertScaleData_<CV_64U_TYPE, CV_16S_TYPE>,
+            convertScaleData_<CV_64U_TYPE, CV_32U_TYPE>, convertScaleData_<CV_64U_TYPE, CV_32S_TYPE>,
+            convertScaleData_<CV_64U_TYPE, CV_64U_TYPE>, convertScaleData_<CV_64U_TYPE, CV_64S_TYPE>,
+            convertScaleData_<CV_64U_TYPE, CV_32F_TYPE>, convertScaleData_<CV_64U_TYPE, CV_64F_TYPE>,
+            0, 0, 0, 0 },
+        
+        {   convertScaleData_<CV_64S_TYPE, CV_2U_TYPE>,  convertScaleData_<CV_64S_TYPE, CV_4U_TYPE>,
+            convertScaleData_<CV_64S_TYPE, CV_8U_TYPE>,  convertScaleData_<CV_64S_TYPE, CV_8S_TYPE>,
+            convertScaleData_<CV_64S_TYPE, CV_16U_TYPE>, convertScaleData_<CV_64S_TYPE, CV_16S_TYPE>,
+            convertScaleData_<CV_64S_TYPE, CV_32U_TYPE>, convertScaleData_<CV_64S_TYPE, CV_32S_TYPE>,
+            convertScaleData_<CV_64S_TYPE, CV_64U_TYPE>, convertScaleData_<CV_64S_TYPE, CV_64S_TYPE>,
+            convertScaleData_<CV_64S_TYPE, CV_32F_TYPE>, convertScaleData_<CV_64S_TYPE, CV_64F_TYPE>,
+            0, 0, 0, 0 },
+        
+        {   convertScaleData_<CV_32F_TYPE, CV_2U_TYPE>,  convertScaleData_<CV_32F_TYPE, CV_4U_TYPE>,
+            convertScaleData_<CV_32F_TYPE, CV_8U_TYPE>,  convertScaleData_<CV_32F_TYPE, CV_8S_TYPE>,
+            convertScaleData_<CV_32F_TYPE, CV_16U_TYPE>, convertScaleData_<CV_32F_TYPE, CV_16S_TYPE>,
+            convertScaleData_<CV_32F_TYPE, CV_32U_TYPE>, convertScaleData_<CV_32F_TYPE, CV_32S_TYPE>,
+            convertScaleData_<CV_32F_TYPE, CV_64U_TYPE>, convertScaleData_<CV_32F_TYPE, CV_64S_TYPE>,
+            convertScaleData_<CV_32F_TYPE, CV_32F_TYPE>, convertScaleData_<CV_32F_TYPE, CV_64F_TYPE>,
+            0, 0, 0, 0 },
+        
+        {   convertScaleData_<CV_64F_TYPE, CV_2U_TYPE>,  convertScaleData_<CV_64F_TYPE, CV_4U_TYPE>,
+            convertScaleData_<CV_64F_TYPE, CV_8U_TYPE>,  convertScaleData_<CV_64F_TYPE, CV_8S_TYPE>,
+            convertScaleData_<CV_64F_TYPE, CV_16U_TYPE>, convertScaleData_<CV_64F_TYPE, CV_16S_TYPE>,
+            convertScaleData_<CV_64F_TYPE, CV_32U_TYPE>, convertScaleData_<CV_64F_TYPE, CV_32S_TYPE>,
+            convertScaleData_<CV_64F_TYPE, CV_64U_TYPE>, convertScaleData_<CV_64F_TYPE, CV_64S_TYPE>,
+            convertScaleData_<CV_64F_TYPE, CV_32F_TYPE>, convertScaleData_<CV_64F_TYPE, CV_64F_TYPE>,
+            0, 0, 0, 0 },
+        {   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        {   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        {   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        {   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
+    };
 
     ConvertScaleData func = tab[CV_MAT_DEPTH(fromType)][CV_MAT_DEPTH(toType)];
     CV_Assert( func != 0 );

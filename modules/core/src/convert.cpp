@@ -377,13 +377,16 @@ template<typename T> static void
 mixChannels_( const T** src, const int* sdelta,
               T** dst, const int* ddelta,
               int len, int npairs )
-{
+    {
+        printf("mixChannels_ : len : %i",len);
+        printf("mixChannels_ : npairs : %i",npairs);
     int i, k;
     for( k = 0; k < npairs; k++ )
     {
         const T* s = src[k];
         T* d = dst[k];
         int ds = sdelta[k], dd = ddelta[k];
+        printf("mixChannels_ : ds : %i : dd : %i",ds,dd);
         if( s )
         {
             for( i = 0; i <= len - 2; i += 2, s += ds*2, d += dd*2 )
@@ -462,20 +465,29 @@ void cv::mixChannels( const Mat* src, size_t nsrcs, Mat* dst, size_t ndsts, cons
 
     size_t i, j, k, esz1 = dst[0].elemSize1();
     int depth = dst[0].depth();
-
+    printf("mixChannels_ : depth : %i",i);
     AutoBuffer<uchar> buf((nsrcs + ndsts + 1)*(sizeof(Mat*) + sizeof(uchar*)) + npairs*(sizeof(uchar*)*2 + sizeof(int)*6));
+    printf("mixChannels_ : ");
     const Mat** arrays = (const Mat**)(uchar*)buf;
+    printf("mixChannels_ : ");
     uchar** ptrs = (uchar**)(arrays + nsrcs + ndsts);
+    printf("mixChannels_ : ");
     const uchar** srcs = (const uchar**)(ptrs + nsrcs + ndsts + 1);
+    printf("mixChannels_ : ");
     uchar** dsts = (uchar**)(srcs + npairs);
+    printf("mixChannels_ : ");
     int* tab = (int*)(dsts + npairs);
+    printf("mixChannels_ : ");
     int *sdelta = (int*)(tab + npairs*4), *ddelta = sdelta + npairs;
+    printf("mixChannels_ : ");
 
     for( i = 0; i < nsrcs; i++ )
         arrays[i] = &src[i];
     for( i = 0; i < ndsts; i++ )
         arrays[i + nsrcs] = &dst[i];
+    printf("mixChannels_ : ");
     ptrs[nsrcs + ndsts] = 0;
+    printf("mixChannels_ : ");
 
     for( i = 0; i < npairs; i++ )
     {
@@ -502,10 +514,14 @@ void cv::mixChannels( const Mat* src, size_t nsrcs, Mat* dst, size_t ndsts, cons
         tab[i*4+2] = (int)(j + nsrcs); tab[i*4+3] = (int)(i1*esz1);
         ddelta[i] = dst[j].channels();
     }
+    printf("mixChannels_ : ");
 
     NAryMatIterator it(arrays, ptrs, (int)(nsrcs + ndsts));
+    printf("mixChannels_ : ");
     int total = (int)it.size, blocksize = std::min(total, (int)((BLOCK_SIZE + esz1-1)/esz1));
+    printf("mixChannels_ : ");
     MixChannelsFunc func = getMixchFunc(depth);
+    printf("mixChannels_ : ");
 
     for( i = 0; i < it.nplanes; i++, ++it )
     {
@@ -528,6 +544,7 @@ void cv::mixChannels( const Mat* src, size_t nsrcs, Mat* dst, size_t ndsts, cons
                 }
         }
     }
+    printf("mixChannels_ : out");
 }
 
 
@@ -1411,47 +1428,106 @@ BinaryFunc getConvertFunc(int sdepth, int ddepth)
 
 static BinaryFunc getConvertScaleFunc(int sdepth, int ddepth)
 {
-    static BinaryFunc cvtScaleTab[][8] =
+    static BinaryFunc cvtScaleTab[][16] =
     {
         {
-            (BinaryFunc)GET_OPTIMIZED(cvtScale8u), (BinaryFunc)GET_OPTIMIZED(cvtScale8s8u), (BinaryFunc)GET_OPTIMIZED(cvtScale16u8u),
-            (BinaryFunc)GET_OPTIMIZED(cvtScale16s8u), (BinaryFunc)GET_OPTIMIZED(cvtScale32s8u), (BinaryFunc)GET_OPTIMIZED(cvtScale32f8u),
-            (BinaryFunc)cvtScale64f8u, 0
+            (BinaryFunc)(cvtScale2u),                (BinaryFunc)GET_OPTIMIZED(cvtScale4u2u), (BinaryFunc)GET_OPTIMIZED(cvtScale8u2u),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale8s2u), (BinaryFunc)GET_OPTIMIZED(cvtScale16u2u),(BinaryFunc)GET_OPTIMIZED(cvtScale16s2u),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale32u2u),(BinaryFunc)GET_OPTIMIZED(cvtScale32s2u),(BinaryFunc)GET_OPTIMIZED(cvtScale64u2u),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale64s2u),(BinaryFunc)GET_OPTIMIZED(cvtScale32f2u),(BinaryFunc)GET_OPTIMIZED(cvtScale64f2u),
+            0, 0, 0, 0
         },
         {
-            (BinaryFunc)GET_OPTIMIZED(cvtScale8u8s), (BinaryFunc)GET_OPTIMIZED(cvtScale8s), (BinaryFunc)GET_OPTIMIZED(cvtScale16u8s),
-            (BinaryFunc)GET_OPTIMIZED(cvtScale16s8s), (BinaryFunc)GET_OPTIMIZED(cvtScale32s8s), (BinaryFunc)GET_OPTIMIZED(cvtScale32f8s),
-            (BinaryFunc)cvtScale64f8s, 0
+            (BinaryFunc)GET_OPTIMIZED(cvtScale2u4u), (BinaryFunc)(cvtScale4u),                (BinaryFunc)GET_OPTIMIZED(cvtScale8u4u),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale8s4u), (BinaryFunc)GET_OPTIMIZED(cvtScale16u4u),(BinaryFunc)GET_OPTIMIZED(cvtScale16s4u),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale32u4u),(BinaryFunc)GET_OPTIMIZED(cvtScale32s4u),(BinaryFunc)GET_OPTIMIZED(cvtScale64u4u),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale64s4u),(BinaryFunc)GET_OPTIMIZED(cvtScale32f4u),(BinaryFunc)GET_OPTIMIZED(cvtScale64f4u),
+            0, 0, 0, 0
         },
         {
-            (BinaryFunc)GET_OPTIMIZED(cvtScale8u16u), (BinaryFunc)GET_OPTIMIZED(cvtScale8s16u), (BinaryFunc)GET_OPTIMIZED(cvtScale16u),
-            (BinaryFunc)GET_OPTIMIZED(cvtScale16s16u), (BinaryFunc)GET_OPTIMIZED(cvtScale32s16u), (BinaryFunc)GET_OPTIMIZED(cvtScale32f16u),
-            (BinaryFunc)cvtScale64f16u, 0
+            (BinaryFunc)GET_OPTIMIZED(cvtScale2u8u), (BinaryFunc)GET_OPTIMIZED(cvtScale4u8u), (BinaryFunc)(cvtScale8u),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale8s8u), (BinaryFunc)GET_OPTIMIZED(cvtScale16u8u),(BinaryFunc)GET_OPTIMIZED(cvtScale16s8u),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale32u8u),(BinaryFunc)GET_OPTIMIZED(cvtScale32s8u),(BinaryFunc)GET_OPTIMIZED(cvtScale64u8u),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale64s8u),(BinaryFunc)GET_OPTIMIZED(cvtScale32f8u),(BinaryFunc)GET_OPTIMIZED(cvtScale64f8u),
+            0, 0, 0, 0
         },
         {
-            (BinaryFunc)GET_OPTIMIZED(cvtScale8u16s), (BinaryFunc)GET_OPTIMIZED(cvtScale8s16s), (BinaryFunc)GET_OPTIMIZED(cvtScale16u16s),
-            (BinaryFunc)GET_OPTIMIZED(cvtScale16s), (BinaryFunc)GET_OPTIMIZED(cvtScale32s16s), (BinaryFunc)GET_OPTIMIZED(cvtScale32f16s),
-            (BinaryFunc)cvtScale64f16s, 0
+            (BinaryFunc)GET_OPTIMIZED(cvtScale2u8s), (BinaryFunc)GET_OPTIMIZED(cvtScale4u8s), (BinaryFunc)GET_OPTIMIZED(cvtScale8u8s),
+            (BinaryFunc)(cvtScale8s),                (BinaryFunc)GET_OPTIMIZED(cvtScale16u8s),(BinaryFunc)GET_OPTIMIZED(cvtScale16s8s),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale32u8s),(BinaryFunc)GET_OPTIMIZED(cvtScale32s8s),(BinaryFunc)GET_OPTIMIZED(cvtScale64u8s),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale64s8s),(BinaryFunc)GET_OPTIMIZED(cvtScale32f8s),(BinaryFunc)GET_OPTIMIZED(cvtScale64f8s),
+            0, 0, 0, 0
         },
         {
-            (BinaryFunc)GET_OPTIMIZED(cvtScale8u32s), (BinaryFunc)GET_OPTIMIZED(cvtScale8s32s), (BinaryFunc)GET_OPTIMIZED(cvtScale16u32s),
-            (BinaryFunc)GET_OPTIMIZED(cvtScale16s32s), (BinaryFunc)GET_OPTIMIZED(cvtScale32s), (BinaryFunc)GET_OPTIMIZED(cvtScale32f32s),
-            (BinaryFunc)cvtScale64f32s, 0
+            (BinaryFunc)GET_OPTIMIZED(cvtScale2u16u), (BinaryFunc)GET_OPTIMIZED(cvtScale4u16u), (BinaryFunc)GET_OPTIMIZED(cvtScale8u16u),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale8s16u), (BinaryFunc)(cvtScale16u),                (BinaryFunc)GET_OPTIMIZED(cvtScale16s16u),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale32u16u),(BinaryFunc)GET_OPTIMIZED(cvtScale32s16u),(BinaryFunc)GET_OPTIMIZED(cvtScale64u16u),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale64s16u),(BinaryFunc)GET_OPTIMIZED(cvtScale32f16u),(BinaryFunc)GET_OPTIMIZED(cvtScale64f16u),
+            0, 0, 0, 0
         },
         {
-            (BinaryFunc)GET_OPTIMIZED(cvtScale8u32f), (BinaryFunc)GET_OPTIMIZED(cvtScale8s32f), (BinaryFunc)GET_OPTIMIZED(cvtScale16u32f),
-            (BinaryFunc)GET_OPTIMIZED(cvtScale16s32f), (BinaryFunc)GET_OPTIMIZED(cvtScale32s32f), (BinaryFunc)GET_OPTIMIZED(cvtScale32f),
-            (BinaryFunc)cvtScale64f32f, 0
+            (BinaryFunc)GET_OPTIMIZED(cvtScale2u16s), (BinaryFunc)GET_OPTIMIZED(cvtScale4u16s), (BinaryFunc)GET_OPTIMIZED(cvtScale8u16s),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale8s16s), (BinaryFunc)GET_OPTIMIZED(cvtScale16u16s),(BinaryFunc)(cvtScale16s),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale32u16s),(BinaryFunc)GET_OPTIMIZED(cvtScale32s16s),(BinaryFunc)GET_OPTIMIZED(cvtScale64u16s),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale64s16s),(BinaryFunc)GET_OPTIMIZED(cvtScale32f16s),(BinaryFunc)GET_OPTIMIZED(cvtScale64f16s),
+            0, 0, 0, 0
         },
         {
-            (BinaryFunc)cvtScale8u64f, (BinaryFunc)cvtScale8s64f, (BinaryFunc)cvtScale16u64f,
-            (BinaryFunc)cvtScale16s64f, (BinaryFunc)cvtScale32s64f, (BinaryFunc)cvtScale32f64f,
-            (BinaryFunc)cvtScale64f, 0
+            (BinaryFunc)GET_OPTIMIZED(cvtScale2u32u), (BinaryFunc)GET_OPTIMIZED(cvtScale4u32u), (BinaryFunc)GET_OPTIMIZED(cvtScale8u32u),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale8s32u), (BinaryFunc)GET_OPTIMIZED(cvtScale16u32u),(BinaryFunc)GET_OPTIMIZED(cvtScale16s32u),
+            (BinaryFunc)(cvtScale32u),                (BinaryFunc)GET_OPTIMIZED(cvtScale32s32u),(BinaryFunc)GET_OPTIMIZED(cvtScale64u32u),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale64s32u),(BinaryFunc)GET_OPTIMIZED(cvtScale32f32u),(BinaryFunc)GET_OPTIMIZED(cvtScale64f32u),
+            0, 0, 0, 0
         },
         {
-            0, 0, 0, 0, 0, 0, 0, 0
+            (BinaryFunc)GET_OPTIMIZED(cvtScale2u32s), (BinaryFunc)GET_OPTIMIZED(cvtScale4u32s), (BinaryFunc)GET_OPTIMIZED(cvtScale8u32s),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale8s32s), (BinaryFunc)GET_OPTIMIZED(cvtScale16u32s),(BinaryFunc)GET_OPTIMIZED(cvtScale16s32s),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale32u32s),(BinaryFunc)(cvtScale32s),                (BinaryFunc)GET_OPTIMIZED(cvtScale64u32s),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale64s32s),(BinaryFunc)GET_OPTIMIZED(cvtScale32f32s),(BinaryFunc)GET_OPTIMIZED(cvtScale64f32s),
+            0, 0, 0, 0
+        },
+        {
+            (BinaryFunc)GET_OPTIMIZED(cvtScale2u64u), (BinaryFunc)GET_OPTIMIZED(cvtScale4u64u), (BinaryFunc)GET_OPTIMIZED(cvtScale8u64u),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale8s64u), (BinaryFunc)GET_OPTIMIZED(cvtScale16u64u),(BinaryFunc)GET_OPTIMIZED(cvtScale16s64u),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale32u64u),(BinaryFunc)GET_OPTIMIZED(cvtScale32s64u),(BinaryFunc)(cvtScale64u),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale64s64u),(BinaryFunc)GET_OPTIMIZED(cvtScale32f64u),(BinaryFunc)GET_OPTIMIZED(cvtScale64f64u),
+            0, 0, 0, 0
+        },
+        {
+            (BinaryFunc)GET_OPTIMIZED(cvtScale2u64s), (BinaryFunc)GET_OPTIMIZED(cvtScale4u64s), (BinaryFunc)GET_OPTIMIZED(cvtScale8u64s),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale8s64s), (BinaryFunc)GET_OPTIMIZED(cvtScale16u64s),(BinaryFunc)GET_OPTIMIZED(cvtScale16s64s),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale32u64s),(BinaryFunc)GET_OPTIMIZED(cvtScale32s64s),(BinaryFunc)GET_OPTIMIZED(cvtScale64u64s),
+            (BinaryFunc)(cvtScale64s),                (BinaryFunc)GET_OPTIMIZED(cvtScale32f64s),(BinaryFunc)GET_OPTIMIZED(cvtScale64f64s),
+            0, 0, 0, 0
+        },
+        {
+            (BinaryFunc)GET_OPTIMIZED(cvtScale2u32f),(BinaryFunc)GET_OPTIMIZED(cvtScale4u32f), (BinaryFunc)GET_OPTIMIZED(cvtScale8u32f),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale8s32f), (BinaryFunc)GET_OPTIMIZED(cvtScale16u32f),(BinaryFunc)GET_OPTIMIZED(cvtScale16s32f),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale32u32f),(BinaryFunc)GET_OPTIMIZED(cvtScale32s32f),(BinaryFunc)GET_OPTIMIZED(cvtScale64u32f),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale64s32f),(BinaryFunc)(cvtScale32f),                (BinaryFunc)GET_OPTIMIZED(cvtScale64f32f),
+            0, 0, 0, 0
+        },
+        {
+            (BinaryFunc)GET_OPTIMIZED(cvtScale2u64f), (BinaryFunc)GET_OPTIMIZED(cvtScale4u64f), (BinaryFunc)GET_OPTIMIZED(cvtScale8u64f),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale8s64f), (BinaryFunc)GET_OPTIMIZED(cvtScale16u64f),(BinaryFunc)GET_OPTIMIZED(cvtScale16s64f),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale32u64f),(BinaryFunc)GET_OPTIMIZED(cvtScale32s64f),(BinaryFunc)GET_OPTIMIZED(cvtScale64u64f),
+            (BinaryFunc)GET_OPTIMIZED(cvtScale64s64f),(BinaryFunc)GET_OPTIMIZED(cvtScale32f64f),(BinaryFunc)(cvtScale64f),
+            0, 0, 0, 0
+        },
+        {
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        },
+        {
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        },
+        {
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        },
+        {
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
         }
     };
+
 
     return cvtScaleTab[CV_MAT_DEPTH(ddepth)][CV_MAT_DEPTH(sdepth)];
 }
@@ -1487,45 +1563,66 @@ void cv::convertScaleAbs( InputArray _src, OutputArray _dst, double alpha, doubl
 
 void cv::Mat::convertTo(OutputArray _dst, int _type, double alpha, double beta) const
 {
+    printf("convert.cpp :: cv::Mat::convertTo : \n");
     bool noScale = fabs(alpha-1) < DBL_EPSILON && fabs(beta) < DBL_EPSILON;
 
     if( _type < 0 )
         _type = _dst.fixedType() ? _dst.type() : type();
     else
         _type = CV_MAKETYPE(CV_MAT_DEPTH(_type), channels());
+    printf("convert.cpp :: cv::Mat::convertTo : _type : %i\n",_type);
 
     int sdepth = depth(), ddepth = CV_MAT_DEPTH(_type);
+    printf("convert.cpp :: cv::Mat::convertTo : \n");
     if( sdepth == ddepth && noScale )
     {
+        printf("convert.cpp :: cv::Mat::convertTo : copyTo \n");
         copyTo(_dst);
         return;
     }
-
+    
+    printf("convert.cpp :: cv::Mat::convertTo : \n");
     Mat src = *this;
-
+    
+    printf("convert.cpp :: cv::Mat::convertTo : \n");
     BinaryFunc func = noScale ? getConvertFunc(sdepth, ddepth) : getConvertScaleFunc(sdepth, ddepth);
+    printf("convert.cpp :: cv::Mat::convertTo : \n");
     double scale[] = {alpha, beta};
     int cn = channels();
     CV_Assert( func != 0 );
-
+    
+    printf("convert.cpp :: cv::Mat::convertTo : \n");
     if( dims <= 2 )
     {
+        printf("convert.cpp :: cv::Mat::convertTo : dims <= 2 IN\n");
         _dst.create( size(), _type );
+        printf("convert.cpp :: cv::Mat::convertTo : dims <= 2\n");
         Mat dst = _dst.getMat();
+        printf("convert.cpp :: cv::Mat::convertTo : dims <= 2\n");
         Size sz = getContinuousSize(src, dst, cn);
+        printf("convert.cpp :: cv::Mat::convertTo : dims <= 2\n");
         func( src.data, src.step, 0, 0, dst.data, dst.step, sz, scale );
+        printf("convert.cpp :: cv::Mat::convertTo : dims <= 2 OUT\n");
     }
     else
     {
+        printf("convert.cpp :: cv::Mat::convertTo : dims > 2 IN\n");
         _dst.create( dims, size, _type );
+        printf("convert.cpp :: cv::Mat::convertTo : dims > 2\n");
         Mat dst = _dst.getMat();
+        printf("convert.cpp :: cv::Mat::convertTo : dims > 2\n");
         const Mat* arrays[] = {&src, &dst, 0};
+        printf("convert.cpp :: cv::Mat::convertTo : dims > 2\n");
         uchar* ptrs[2];
+        printf("convert.cpp :: cv::Mat::convertTo : dims > 2\n");
         NAryMatIterator it(arrays, ptrs);
+        printf("convert.cpp :: cv::Mat::convertTo : dims > 2\n");
         Size sz((int)(it.size*cn), 1);
+        printf("convert.cpp :: cv::Mat::convertTo : dims > 2 \n");
 
         for( size_t i = 0; i < it.nplanes; i++, ++it )
             func(ptrs[0], 0, 0, 0, ptrs[1], 0, sz, scale);
+        printf("convert.cpp :: cv::Mat::convertTo : dims > 2 OUT\n");
     }
 }
 

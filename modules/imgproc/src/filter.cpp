@@ -2878,22 +2878,34 @@ cv::Ptr<cv::FilterEngine> cv::createSeparableLinearFilter(
     int _rowBorderType, int _columnBorderType,
     const Scalar& _borderValue )
 {
+    printf("cv::createSeparableLinearFilter : \n");
     Mat _rowKernel = __rowKernel.getMat(), _columnKernel = __columnKernel.getMat();
+    printf("cv::createSeparableLinearFilter : _srcType : %i \n",_srcType);
     _srcType = CV_MAT_TYPE(_srcType);
+    printf("cv::createSeparableLinearFilter : _srcType : %i \n",_srcType);
     _dstType = CV_MAT_TYPE(_dstType);
+    printf("cv::createSeparableLinearFilter : _dstType : %i \n",_dstType);
     int sdepth = CV_MAT_DEPTH(_srcType), ddepth = CV_MAT_DEPTH(_dstType);
+    printf("cv::createSeparableLinearFilter : sdepth : %i : ddepth : %i\n",sdepth,ddepth);
     int cn = CV_MAT_CN(_srcType);
+    printf("cv::createSeparableLinearFilter : cn : %i\n",cn);
     CV_Assert( cn == CV_MAT_CN(_dstType) );
+    printf("cv::createSeparableLinearFilter : %i == %i \n", cn, CV_MAT_CN(_dstType));
     int rsize = _rowKernel.rows + _rowKernel.cols - 1;
+    printf("cv::createSeparableLinearFilter : rsize : %i \n", rsize);
     int csize = _columnKernel.rows + _columnKernel.cols - 1;
+    printf("cv::createSeparableLinearFilter : csize : %i\n", csize);
     if( _anchor.x < 0 )
         _anchor.x = rsize/2;
     if( _anchor.y < 0 )
         _anchor.y = csize/2;
+    printf("cv::createSeparableLinearFilter : \n");
     int rtype = getKernelType(_rowKernel,
-        _rowKernel.rows == 1 ? Point(_anchor.x, 0) : Point(0, _anchor.x));
+                              _rowKernel.rows == 1 ? Point(_anchor.x, 0) : Point(0, _anchor.x));
+    printf("cv::createSeparableLinearFilter : \n");
     int ctype = getKernelType(_columnKernel,
-        _columnKernel.rows == 1 ? Point(_anchor.y, 0) : Point(0, _anchor.y));
+                              _columnKernel.rows == 1 ? Point(_anchor.y, 0) : Point(0, _anchor.y));
+    printf("cv::createSeparableLinearFilter : \n");
     Mat rowKernel, columnKernel;
 
     int bdepth = std::max(CV_32F,std::max(sdepth, ddepth));
@@ -2910,28 +2922,38 @@ cv::Ptr<cv::FilterEngine> cv::createSeparableLinearFilter(
     {
         bdepth = CV_32S;
         bits = ddepth == CV_8U ? 8 : 0;
+        printf("cv::createSeparableLinearFilter : _rowKernel.convertTo( rowKernel, CV_32S, 1 << bits );\n");
         _rowKernel.convertTo( rowKernel, CV_32S, 1 << bits );
+        printf("cv::createSeparableLinearFilter : _rowKernel.convertTo( rowKernel, CV_32S, 1 << bits );\n");
+        printf("cv::createSeparableLinearFilter : _columnKernel.convertTo( columnKernel, CV_32S, 1 << bits );\n");
         _columnKernel.convertTo( columnKernel, CV_32S, 1 << bits );
+        printf("cv::createSeparableLinearFilter : _columnKernel.convertTo( columnKernel, CV_32S, 1 << bits );\n");
         bits *= 2;
         _delta *= (1 << bits);
     }
     else
     {
-        if( _rowKernel.type() != bdepth )
-            _rowKernel.convertTo( rowKernel, bdepth );
+        if( _rowKernel.type() != bdepth ){
+        printf("cv::createSeparableLinearFilter : _rowKernel.convertTo( rowKernel, bdepth )\n");
+        _rowKernel.convertTo( rowKernel, bdepth );
+            printf("cv::createSeparableLinearFilter : _rowKernel.convertTo( rowKernel, bdepth )\n");}
         else
             rowKernel = _rowKernel;
-        if( _columnKernel.type() != bdepth )
-            _columnKernel.convertTo( columnKernel, bdepth );
+        if( _columnKernel.type() != bdepth ){
+            printf("cv::createSeparableLinearFilter : _columnKernel.convertTo( columnKernel, bdepth )\n");
+        _columnKernel.convertTo( columnKernel, bdepth );
+            printf("cv::createSeparableLinearFilter : _columnKernel.convertTo( columnKernel, bdepth )\n");}
         else
             columnKernel = _columnKernel;
     }
-
+    
+    printf("cv::createSeparableLinearFilter : \n");
     int _bufType = CV_MAKETYPE(bdepth, cn);
-    Ptr<BaseRowFilter> _rowFilter = getLinearRowFilter(
-        _srcType, _bufType, rowKernel, _anchor.x, rtype);
-    Ptr<BaseColumnFilter> _columnFilter = getLinearColumnFilter(
-        _bufType, _dstType, columnKernel, _anchor.y, ctype, _delta, bits );
+    printf("cv::createSeparableLinearFilter : _bufType : %i\n",_bufType);
+    Ptr<BaseRowFilter> _rowFilter = getLinearRowFilter(_srcType, _bufType, rowKernel, _anchor.x, rtype);
+    printf("cv::createSeparableLinearFilter : getLinearRowFilter\n");
+    Ptr<BaseColumnFilter> _columnFilter = getLinearColumnFilter(_bufType, _dstType, columnKernel, _anchor.y,ctype, _delta, bits );
+    printf("cv::createSeparableLinearFilter : getLinearRowFilter\n");
 
     return Ptr<FilterEngine>( new FilterEngine(Ptr<BaseFilter>(0), _rowFilter, _columnFilter,
         _srcType, _dstType, _bufType, _rowBorderType, _columnBorderType, _borderValue ));
