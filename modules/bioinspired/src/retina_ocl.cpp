@@ -579,7 +579,7 @@ void BasicRetinaFilter::_localLuminanceAdaptation(const oclMat &inputFrame, cons
 
     Context * ctx = Context::getContext();
     std::vector<std::pair<size_t, const void *> > args;
-    size_t globalSize[] = {_NBcols, _NBrows, 1};
+    size_t globalSize[] = {static_cast<size_t>(_NBcols), static_cast<size_t>(_NBrows), 1};
     size_t localSize[]  = {16, 16, 1};
 
     args.push_back(std::make_pair(sizeof(cl_mem),   &localLuminance.data));
@@ -624,7 +624,7 @@ void BasicRetinaFilter::_horizontalCausalFilter_addInput(const oclMat &inputFram
 
     Context * ctx = Context::getContext();
     std::vector<std::pair<size_t, const void *> > args;
-    size_t globalSize[] = {_NBrows, 1, 1};
+    size_t globalSize[] = {static_cast<size_t>(_NBrows), 1, 1};
     size_t localSize[]  = {256, 1, 1};
 
     args.push_back(std::make_pair(sizeof(cl_mem),   &inputFrame.data));
@@ -645,7 +645,7 @@ void BasicRetinaFilter::_horizontalAnticausalFilter(oclMat &outputFrame)
 
     Context * ctx = Context::getContext();
     std::vector<std::pair<size_t, const void *> > args;
-    size_t globalSize[] = {_NBrows, 1, 1};
+    size_t globalSize[] = {static_cast<size_t>(_NBrows), 1, 1};
     size_t localSize[]  = {256, 1, 1};
 
     args.push_back(std::make_pair(sizeof(cl_mem),   &outputFrame.data));
@@ -663,7 +663,7 @@ void BasicRetinaFilter::_verticalCausalFilter(oclMat &outputFrame)
 
     Context * ctx = Context::getContext();
     std::vector<std::pair<size_t, const void *> > args;
-    size_t globalSize[] = {_NBcols, 1, 1};
+    size_t globalSize[] = {static_cast<size_t>(_NBcols), 1, 1};
     size_t localSize[]  = {256, 1, 1};
 
     args.push_back(std::make_pair(sizeof(cl_mem),   &outputFrame.data));
@@ -681,7 +681,7 @@ void BasicRetinaFilter::_verticalAnticausalFilter_multGain(oclMat &outputFrame)
 
     Context * ctx = Context::getContext();
     std::vector<std::pair<size_t, const void *> > args;
-    size_t globalSize[] = {_NBcols, 1, 1};
+    size_t globalSize[] = {static_cast<size_t>(_NBcols), 1, 1};
     size_t localSize[]  = {256, 1, 1};
 
     args.push_back(std::make_pair(sizeof(cl_mem),   &outputFrame.data));
@@ -700,7 +700,7 @@ void BasicRetinaFilter::_horizontalAnticausalFilter_Irregular(oclMat &outputFram
 
     Context * ctx = Context::getContext();
     std::vector<std::pair<size_t, const void *> > args;
-    size_t globalSize[] = {outputFrame.rows, 1, 1};
+    size_t globalSize[] = {static_cast<size_t>(outputFrame.rows), 1, 1};
     size_t localSize[]  = {256, 1, 1};
 
     args.push_back(std::make_pair(sizeof(cl_mem),   &outputFrame.data));
@@ -720,7 +720,7 @@ void BasicRetinaFilter::_verticalCausalFilter_Irregular(oclMat &outputFrame, con
 
     Context * ctx = Context::getContext();
     std::vector<std::pair<size_t, const void *> > args;
-    size_t globalSize[] = {outputFrame.cols, 1, 1};
+    size_t globalSize[] = {static_cast<size_t>(outputFrame.cols), 1, 1};
     size_t localSize[]  = {256, 1, 1};
 
     args.push_back(std::make_pair(sizeof(cl_mem),   &outputFrame.data));
@@ -756,7 +756,7 @@ void normalizeGrayOutputCentredSigmoide(const float meanValue, const float sensi
 
     Context * ctx = Context::getContext();
     std::vector<std::pair<size_t, const void *> > args;
-    size_t globalSize[] = {in.cols, out.rows, 1};
+    size_t globalSize[] = {static_cast<size_t>(in.cols), static_cast<size_t>(out.rows), 1};
     size_t localSize[]  = {16, 16, 1};
 
     int elements_per_row = static_cast<int>(out.step / out.elemSize());
@@ -777,7 +777,7 @@ void normalizeGrayOutputNearZeroCentreredSigmoide(oclMat &inputPicture, oclMat &
 
     Context * ctx = Context::getContext();
     std::vector<std::pair<size_t, const void *> > args;
-    size_t globalSize[] = {inputPicture.cols, inputPicture.rows, 1};
+    size_t globalSize[] = {static_cast<size_t>(inputPicture.cols), static_cast<size_t>(inputPicture.rows), 1};
     size_t localSize[]  = {16, 16, 1};
 
     int elements_per_row = static_cast<int>(inputPicture.step / inputPicture.elemSize());
@@ -798,7 +798,7 @@ void centerReductImageLuminance(oclMat &inputoutput)
 
     Context * ctx = Context::getContext();
     std::vector<std::pair<size_t, const void *> > args;
-    size_t globalSize[] = {inputoutput.cols, inputoutput.rows, 1};
+    size_t globalSize[] = {static_cast<size_t>(inputoutput.cols), static_cast<size_t>(inputoutput.rows), 1};
     size_t localSize[]  = {16, 16, 1};
 
     float f_mean = static_cast<float>(mean[0]);
@@ -902,7 +902,7 @@ void ParvoRetinaFilter::_OPL_OnOffWaysComputing()
 
     Context * ctx = Context::getContext();
     std::vector<std::pair<size_t, const void *> > args;
-    size_t globalSize[] = {(_photoreceptorsOutput.cols + 3) / 4, _photoreceptorsOutput.rows, 1};
+    size_t globalSize[] = {static_cast<size_t>((_photoreceptorsOutput.cols + 3) / 4), static_cast<size_t>(_photoreceptorsOutput.rows), 1};
     size_t localSize[]  = {16, 16, 1};
 
     args.push_back(std::make_pair(sizeof(cl_mem),   &_photoreceptorsOutput.data));
@@ -991,7 +991,7 @@ void MagnoRetinaFilter::_amacrineCellsComputing(
 
     Context * ctx = Context::getContext();
     std::vector<std::pair<size_t, const void *> > args;
-    size_t globalSize[] = {OPL_ON.cols, OPL_ON.rows, 1};
+    size_t globalSize[] = {static_cast<size_t>(OPL_ON.cols), static_cast<size_t>(OPL_ON.rows), 1};
     size_t localSize[]  = {16, 16, 1};
 
     args.push_back(std::make_pair(sizeof(cl_mem),   &OPL_ON.data));
@@ -1118,7 +1118,7 @@ static void inverseValue(oclMat &input)
 
     Context * ctx = Context::getContext();
     std::vector<std::pair<size_t, const void *> > args;
-    size_t globalSize[] = {input.cols, input.rows, 1};
+    size_t globalSize[] = {static_cast<size_t>(input.cols), static_cast<size_t>(input.rows), 1};
     size_t localSize[]  = {16, 16, 1};
 
     args.push_back(std::make_pair(sizeof(cl_mem),   &input.data));
@@ -1163,7 +1163,7 @@ static void demultiplex(const oclMat &input, oclMat &ouput)
 
     Context * ctx = Context::getContext();
     std::vector<std::pair<size_t, const void *> > args;
-    size_t globalSize[] = {input.cols, input.rows, 1};
+    size_t globalSize[] = {static_cast<size_t>(input.cols), static_cast<size_t>(input.rows), 1};
     size_t localSize[]  = {16, 16, 1};
 
     args.push_back(std::make_pair(sizeof(cl_mem),   &input.data));
@@ -1187,7 +1187,7 @@ static void normalizePhotoDensity(
 
     Context * ctx = Context::getContext();
     std::vector<std::pair<size_t, const void *> > args;
-    size_t globalSize[] = {ocl_luma.cols, ocl_luma.rows, 1};
+    size_t globalSize[] = {static_cast<size_t>(ocl_luma.cols), static_cast<size_t>(ocl_luma.rows), 1};
     size_t localSize[]  = {16, 16, 1};
 
     args.push_back(std::make_pair(sizeof(cl_mem),   &chroma.data));
@@ -1214,7 +1214,7 @@ static void substractResidual(
     Context * ctx = Context::getContext();
     std::vector<std::pair<size_t, const void *> > args;
     int rows = colorDemultiplex.rows / 3, cols = colorDemultiplex.cols;
-    size_t globalSize[] = {cols, rows, 1};
+    size_t globalSize[] = {static_cast<size_t>(cols), static_cast<size_t>(rows), 1};
     size_t localSize[]  = {16, 16, 1};
 
     args.push_back(std::make_pair(sizeof(cl_mem),   &colorDemultiplex.data));
@@ -1235,7 +1235,7 @@ static void demultiplexAssign(const oclMat& input, const oclMat& output)
     Context * ctx = Context::getContext();
     std::vector<std::pair<size_t, const void *> > args;
     int rows = input.rows / 3, cols = input.cols;
-    size_t globalSize[] = {cols, rows, 1};
+    size_t globalSize[] = {static_cast<size_t>(cols), static_cast<size_t>(rows), 1};
     size_t localSize[]  = {16, 16, 1};
 
     args.push_back(std::make_pair(sizeof(cl_mem),   &input.data));
@@ -1318,7 +1318,7 @@ void RetinaColor::runColorMultiplexing(const oclMat &demultiplexedInputFrame, oc
 
     Context * ctx = Context::getContext();
     std::vector<std::pair<size_t, const void *> > args;
-    size_t globalSize[] = {multiplexedFrame.cols, multiplexedFrame.rows, 1};
+    size_t globalSize[] = {static_cast<size_t>(multiplexedFrame.cols), static_cast<size_t>(multiplexedFrame.rows), 1};
     size_t localSize[]  = {16, 16, 1};
 
     args.push_back(std::make_pair(sizeof(cl_mem),   &demultiplexedInputFrame.data));
@@ -1338,7 +1338,7 @@ void RetinaColor::clipRGBOutput_0_maxInputValue(oclMat &inputOutputBuffer, const
 
     Context * ctx = Context::getContext();
     std::vector<std::pair<size_t, const void *> > args;
-    size_t globalSize[] = {_NBcols, inputOutputBuffer.rows, 1};
+    size_t globalSize[] = {static_cast<size_t>(_NBcols), static_cast<size_t>(inputOutputBuffer.rows), 1};
     size_t localSize[]  = {16, 16, 1};
 
     args.push_back(std::make_pair(sizeof(cl_mem),   &inputOutputBuffer.data));
@@ -1369,7 +1369,7 @@ void RetinaColor::_adaptiveHorizontalCausalFilter_addInput(const oclMat &inputFr
 
     Context * ctx = Context::getContext();
     std::vector<std::pair<size_t, const void *> > args;
-    size_t globalSize[] = {_NBrows, 1, 1};
+    size_t globalSize[] = {static_cast<size_t>(_NBrows), 1, 1};
     size_t localSize[]  = {256, 1, 1};
 
     args.push_back(std::make_pair(sizeof(cl_mem),   &inputFrame.data));
@@ -1390,7 +1390,7 @@ void RetinaColor::_adaptiveVerticalAnticausalFilter_multGain(const oclMat &gradi
 
     Context * ctx = Context::getContext();
     std::vector<std::pair<size_t, const void *> > args;
-    size_t globalSize[] = {_NBcols, 1, 1};
+    size_t globalSize[] = {static_cast<size_t>(_NBcols), 1, 1};
     size_t localSize[]  = {256, 1, 1};
 
     int gradOffset = gradient.offset + static_cast<int>(gradient.step * _NBrows);
@@ -1411,7 +1411,7 @@ void RetinaColor::_computeGradient(const oclMat &luminance, oclMat &gradient)
 
     Context * ctx = Context::getContext();
     std::vector<std::pair<size_t, const void *> > args;
-    size_t globalSize[] = {_NBcols, _NBrows, 1};
+    size_t globalSize[] = {static_cast<size_t>(_NBcols), static_cast<size_t>(_NBrows), 1};
     size_t localSize[]  = {16, 16, 1};
 
     args.push_back(std::make_pair(sizeof(cl_mem),   &luminance.data));
@@ -1621,7 +1621,7 @@ void RetinaFilter::_processRetinaParvoMagnoMapping()
 
     Context * ctx = Context::getContext();
     std::vector<std::pair<size_t, const void *> > args;
-    size_t globalSize[] = {parvo.cols, parvo.rows, 1};
+    size_t globalSize[] = {static_cast<size_t>(parvo.cols), static_cast<size_t>(parvo.rows), 1};
     size_t localSize[]  = {16, 16, 1};
 
     args.push_back(std::make_pair(sizeof(cl_mem),   &parvo.data));

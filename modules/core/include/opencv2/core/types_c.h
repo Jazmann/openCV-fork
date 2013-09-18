@@ -460,14 +460,14 @@ CvMat;
     (((mat)->rows|(mat)->cols) == 1)
 
 // Size of each channel item
-#define CV_ELEM_SIZE1 CV_DEPTH_BYTES
+// #define CV_ELEM_SIZE1 CV_DEPTH_BYTES
 
 // In case the channels are packed into fewer than one byte each we calculate : bits_used = channels * bits_per_channel
-#define CV_ELEM_SIZE_BITS(type) ( CV_MAT_CN(type) * CV_MAT_DEPTH_BITS(type) )
+// #define CV_ELEM_SIZE_BITS(type) ( CV_MAT_CN(type) * CV_MAT_DEPTH_BITS(type) )
 // then bytes = Ceiling( bits_used / 8)
-#define CV_ELEM_SIZE_BYTES(type) ((CV_ELEM_SIZE_BITS(type) >> 3) + ( (CV_ELEM_SIZE_BITS(type) & 7) ? 1 : 0 ))
+// #define CV_ELEM_SIZE_BYTES(type) ( (CV_ELEM_SIZE_BITS(type) >> 3) + ( (CV_ELEM_SIZE_BITS(type) & 7) ? 1 : 0 ))
 
-#define CV_ELEM_SIZE CV_ELEM_SIZE_BYTES
+// #define CV_ELEM_SIZE CV_ELEM_SIZE_BYTES
 
 #define IPL2CV_DEPTH(depth) \
     ((((CV_8U)+(CV_16U<<4)+(CV_32F<<8)+(CV_64F<<16)+(CV_8S<<20)+ \
@@ -490,7 +490,7 @@ CV_INLINE CvMat cvMat( int rows, int cols, int type, void* data CV_DEFAULT(NULL)
     m.type = CV_MAT_MAGIC_VAL | CV_MAT_CONT_FLAG | type;
     m.cols = cols;
     m.rows = rows;
-    m.step = m.cols*CV_ELEM_SIZE(type);
+    m.step = m.cols * CV_ELEM_SIZE_BYTES(type);
     m.data.ptr = (uchar*)data;
     m.refcount = NULL;
     m.hdr_refcount = 0;

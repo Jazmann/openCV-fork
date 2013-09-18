@@ -1489,7 +1489,7 @@ JNIEXPORT jdoubleArray JNICALL Java_org_opencv_core_Mat_n_1size
         Mat* me = (Mat*) self; //TODO: check for NULL
         Size _retval_ = me->size(  );
         jdoubleArray _da_retval_ = env->NewDoubleArray(2);
-        jdouble _tmp_retval_[2] = {_retval_.width, _retval_.height};
+        jdouble _tmp_retval_[2] = {static_cast<jdouble>(_retval_.width), static_cast<jdouble>(_retval_.height)};
         env->SetDoubleArrayRegion(_da_retval_, 0, 2, _tmp_retval_);
         return _da_retval_;
     } catch(const std::exception &e) {

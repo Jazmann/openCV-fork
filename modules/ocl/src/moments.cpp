@@ -137,8 +137,8 @@ static void icvContourMoments( CvSeq* contour, CvMoments* mom )
         cv::ocl::oclMat dst_a(10, lpt, CV_64FC1);
         cv::ocl::oclMat reader_oclmat(reader_mat);
         int llength = std::min(lpt,128);
-        size_t localThreads[3]  = { llength, 1, 1};
-        size_t globalThreads[3] = { lpt, 1, 1};
+        size_t localThreads[3]  = { static_cast<size_t>(llength), 1, 1};
+        size_t globalThreads[3] = { static_cast<size_t>(lpt), 1, 1};
         std::vector<std::pair<size_t , const void *> > args;
         args.push_back( std::make_pair( sizeof(cl_int) , (void *)&contour->total ));
         args.push_back( std::make_pair( sizeof(cl_mem) , (void *)&reader_oclmat.data ));
@@ -285,8 +285,8 @@ static void ocl_cvMoments( const void* array, CvMoments* mom, int binary )
     oclMat sum(1, 10, CV_64FC1);
     int tile_width  = std::min(size.width,TILE_SIZE);
     int tile_height = std::min(size.height,TILE_SIZE);
-    size_t localThreads[3]  = { tile_height, 1, 1};
-    size_t globalThreads[3] = { size.height, blockx, 1};
+    size_t localThreads[3]  = { static_cast<size_t>(tile_height), 1, 1};
+    size_t globalThreads[3] = { static_cast<size_t>(size.height), static_cast<size_t>(blockx), 1};
     std::vector<std::pair<size_t , const void *> > args,args_sum;
     args.push_back( std::make_pair( sizeof(cl_mem) , (void *)&src.data ));
     args.push_back( std::make_pair( sizeof(cl_int) , (void *)&src.rows ));

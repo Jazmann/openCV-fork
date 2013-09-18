@@ -198,7 +198,7 @@ static void mog_withoutLearning(const oclMat& frame, int cn, oclMat& fgmask, ocl
     Context* clCxt = Context::getContext();
 
     size_t local_thread[] = {32, 8, 1};
-    size_t global_thread[] = {frame.cols, frame.rows, 1};
+    size_t global_thread[] = {static_cast<size_t>(frame.cols), static_cast<size_t>(frame.rows), 1};
 
     int frame_step = (int)(frame.step/frame.elemSize());
     int fgmask_step = (int)(fgmask.step/fgmask.elemSize());
@@ -260,7 +260,7 @@ static void mog_withLearning(const oclMat& frame, int cn, oclMat& fgmask_raw, oc
     Context* clCxt = Context::getContext();
 
     size_t local_thread[] = {32, 8, 1};
-    size_t global_thread[] = {frame.cols, frame.rows, 1};
+    size_t global_thread[] = {static_cast<size_t>(frame.cols), static_cast<size_t>(frame.rows), 1};
 
     oclMat fgmask(fgmask_raw.size(), CV_32SC1);
 
@@ -341,7 +341,7 @@ void cv::ocl::device::mog::getBackgroundImage_ocl(int cn, const oclMat& weight, 
     Context* clCxt = Context::getContext();
 
     size_t local_thread[] = {32, 8, 1};
-    size_t global_thread[] = {dst.cols, dst.rows, 1};
+    size_t global_thread[] = {static_cast<size_t>(dst.cols), static_cast<size_t>(dst.rows), 1};
 
     int weight_step = (int)(weight.step/weight.elemSize());
     int mean_step = (int)(mean.step/mean.elemSize());
@@ -410,7 +410,7 @@ void cv::ocl::device::mog::mog2_ocl(const oclMat& frame, int cn, oclMat& fgmaskR
         detectShadows_flag = 1;
 
     size_t local_thread[] = {32, 8, 1};
-    size_t global_thread[] = {frame.cols, frame.rows, 1};
+    size_t global_thread[] = {static_cast<size_t>(frame.cols), static_cast<size_t>(frame.rows), 1};
 
     int frame_step = (int)(frame.step/frame.elemSize());
     int fgmask_step = (int)(fgmask.step/fgmask.elemSize());
@@ -480,7 +480,7 @@ void cv::ocl::device::mog::getBackgroundImage2_ocl(int cn, const oclMat& modesUs
     Context* clCxt = Context::getContext();
 
     size_t local_thread[] = {32, 8, 1};
-    size_t global_thread[] = {modesUsed.cols, modesUsed.rows, 1};
+    size_t global_thread[] = {static_cast<size_t>(modesUsed.cols), static_cast<size_t>(modesUsed.rows), 1};
 
     int weight_step = (int)(weight.step/weight.elemSize());
     int modesUsed_step = (int)(modesUsed.step/modesUsed.elemSize());

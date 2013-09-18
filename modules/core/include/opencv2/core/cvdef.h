@@ -499,7 +499,8 @@ typedef signed char schar;
 // In case the channels are packed into fewer than one byte each we calculate : bits_used = channels * bits_per_channel
 #define CV_ELEM_SIZE_BITS(type) ( CV_MAT_CN(type) * CV_MAT_DEPTH_BITS(type) )
 // then bytes = Ceiling( bits_used / 8)
-#define CV_ELEM_SIZE_BYTES(type) ((CV_ELEM_SIZE_BITS(type) >> 3) + ( (CV_ELEM_SIZE_BITS(type) & 7) ? 1 : 0 ))
+#define CV_ELEM_SIZE_BYTES(type) ( CV_MAT_CN(type) * CV_MAT_DEPTH_BYTES(type) )
+// #define CV_ELEM_SIZE_BYTES(type) ((CV_ELEM_SIZE_BITS(type) >> 3) + ( (CV_ELEM_SIZE_BITS(type) & 7) ? 1 : 0 ))
 
 #define CV_ELEM_SIZE CV_ELEM_SIZE_BYTES
 
