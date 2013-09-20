@@ -101,7 +101,8 @@ void cv::Canny( InputArray _src, OutputArray _dst,
         aperture_size &= ~CV_CANNY_L2_GRADIENT;
         L2gradient = true;
     }
-
+    printf("aperture_size : %i \n",aperture_size);
+    printf("src.size() : %i \n",src.size());
     if ((aperture_size & 1) == 0 || (aperture_size != -1 && (aperture_size < 3 || aperture_size > 7)))
         CV_Error(CV_StsBadFlag, "");
 
