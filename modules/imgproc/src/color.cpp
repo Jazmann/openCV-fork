@@ -3868,10 +3868,8 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int blue
         }
     };
 
-template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(cv::Vec<int, 3> sp0, cv::Vec<int, 3> sp1, cv::Vec<int, 3> sp2, cv::Vec<double, 3> g, cv::Vec<typename cv::depthConverter<src_t, dst_t>::srcType,3> c)
+template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int blueIdx, cv::Matx<int, 3, 3>& T, cv::Vec<double, 3> g, cv::Vec<typename cv::depthConverter<src_t, dst_t>::srcType,3> c)
 {
-    
-    
     using srcInfo = cv::Data_Type<src_t>;
     using srcType = typename cv::Data_Type<src_t>::type;
     using src_channel_type = srcType;
@@ -3891,104 +3889,18 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(cv::Vec<int, 3
     using dcDstType = typename cv::depthConverter<src_t, dst_t>::dstType;
     using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
     
-    int indxA = 0;
-    int indxB = 1;
-    int indxC = 2;
+    const int idxSrc[3] = {(blueIdx+2)%4,1,blueIdx}; // (blueIdx+2)%4 = 2 if blueIdx = 0
+    const int idxDst[3] = {(blueIdx+2)%4,1,blueIdx}; //                 0 if blueIdx = 2
     
-    cv::sVec<int, 3> v1(1.0, sp1 - sp0);
-    cv::sVec<int, 3> v2(1.0, sp2 - sp0);
+    int indxA = 0, indxB = 1, indxC = 2;
 
-    v1.factor(); v1.scale=1.0;
-    v2.factor(); v2.scale=1.0;
-    
-        
-    cv::sVec<int, 1> v1Norm2 = v1 * v1; // v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2];
-    cv::sVec<int, 1> v2Norm2 = v2 * v2; // v2[0] * v2[0] + v2[1] * v2[1] + v2[2] * v2[2];
-    cv::sVec<int, 1> v2DotV1 = v2 * v1; // v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
-    float v1V2Sin = sqrtf(v1Norm2(0) * v2Norm2(0) - v2DotV1(0) * v2DotV1(0));
-
-    cv::sVec<int, 3> a1 = v1;
-    cv::sVec<int, 3> a2a = v1Norm2(0) * v2;
-    cv::sVec<int, 3> a2b = v2DotV1(0) * v1;
-    cv::sVec<int, 3> a2(1.0 / (v1Norm2(0) * v1V2Sin), v1Norm2(0) * v2 - v2DotV1(0) * v1);
-    cv::sVec<int, 3> a3 = v1.cross(v2);
-    a3.scale = 1.0/v1V2Sin;
-    
-    a1.factor(); a2.factor(); a3.factor(); // Remove common factors
-    
-        // Reorder as a rigt handed coordinate system with a1 in RGB. If a1 is in RGB the all components are positive.
-        // a1 x a2 = a3, a2 x a3 = a1, a3 x a1 = a2 Cyclic permitations are allowed.
-        if (a1.allPositive()) {     // Then a1.vec is in RGB. Do nothing.
-            if (a1.scale < 0.0) { // a1 is pointing in the wrong direction flip the sign and correct the product a1 x a2 = a3.
-                a1.scale *= -1.0;
-                std::swap(a2, a3);
-                std::swap(indxB, indxC);
-            }
-        } else if (a2.allPositive()){ // Then a2.vec is in RGB. Make a2 -> a1, a1 -> a2 and flip sign of a3 to preserve a1 x a2 = a3.
-            if (a2.scale < 0.0) { // a2 is pointing in the wrong direction flip the sign and correct the product a1 x a2 = a3.
-                a2.scale *= -1.0;
-                std::swap(a1, a2); // Now : a2,a1,a3 As desired.
-                std::swap(indxA, indxB);
-            } else {
-                std::swap(a1, a3);    // Now : a3,a2,a1
-                std::swap(indxA, indxC);
-                std::swap(a1, a2);    // Now : a2,a3,a1 As desired.
-                std::swap(indxA, indxB);
-            }
-            a3 *= -1; // Flip sign of a3 to preserve a1 x a2 = a3.
-            
-        }else if (a3.allPositive()){ // Then a3.vec is in RGB. Perform cyclic permutation of the vectors. a3 -> a1, a1 -> a2, a2 -> a3.
-            if (a3.scale < 0.0) { // a3 is pointing in the wrong direction flip the sign and correct the product a1 x a2 = a3.
-                a3.scale *= -1.0;
-                std::swap(a1, a3);    // Now : a3,a2,a1
-                std::swap(indxA, indxC);
-            } else {
-                std::swap(a1, a3);    // Now : a3,a2,a1
-                std::swap(indxA, indxC);
-                std::swap(a2, a3);    // Now : a3,a1,a2 As desired.
-                std::swap(indxB, indxC);
-            }
-        }
-    // Rescale to avoid bit overflow during transform.
-    
-    int TitRowSum[3] = {
-        std::abs(a1[0])+std::abs(a1[1])+std::abs(a1[2]),
-        std::abs(a2[0])+std::abs(a2[1])+std::abs(a2[2]),
-        std::abs(a3[0])+std::abs(a3[1])+std::abs(a3[2])
-    };
-    // Find left most bit.
-    int TitRowLog2Sum[3] = {0,0,0};
-    for (int i=0; i<=2; i++) {
-        while (TitRowSum[i] >>= 1) ++TitRowLog2Sum[i];
-    }
-    
-    // MWB is the number of bits needed for the Working Type storage.
-    // a[0] srcMax + a[1] srcMax + a[2] srcMax  = ( a[0] + a[1] + a[2]) * srcMax
-    // MWB = log2(( a[0] + a[1] + a[2]) * srcMax) = log2( a[0] + a[1] + a[2]) + log2( srcMax )
-    cv::Matx<int, 3, 1> MWB({
-        TitRowLog2Sum[0] + CV_MAT_DEPTH_BITS(src_t),
-        TitRowLog2Sum[1] + CV_MAT_DEPTH_BITS(src_t),
-        TitRowLog2Sum[2] + CV_MAT_DEPTH_BITS(src_t)
-    });
-    printf("RGB2Rot\n");
-    
-    int excessWBFactor[3] = {
-        (int) ceil(pow(2, TitRowLog2Sum[0] - CV_MAT_DEPTH_BITS(src_t))),
-        (int) ceil(pow(2, TitRowLog2Sum[1] - CV_MAT_DEPTH_BITS(src_t))),
-        (int) ceil(pow(2, TitRowLog2Sum[2] - CV_MAT_DEPTH_BITS(src_t)))
-    };
-    printf("RGB2Rot\n");
-    
-    cv::Matx<wrkType, 3, 3> Ti = cv::Matx<wrkType, 3, 3>(a1[0]/excessWBFactor[0], a1[1]/excessWBFactor[0], a1[2]/excessWBFactor[0],
-                                                 a2[0]/excessWBFactor[1], a2[1]/excessWBFactor[1], a2[2]/excessWBFactor[1],
-                                                 a3[0]/excessWBFactor[2], a3[1]/excessWBFactor[2], a3[2]/excessWBFactor[2]);
     // Setup internal data
     printf("RGB2Rot\n");
-        cv::Matx<wrkType, 3, 8> RGBBox({
+    cv::Matx<int, 3, 8> RGBBox({
             0, 1, 0, 0, 0, 1, 1, 1,
             0, 0, 1, 0, 1, 0, 1, 1,
             0, 0, 0, 1, 1, 1, 0, 1});
-    cv::Matx<wrkType, 3, 8> RGBBoxInNew = Ti * RGBBox;
+    cv::Matx<wrkType, 3, 8> RGBBoxInNew = T * RGBBox;
     cv::Matx<wrkType, 3, 1> RGBCubeMax = cv::MaxInRow<wrkType, 3, 8>(RGBBoxInNew);
     cv::Matx<wrkType, 3, 1> RGBCubeMin = cv::MinInRow<wrkType, 3, 8>(RGBBoxInNew);
     cv::Matx<wrkType, 3, 1> RGBCubeRange = RGBCubeMax - RGBCubeMin;
@@ -3996,7 +3908,7 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(cv::Vec<int, 3
     for(int i = 0; i < dstInfo::channels; i++){
         for(int j = 0; j < srcInfo::channels; j++){
             if (j<3&&i<3) {
-                M[i][j] = Ti(i,j);
+                M[i][j] = T(idxDst[i], idxSrc[j]);
             }else{
                 M[i][j] = 0;// Dont add the alpha channel to the color mix.
             }
@@ -4004,9 +3916,9 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(cv::Vec<int, 3
         }
     }
     
-    printf(" Ti = %lli  %lli  %lli \n",Ti(0,0),Ti(0,1),Ti(0,2));
-    printf("      %lli  %lli  %lli \n",Ti(1,0),Ti(1,1),Ti(1,2));
-    printf("      %lli  %lli  %lli \n",Ti(2,0),Ti(2,1),Ti(2,2));
+    printf(" T = %lli  %lli  %lli \n",T(0,0),T(0,1),T(0,2));
+    printf("      %lli  %lli  %lli \n",T(1,0),T(1,1),T(1,2));
+    printf("      %lli  %lli  %lli \n",T(2,0),T(2,1),T(2,2));
     
     printf(" M = %lli  %lli  %lli \n",M[0][0],M[0][1],M[0][2]);
     printf("     %lli  %lli  %lli \n",M[1][0],M[1][1],M[1][2]);
@@ -4052,6 +3964,198 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(cv::Vec<int, 3
     printf("RGB2Rot out\n");
 }
 
+template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(cv::Vec<int, 3> sp0, cv::Vec<int, 3> sp1, cv::Vec<int, 3> sp2, cv::Vec<double, 3> g, cv::Vec<typename cv::depthConverter<src_t, dst_t>::srcType,3> c)
+{
+    
+    
+    using srcInfo = cv::Data_Type<src_t>;
+    using srcType = typename cv::Data_Type<src_t>::type;
+    using src_channel_type = srcType;
+    
+    using dstInfo = cv::Data_Type<dst_t>;
+    using dstType = typename cv::Data_Type<dst_t>::type;
+    using dst_channel_type = dstType;
+    
+    using srcInfo = typename cv::Data_Type<src_t>;
+    using srcType = typename cv::Data_Type<src_t>::type;
+    using dstInfo = typename cv::Data_Type<dst_t>;
+    using dstType = typename cv::Data_Type<dst_t>::type;
+    using wrkInfo = typename cv::colorSpaceConverter<src_t, dst_t>::wrkInfo;
+    using wrkType = typename cv::colorSpaceConverter<src_t, dst_t>::wrkType;
+    
+    using dcSrcType = typename cv::depthConverter<src_t, dst_t>::srcType;
+    using dcDstType = typename cv::depthConverter<src_t, dst_t>::dstType;
+    using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
+    
+    cv::Matx<wrkType, 3, 3> Ti;
+    int indxA, indxB, indxC;
+    
+    std::tie(Ti, indxA, indxB, indxC) = cv::transformFromVecs<src_t, wrkType>(sp0,sp1,sp2);
+    
+    // Setup internal data
+    printf("RGB2Rot\n");
+    cv::Matx<wrkType, 3, 8> RGBBox({
+        0, 1, 0, 0, 0, 1, 1, 1,
+        0, 0, 1, 0, 1, 0, 1, 1,
+        0, 0, 0, 1, 1, 1, 0, 1});
+    cv::Matx<wrkType, 3, 8> RGBBoxInNew = Ti * RGBBox;
+    cv::Matx<wrkType, 3, 1> RGBCubeMax = cv::MaxInRow<wrkType, 3, 8>(RGBBoxInNew);
+    cv::Matx<wrkType, 3, 1> RGBCubeMin = cv::MinInRow<wrkType, 3, 8>(RGBBoxInNew);
+    cv::Matx<wrkType, 3, 1> RGBCubeRange = RGBCubeMax - RGBCubeMin;
+    
+    for(int i = 0; i < dstInfo::channels; i++){
+        for(int j = 0; j < srcInfo::channels; j++){
+            if (j<3&&i<3) {
+                M[i][j] = Ti(i,j);
+            }else{
+                M[i][j] = 0;// Dont add the alpha channel to the color mix.
+            }
+            if (j==3&&i==3){M[i][j] = 1;};// Preserve alpha channel if possible.
+        }
+    }
+    
+    printf(" Ti = %lli  %lli  %lli \n",Ti(0,0),Ti(0,1),Ti(0,2));
+    printf("      %lli  %lli  %lli \n",Ti(1,0),Ti(1,1),Ti(1,2));
+    printf("      %lli  %lli  %lli \n",Ti(2,0),Ti(2,1),Ti(2,2));
+    
+    printf(" M = %lli  %lli  %lli \n",M[0][0],M[0][1],M[0][2]);
+    printf("     %lli  %lli  %lli \n",M[1][0],M[1][1],M[1][2]);
+    printf("     %lli  %lli  %lli \n",M[2][0],M[2][1],M[2][2]);
+    printf("RGB2Rot f\n");
+    
+    TMin[0] = RGBCubeMin(0,0); TRange[0] = RGBCubeRange(0,0);
+    TMin[1] = RGBCubeMin(1,0); TRange[1] = RGBCubeRange(1,0);
+    TMin[2] = RGBCubeMin(2,0); TRange[2] = RGBCubeRange(2,0);
+    
+    printf("RGB2Rot g\n");
+    
+    wrkType c1 = c[0]*M[0][0] + c[1]*M[0][1] + c[2]*M[0][2];
+    wrkType c2 = c[0]*M[1][0] + c[1]*M[1][1] + c[2]*M[1][2];
+    wrkType c3 = c[0]*M[2][0] + c[1]*M[2][1] + c[2]*M[2][2];
+    printf(" wrkInfo::max = %lli \n", wrkInfo::max);
+    printf(" wrkInfo::min = %lli \n", wrkInfo::min);
+    
+    
+    printf(" c = %lli, %i \n",c1,(int)c[0]);
+    printf("     %lli, %i \n",c2,(int)c[1]);
+    printf("     %lli, %i \n",c3,(int)c[2]);
+    
+    
+    printf("RGBCubeMin (int)sMin = %i (int)c = %i (int)sMax = %i (int)dMin = %i (int)dMax = %i \n",(int)wrkType((srcInfo::max - srcInfo::min) * TMin[0]), (int)c1,(int)wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(0,0)),(int)dcDstType(dstInfo::min), (int)dcDstType(dstInfo::max));
+    
+    
+    redScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (   g[indxA], c1, wrkType((srcInfo::max - srcInfo::min) * TMin[0]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(0,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
+    
+    printf("RGBCubeMin (int)sMin = %i (int)c = %i (int)sMax = %i (int)dMin = %i (int)dMax = %i \n",(int)wrkType((srcInfo::max - srcInfo::min) * TMin[1]), (int)c2,(int)wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(1,0)),(int)dcDstType(dstInfo::min), (int)dcDstType(dstInfo::max));
+    
+    
+    greenScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> ( g[indxB], c2, wrkType((srcInfo::max - srcInfo::min) * TMin[1]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(1,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
+    
+    
+    printf("RGBCubeMin (int)sMin = %i (int)c = %i (int)sMax = %i (int)dMin = %i (int)dMax = %i \n",(int)wrkType((srcInfo::max - srcInfo::min) * TMin[2]), (int)c3,(int)wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(2,0)),(int)dcDstType(dstInfo::min), (int)dcDstType(dstInfo::max));
+    
+    blueScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (  g[indxC], c3, wrkType((srcInfo::max - srcInfo::min) * TMin[2]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(2,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
+    
+    (*redScale)(  c1, cRot[0]);
+    (*greenScale)(c2, cRot[1]);
+    (*blueScale)( c3, cRot[2]);
+    printf("RGB2Rot out\n");
+}
+
+
+template<int src_t, typename wrkType> typename std::tuple<cv::Matx<wrkType, 3, 3>, int, int, int> cv::transformFromVecs(cv::Vec<int, 3> sp0, cv::Vec<int, 3> sp1, cv::Vec<int, 3> sp2)
+{
+    int indxA = 0;
+    int indxB = 1;
+    int indxC = 2;
+    
+    cv::sVec<int, 3> v1(1.0, sp1 - sp0);
+    cv::sVec<int, 3> v2(1.0, sp2 - sp0);
+    
+    v1.factor(); v1.scale=1.0;
+    v2.factor(); v2.scale=1.0;
+    
+    cv::sVec<int, 1> v1Norm2 = v1 * v1; // v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2];
+    cv::sVec<int, 1> v2Norm2 = v2 * v2; // v2[0] * v2[0] + v2[1] * v2[1] + v2[2] * v2[2];
+    cv::sVec<int, 1> v2DotV1 = v2 * v1; // v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
+    float v1V2Sin = sqrtf(v1Norm2(0) * v2Norm2(0) - v2DotV1(0) * v2DotV1(0));
+    
+    cv::sVec<int, 3> a1 = v1;
+    cv::sVec<int, 3> a2a = v1Norm2(0) * v2;
+    cv::sVec<int, 3> a2b = v2DotV1(0) * v1;
+    cv::sVec<int, 3> a2(1.0 / (v1Norm2(0) * v1V2Sin), v1Norm2(0) * v2 - v2DotV1(0) * v1);
+    cv::sVec<int, 3> a3 = v1.cross(v2);
+    a3.scale = 1.0/v1V2Sin;
+    
+    a1.factor(); a2.factor(); a3.factor(); // Remove common factors
+    
+    // Reorder as a rigt handed coordinate system with a1 in RGB. If a1 is in RGB the all components are positive.
+    // a1 x a2 = a3, a2 x a3 = a1, a3 x a1 = a2 Cyclic permitations are allowed.
+    if (a1.allPositive()) {     // Then a1.vec is in RGB. Do nothing.
+        if (a1.scale < 0.0) { // a1 is pointing in the wrong direction flip the sign and correct the product a1 x a2 = a3.
+            a1.scale *= -1.0;
+            std::swap(a2, a3);
+            std::swap(indxB, indxC);
+        }
+    } else if (a2.allPositive()){ // Then a2.vec is in RGB. Make a2 -> a1, a1 -> a2 and flip sign of a3 to preserve a1 x a2 = a3.
+        if (a2.scale < 0.0) { // a2 is pointing in the wrong direction flip the sign and correct the product a1 x a2 = a3.
+            a2.scale *= -1.0;
+            std::swap(a1, a2); // Now : a2,a1,a3 As desired.
+            std::swap(indxA, indxB);
+        } else {
+            std::swap(a1, a3);    // Now : a3,a2,a1
+            std::swap(indxA, indxC);
+            std::swap(a1, a2);    // Now : a2,a3,a1 As desired.
+            std::swap(indxA, indxB);
+        }
+        a3 *= -1; // Flip sign of a3 to preserve a1 x a2 = a3.
+        
+    }else if (a3.allPositive()){ // Then a3.vec is in RGB. Perform cyclic permutation of the vectors. a3 -> a1, a1 -> a2, a2 -> a3.
+        if (a3.scale < 0.0) { // a3 is pointing in the wrong direction flip the sign and correct the product a1 x a2 = a3.
+            a3.scale *= -1.0;
+            std::swap(a1, a3);    // Now : a3,a2,a1
+            std::swap(indxA, indxC);
+        } else {
+            std::swap(a1, a3);    // Now : a3,a2,a1
+            std::swap(indxA, indxC);
+            std::swap(a2, a3);    // Now : a3,a1,a2 As desired.
+            std::swap(indxB, indxC);
+        }
+    }
+    // Rescale to avoid bit overflow during transform.
+    
+    int TitRowSum[3] = {
+        std::abs(a1[0])+std::abs(a1[1])+std::abs(a1[2]),
+        std::abs(a2[0])+std::abs(a2[1])+std::abs(a2[2]),
+        std::abs(a3[0])+std::abs(a3[1])+std::abs(a3[2])
+    };
+    // Find left most bit.
+    int TitRowLog2Sum[3] = {0,0,0};
+    for (int i=0; i<=2; i++) {
+        while (TitRowSum[i] >>= 1) ++TitRowLog2Sum[i];
+    }
+    
+    // MWB is the number of bits needed for the Working Type storage.
+    // a[0] srcMax + a[1] srcMax + a[2] srcMax  = ( a[0] + a[1] + a[2]) * srcMax
+    // MWB = log2(( a[0] + a[1] + a[2]) * srcMax) = log2( a[0] + a[1] + a[2]) + log2( srcMax )
+    cv::Matx<int, 3, 1> MWB({
+        TitRowLog2Sum[0] + CV_MAT_DEPTH_BITS(src_t),
+        TitRowLog2Sum[1] + CV_MAT_DEPTH_BITS(src_t),
+        TitRowLog2Sum[2] + CV_MAT_DEPTH_BITS(src_t)
+    });
+    
+    int excessWBFactor[3] = {
+        (int) ceil(pow(2, TitRowLog2Sum[0] - CV_MAT_DEPTH_BITS(src_t))),
+        (int) ceil(pow(2, TitRowLog2Sum[1] - CV_MAT_DEPTH_BITS(src_t))),
+        (int) ceil(pow(2, TitRowLog2Sum[2] - CV_MAT_DEPTH_BITS(src_t)))
+    };
+    
+    return {cv::Matx<wrkType, 3, 4>(a1[0]/excessWBFactor[0], a1[1]/excessWBFactor[0], a1[2]/excessWBFactor[0], wrkType(indxA),
+                                   a2[0]/excessWBFactor[1], a2[1]/excessWBFactor[1], a2[2]/excessWBFactor[1], wrkType(indxB),
+                                   a3[0]/excessWBFactor[2], a3[1]/excessWBFactor[2], a3[2]/excessWBFactor[2], wrkType(indxC)),
+            indxA, indxB, indxC};
+   }
+
 template<int src_t, int dst_t> inline void cv::RGB2Rot<src_t, dst_t>::operator()(const typename cv::Data_Type<src_t>::type* src, typename cv::Data_Type<dst_t>::type* dst, int n) const
 {
     using cs = typename cv::colorSpaceConverter<src_t, dst_t>;
@@ -4086,6 +4190,9 @@ template<int src_t, int dst_t> inline void cv::RGB2Rot<src_t, dst_t>::operator()
 
 template class cv::RGB2Rot<CV_8UC3,CV_8UC3>;
 template class cv::RGB2Rot<CV_8UC4,CV_8UC3>;
+
+template class cv::transformFromVecs<CV_8UC3,CV_8UC3>;
+template class cv::transformFromVecs<CV_8UC4,CV_8UC3>;
 
 template<int src_t, int dst_t> void cv::convertColor(cv::InputArray _src, cv::OutputArray _dst, cv::colorSpaceConverter<src_t, dst_t>& colorConverter)
 {

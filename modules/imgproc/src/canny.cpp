@@ -94,7 +94,9 @@ void cv::Canny( InputArray _src, OutputArray _dst,
 
     _dst.create(src.size(), CV_8U);
     Mat dst = _dst.getMat();
-
+    
+    printf("aperture_size : %i \n",aperture_size);
+    printf("~CV_CANNY_L2_GRADIENT : %i \n",~CV_CANNY_L2_GRADIENT);
     if (!L2gradient && (aperture_size & CV_CANNY_L2_GRADIENT) == CV_CANNY_L2_GRADIENT)
     {
         //backward compatibility
@@ -122,11 +124,17 @@ void cv::Canny( InputArray _src, OutputArray _dst,
 #endif
 
     const int cn = src.channels();
+    
+    printf("cn : %i \n",cn);
+    printf("CV_16SC(cn) : %i \n",CV_16SC(cn));
+    
     Mat dx(src.rows, src.cols, CV_16SC(cn));
     Mat dy(src.rows, src.cols, CV_16SC(cn));
 
     Sobel(src, dx, CV_16S, 1, 0, aperture_size, 1, 0, cv::BORDER_REPLICATE);
     Sobel(src, dy, CV_16S, 0, 1, aperture_size, 1, 0, cv::BORDER_REPLICATE);
+    printf("out of Sobel \n");
+
 
     if (L2gradient)
     {
@@ -136,26 +144,58 @@ void cv::Canny( InputArray _src, OutputArray _dst,
         if (low_thresh > 0) low_thresh *= low_thresh;
         if (high_thresh > 0) high_thresh *= high_thresh;
     }
+    printf("cv::Canny \n");
+
     int low = cvFloor(low_thresh);
     int high = cvFloor(high_thresh);
+    printf("cv::Canny \n");
+
 
     ptrdiff_t mapstep = src.cols + 2;
+    printf("cv::Canny \n");
+
     AutoBuffer<uchar> buffer((src.cols+2)*(src.rows+2) + cn * mapstep * 3 * sizeof(int));
+    printf("cv::Canny \n");
+
 
     int* mag_buf[3];
+    printf("cv::Canny \n");
+
     mag_buf[0] = (int*)(uchar*)buffer;
+    printf("cv::Canny \n");
+
     mag_buf[1] = mag_buf[0] + mapstep*cn;
+    printf("cv::Canny \n");
+
     mag_buf[2] = mag_buf[1] + mapstep*cn;
+    printf("cv::Canny \n");
+
     memset(mag_buf[0], 0, /* cn* */mapstep*sizeof(int));
+    printf("cv::Canny \n");
+
 
     uchar* map = (uchar*)(mag_buf[2] + mapstep*cn);
+    printf("cv::Canny \n");
+
     memset(map, 1, mapstep);
+    printf("cv::Canny \n");
+
     memset(map + mapstep*(src.rows + 1), 1, mapstep);
+    printf("cv::Canny \n");
+
 
     int maxsize = std::max(1 << 10, src.cols * src.rows / 10);
+    printf("cv::Canny \n");
+
     std::vector<uchar*> stack(maxsize);
+    printf("cv::Canny \n");
+
     uchar **stack_top = &stack[0];
+    printf("cv::Canny \n");
+
     uchar **stack_bottom = &stack[0];
+    printf("cv::Canny \n");
+
 
     /* sector numbers
        (Top-Left Origin)
@@ -285,12 +325,14 @@ __ocv_canny_push:
                 _map[j] = 0;
         }
 
+
         // scroll the ring buffer
         _mag = mag_buf[0];
         mag_buf[0] = mag_buf[1];
         mag_buf[1] = mag_buf[2];
         mag_buf[2] = _mag;
     }
+    printf("cv::Canny out of loop\n");
 
     // now track the edges (hysteresis thresholding)
     while (stack_top > stack_bottom)
@@ -316,6 +358,7 @@ __ocv_canny_push:
         if (!m[mapstep])    CANNY_PUSH(m + mapstep);
         if (!m[mapstep+1])  CANNY_PUSH(m + mapstep + 1);
     }
+    printf("cv::Canny out of 2nd loop\n");
 
     // the final pass, form the final image
     const uchar* pmap = map + mapstep + 1;
@@ -325,6 +368,7 @@ __ocv_canny_push:
         for (int j = 0; j < src.cols; j++)
             pdst[j] = (uchar)-(pmap[j] >> 1);
     }
+    printf("cv::Canny out of 3rd loop\n");
 }
 
 void cvCanny( const CvArr* image, CvArr* edges, double threshold1,

@@ -439,6 +439,11 @@ void cv::Sobel( InputArray _src, OutputArray _dst, int ddepth, int dx, int dy,
     int ktype = std::max(CV_32F, std::max(ddepth, src.depth()));
 
     Mat kx, ky;
+    printf("Sobel:getDerivKernels\n");
+    printf("Sobel:getDerivKernels : dx : %i\n",dx);
+    printf("Sobel:getDerivKernels : dy : %i\n",dy);
+    printf("Sobel:getDerivKernels : ksize : %i\n",ksize);
+    printf("Sobel:getDerivKernels : ktype : %i\n",ktype);
     getDerivKernels( kx, ky, dx, dy, ksize, false, ktype );
     if( scale != 1 )
     {
@@ -449,7 +454,9 @@ void cv::Sobel( InputArray _src, OutputArray _dst, int ddepth, int dx, int dy,
         else
             ky *= scale;
     }
+    printf("Sobel:sepFilter2D\n");
     sepFilter2D( src, dst, ddepth, kx, ky, Point(-1,-1), delta, borderType );
+    printf("Sobel:sepFilter2D : out \n");
 }
 
 
