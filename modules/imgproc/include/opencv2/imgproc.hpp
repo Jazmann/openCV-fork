@@ -553,24 +553,27 @@ template<int src_t, int dst_t> class RGB2Rot: public colorSpaceConverter<src_t, 
         distributeErf<wrkInfo::dataType, dstInfo::dataType> *redScale, *greenScale, *blueScale;
         
         RGB2Rot(); // todo set default distribution functions.
-        RGB2Rot(const int blueIdx, Matx<int, 3, 3>& T, Vec<int, 3>& _TRange, Vec<int,3>& _TMin);
         
-        RGB2Rot(Vec<int, 3> sp0, Vec<int, 3> sp1, Vec<int, 3> sp2, Vec<double, 3> g, Vec<typename depthConverter<src_t, dst_t>::srcType, 3 > c);
+        RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, Vec<int, 3> sp0, Vec<int, 3> sp1, Vec<int, 3> sp2, Vec<double, 3> g, Vec<int, 3> c);
         
-        RGB2Rot(const int blueIdx, cv::Matx<int, 3, 3>& T, cv::Vec<double, 3> g, cv::Vec<typename cv::depthConverter<src_t, dst_t>::srcType,3> c);
-        
-        void setRGBIndices(int srcBlueIdx, int dstBlueIdx);
-        void setTransformFromVecs(cv::Vec<int, 3> sp0, cv::Vec<int, 3> sp1, cv::Vec<int, 3> sp2);
-        void setTransform(cv::Matx<int, 3, 3>& T);
-        void setRanges();
-        void setRedDistributionErf(  int center, double gradient);
-        void setGreenDistributionErf(int center, double gradient);
-        void setBlueDistributionErf( int center, double gradient);
-        
+        RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, cv::Matx<int, 3, 3>& T, cv::Vec<double, 3> g, cv::Vec<int, 3> c);
+                
+       void setRGBIndices(int srcBlueIdx, int dstBlueIdx);
+       void setTransformFromVecs(cv::Vec<int, 3> sp0, cv::Vec<int, 3> sp1, cv::Vec<int, 3> sp2);
+       void setTransform(cv::Matx<int, 3, 3>& T);
+       void setRanges(cv::Matx<int, 3, 3>& T);
+       void setRanges();
+       void setCinRGB(int* _c);
+       void setC(int* _c);
+       void setG(double * _g): g(_g);
+       void setRedDistributionErf();
+       void setRedDistributionErf(  int center, double gradient);
+       void setGreenDistributionErf();
+       void setGreenDistributionErf(int center, double gradient);
+       void setBlueDistributionErf();
+       void setBlueDistributionErf( int center, double gradient);
 
-
-    
-        void operator()(const typename cv::Data_Type<src_t>::type* src, typename cv::Data_Type<dst_t>::type* dst, int n) const;
+       void operator()(const typename cv::Data_Type<src_t>::type* src, typename cv::Data_Type<dst_t>::type* dst, int n) const;
     };
     
     
