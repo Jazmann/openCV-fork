@@ -4073,7 +4073,7 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setCinRGB(int* _c
     c[2] = _c[indxA]*M[2][0] + _c[indxB]*M[2][1] + _c[indxC]*M[2][2];
 };
 
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setC(int* _c){
+template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setC(Vec<int, 3> _c){
     using srcInfo = cv::Data_Type<src_t>;
     using srcType = typename cv::Data_Type<src_t>::type;
     
@@ -4089,7 +4089,7 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setC(int* _c){
     c = {wrkType(_c[indxA]),wrkType(_c[indxB]),wrkType(_c[indxC])};
 };
 
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setG(double * _g){
+template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setG(Vec<double, 3> _g){
     using srcInfo = cv::Data_Type<src_t>;
     using srcType = typename cv::Data_Type<src_t>::type;
     
@@ -4107,7 +4107,7 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setG(double * _g)
 };
 
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRedDistributionErf(){
-    setRedDistributionErf(c[dstRGBindx[0]],g[dstRGBindx[0]]);
+    setRedDistributionErf(c[dstRGBIndices[0]],g[dstRGBIndices[0]]);
 };
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRedDistributionErf(  int center, double gradient){
     using srcInfo = cv::Data_Type<src_t>;
@@ -4122,11 +4122,11 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRedDistributio
     using dcSrcType = typename cv::depthConverter<src_t, dst_t>::srcType;
     using dcDstType = typename cv::depthConverter<src_t, dst_t>::dstType;
     using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
-    redScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (   gradient, center, wrkType((srcInfo::max - srcInfo::min) * TMin[0]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(0,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
+    redScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (   gradient, center, wrkType((srcInfo::max - srcInfo::min) * TMin[0]), wrkType((srcInfo::max - srcInfo::min) * (TMin[0]+TRange[0])), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
     //(*redScale)(  c1, cRot[0]);
 };
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setGreenDistributionErf(){
-    setGreenDistributionErf(c[dstRGBindx[1]],g[dstRGBindx[1]]);
+    setGreenDistributionErf(c[dstRGBIndices[1]],g[dstRGBIndices[1]]);
 };
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setGreenDistributionErf(int center, double gradient){
     using srcInfo = cv::Data_Type<src_t>;
@@ -4141,11 +4141,11 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setGreenDistribut
     using dcSrcType = typename cv::depthConverter<src_t, dst_t>::srcType;
     using dcDstType = typename cv::depthConverter<src_t, dst_t>::dstType;
     using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
-    greenScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> ( gradient, center, wrkType((srcInfo::max - srcInfo::min) * TMin[1]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(1,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
+    greenScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> ( gradient, center, wrkType((srcInfo::max - srcInfo::min) * TMin[1]), wrkType((srcInfo::max - srcInfo::min) * (TMin[1]+TRange[1])), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
     //(*greenScale)(c2, cRot[1]);
 };
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setBlueDistributionErf(){
-    setBlueDistributionErf(c[dstRGBindx[2]],g[dstRGBindx[2]]);
+    setBlueDistributionErf(c[dstRGBIndices[2]],g[dstRGBIndices[2]]);
 };
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setBlueDistributionErf( int center, double gradient){
     using srcInfo = cv::Data_Type<src_t>;
@@ -4160,11 +4160,11 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setBlueDistributi
     using dcSrcType = typename cv::depthConverter<src_t, dst_t>::srcType;
     using dcDstType = typename cv::depthConverter<src_t, dst_t>::dstType;
     using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
-    blueScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (  gradient, center, wrkType((srcInfo::max - srcInfo::min) * TMin[2]), wrkType((srcInfo::max - srcInfo::min) * RGBCubeMax(2,0)), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
+    blueScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (  gradient, center, wrkType((srcInfo::max - srcInfo::min) * TMin[2]), wrkType((srcInfo::max - srcInfo::min) * (TMin[2]+TRange[2])), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
     //(*blueScale)( c3, cRot[2]);
 };
 
-template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, Vec<int, 3> sp0, Vec<int, 3> sp1, Vec<int, 3> sp2, Vec<double, 3> g, Vec<int, 3> c){
+template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, Vec<int, 3> sp0, Vec<int, 3> sp1, Vec<int, 3> sp2, Vec<double, 3> _g, Vec<int, 3> _c){
     using srcInfo = cv::Data_Type<src_t>;
     using srcType = typename cv::Data_Type<src_t>::type;
     
@@ -4179,7 +4179,7 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcB
     using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
     
     RGB2Rot();
-    setTransformFromVecs(sp0, sp1, sp2)
+    setTransformFromVecs(sp0, sp1, sp2);
     setRGBIndices(srcBlueIdx, dstBlueIdx);
     setC(_c); // asumes that c is in rotated color space and with a dstBlueIdx
     setG(_g);
@@ -4228,9 +4228,6 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot()
     using dcSrcType = typename cv::depthConverter<src_t, dst_t>::srcType;
     using dcDstType = typename cv::depthConverter<src_t, dst_t>::dstType;
     using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
-    
-    const int idxSrc[3] = {(blueIdx+2)%4,1,blueIdx}; // (blueIdx+2)%4 = 2 if blueIdx = 0
-    const int idxDst[3] = {(blueIdx+2)%4,1,blueIdx}; //                 0 if blueIdx = 2
     
     indxA = 0, indxB = 1, indxC = 2;
     

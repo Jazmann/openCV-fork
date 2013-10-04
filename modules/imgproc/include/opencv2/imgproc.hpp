@@ -536,8 +536,8 @@ template<int src_t, int dst_t> class RGB2Rot: public colorSpaceConverter<src_t, 
         int indxA, indxB, indxC; // indices for the axis.
         int dstRGBIndices[3]; // indices for the destination 'RGB' channels
         int srcRGBIndices[3]; // indices for the source RGB channels
-        int c[dstInfo::channels];
-        double g[dstInfo::channels];
+        int c[3];
+        double g[3];
         public :
         using srcInfo = typename colorSpaceConverter<src_t, dst_t>::srcInfo;
         using dstInfo = typename colorSpaceConverter<src_t, dst_t>::dstInfo;
@@ -554,9 +554,9 @@ template<int src_t, int dst_t> class RGB2Rot: public colorSpaceConverter<src_t, 
         
         RGB2Rot(); // todo set default distribution functions.
         
-        RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, Vec<int, 3> sp0, Vec<int, 3> sp1, Vec<int, 3> sp2, Vec<double, 3> g, Vec<int, 3> c);
+        RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, Vec<int, 3> sp0, Vec<int, 3> sp1, Vec<int, 3> sp2, Vec<double, 3> _g, Vec<int, 3> _c);
         
-        RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, cv::Matx<int, 3, 3>& T, cv::Vec<double, 3> g, cv::Vec<int, 3> c);
+        RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, cv::Matx<int, 3, 3>& T, cv::Vec<double, 3> _g, cv::Vec<int, 3> _c);
                 
        void setRGBIndices(int srcBlueIdx, int dstBlueIdx);
        void setTransformFromVecs(cv::Vec<int, 3> sp0, cv::Vec<int, 3> sp1, cv::Vec<int, 3> sp2);
@@ -564,8 +564,8 @@ template<int src_t, int dst_t> class RGB2Rot: public colorSpaceConverter<src_t, 
        void setRanges(cv::Matx<int, 3, 3>& T);
        void setRanges();
        void setCinRGB(int* _c);
-       void setC(int* _c);
-       void setG(double * _g): g(_g);
+       void setC(Vec<int, 3> _c);
+       void setG(Vec<double, 3> _g);
        void setRedDistributionErf();
        void setRedDistributionErf(  int center, double gradient);
        void setGreenDistributionErf();
