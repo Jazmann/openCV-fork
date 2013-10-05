@@ -3870,13 +3870,22 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRGBIndices(int
     using dcDstType = typename cv::depthConverter<src_t, dst_t>::dstType;
     using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
     
-    wrkType _M[dstInfo::channels][srcInfo::channels] = M;
-    wrkType _TRange[dstInfo::channels] = TRange, _TMin[dstInfo::channels] = TMin;
-    srcRGBIndices[3] = {(srcBlueIdx+2)%4,1,srcBlueIdx}; // (blueIdx+2)%4 = 2 if blueIdx = 0
-    dstRGBIndices[3] = {(dstBlueIdx+2)%4,1,dstBlueIdx}; //                 0 if blueIdx = 2
+    wrkType _M[dstInfo::channels][srcInfo::channels];
+    wrkType _TRange[dstInfo::channels], _TMin[dstInfo::channels];
+    
+    for (int i=0; i<=dstInfo::channels; i++) {
+        for (int j=0; j<=srcInfo::channels; j++) {
+            _M[i][j] = M[i][j];
+        }
+        _TRange[i] = TRange[i];
+        _TMin[i] = TMin[i];
+    }
+    
+    srcRGBIndices[0] = (srcBlueIdx+2)%4; srcRGBIndices[1] = 1; srcRGBIndices[2] = srcBlueIdx; // (blueIdx+2)%4 = 2 if blueIdx = 0
+    dstRGBIndices[0] = (dstBlueIdx+2)%4; dstRGBIndices[1] = 1; dstRGBIndices[2] = dstBlueIdx; //                 0 if blueIdx = 2
     for(int i=0;i<3;i++){
         for(int j=0;j<3;j++){
-            M[i][j] = _M(dstRGBIndices[i], srcRGBIndices[j]);
+            M[i][j] = _M[dstRGBIndices[i]][srcRGBIndices[j]];
         }
         TRange[i] = _TRange[dstRGBIndices[i]];
         TMin[i]   = _TMin[  dstRGBIndices[i]];
@@ -4086,7 +4095,7 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setC(Vec<int, 3> 
     using dcSrcType = typename cv::depthConverter<src_t, dst_t>::srcType;
     using dcDstType = typename cv::depthConverter<src_t, dst_t>::dstType;
     using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
-    c = {wrkType(_c[indxA]),wrkType(_c[indxB]),wrkType(_c[indxC])};
+    c[0] = _c[indxA]; c[1] = _c[indxB]; c[2] = _c[indxC];
 };
 
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setG(Vec<double, 3> _g){
@@ -4102,7 +4111,7 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setG(Vec<double, 
     using dcSrcType = typename cv::depthConverter<src_t, dst_t>::srcType;
     using dcDstType = typename cv::depthConverter<src_t, dst_t>::dstType;
     using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
-    g = {wrkType(_g[indxA]),wrkType(_g[indxB]),wrkType(_g[indxC])};
+    g[0] = _g[indxA]; g[1] = _g[indxB]; g[2] = _g[indxC];
 
 };
 
