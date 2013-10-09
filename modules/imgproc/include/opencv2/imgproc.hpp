@@ -507,6 +507,21 @@ template<int src_t, int dst_t>  class  distributeLinear: public depthConverter<s
         void operator()(const srcType src, dstType dst) const;
     };
     
+//template<int src_t, int dst_t>  class  distributeEuclideanMetric: public depthConverter<src_t, dst_t>
+//    {
+//        public :
+//        using srcType = typename depthConverter<src_t, dst_t>::srcType;
+//        using dstType = typename depthConverter<src_t, dst_t>::dstType;
+//        using wrkType = typename depthConverter<src_t, dst_t>::wrkType;
+//        srcType sRange, c;
+//        double g, scale;
+//        wrkType shift;
+//        
+//        distributeEuclideanMetric();
+//        distributeEuclideanMetric( double _g, typename depthConverter<src_t, dst_t>::srcType _c, typename depthConverter<src_t, dst_t>::srcType sMin, typename depthConverter<src_t, dst_t>::srcType sMax, typename depthConverter<src_t, dst_t>::dstType dMin, typename depthConverter<src_t, dst_t>::dstType dMax);
+//        void operator()(const srcType src, dstType &dst);
+//    };
+
     
 template<int src_t, int dst_t> class colorSpaceConverter
     {
@@ -532,12 +547,6 @@ template<int src_t, int dst_t> class colorSpaceConverter
     
 template<int src_t, int dst_t> class RGB2Rot: public colorSpaceConverter<src_t, dst_t>
     {
-        private :
-        int indxA, indxB, indxC; // indices for the axis.
-        int dstRGBIndices[3]; // indices for the destination 'RGB' channels
-        int srcRGBIndices[3]; // indices for the source RGB channels
-        int c[3];
-        double g[3];
         public :
         using srcInfo = typename colorSpaceConverter<src_t, dst_t>::srcInfo;
         using dstInfo = typename colorSpaceConverter<src_t, dst_t>::dstInfo;
@@ -546,6 +555,11 @@ template<int src_t, int dst_t> class RGB2Rot: public colorSpaceConverter<src_t, 
         using wrkInfo = typename colorSpaceConverter<src_t, dst_t>::wrkInfo;
         using wrkType = typename colorSpaceConverter<src_t, dst_t>::wrkType;
         
+        int indxA{0}, indxB{1}, indxC{2}; // indices for the axis.
+        int dstRGBIndices[3]; // indices for the destination 'RGB' channels
+        int srcRGBIndices[3]; // indices for the source RGB channels
+        int c[3];
+        double g[3];
         wrkType M[dstInfo::channels][srcInfo::channels];
         wrkType TRange[dstInfo::channels], TMin[dstInfo::channels];
         dstType cRot[dstInfo::channels];
@@ -557,13 +571,13 @@ template<int src_t, int dst_t> class RGB2Rot: public colorSpaceConverter<src_t, 
         RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, Vec<int, 3> sp0, Vec<int, 3> sp1, Vec<int, 3> sp2, Vec<double, 3> _g, Vec<int, 3> _c);
         
         RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, cv::Matx<int, 3, 3>& T, cv::Vec<double, 3> _g, cv::Vec<int, 3> _c);
-                
+        void init();
        void setRGBIndices(int srcBlueIdx, int dstBlueIdx);
        void setTransformFromVecs(cv::Vec<int, 3> sp0, cv::Vec<int, 3> sp1, cv::Vec<int, 3> sp2);
        void setTransform(cv::Matx<int, 3, 3>& T);
        void setRanges(cv::Matx<int, 3, 3>& T);
        void setRanges();
-       void setCinRGB(int* _c);
+       void setCinRGB(Vec<int, 3> _c);
        void setC(Vec<int, 3> _c);
        void setG(Vec<double, 3> _g);
        void setRedDistributionErf();
@@ -576,6 +590,28 @@ template<int src_t, int dst_t> class RGB2Rot: public colorSpaceConverter<src_t, 
        void operator()(const typename cv::Data_Type<src_t>::type* src, typename cv::Data_Type<dst_t>::type* dst, int n) const;
     };
     
+template<int src_t, int dst_t> class ABC2Metric: public colorSpaceConverter<src_t, dst_t>
+    {
+        public :
+        using srcInfo = typename colorSpaceConverter<src_t, dst_t>::srcInfo;
+        using dstInfo = typename colorSpaceConverter<src_t, dst_t>::dstInfo;
+        using srcType = typename colorSpaceConverter<src_t, dst_t>::srcType;
+        using dstType = typename colorSpaceConverter<src_t, dst_t>::dstType;
+        using wrkInfo = typename colorSpaceConverter<src_t, dst_t>::wrkInfo;
+        using wrkType = typename colorSpaceConverter<src_t, dst_t>::wrkType;
+        
+        srcType c[3];
+        int M[dstInfo::channels][srcInfo::channels];
+        
+        ABC2Metric(); // todo set default distribution functions.
+        
+        ABC2Metric(cv::Matx<int, 3, 3>& T, cv::Vec<int, 3> _c);
+        
+        void init();
+        
+        void operator()(const typename cv::Data_Type<src_t>::type* src, typename cv::Data_Type<dst_t>::type* dst, int n) const;
+    };
+
     
 template<int src_t, int dst_t> void convertColor(InputArray _src, OutputArray _dst, colorSpaceConverter<src_t, dst_t>& colorConverter);
     
