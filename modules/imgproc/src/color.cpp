@@ -4395,6 +4395,8 @@ template<int src_t, int dst_t> inline void cv::ABC2Metric<src_t, dst_t>::operato
     }
 }
 
+template class cv::ABC2Metric<CV_8UC3,CV_8UC3>;
+template class cv::ABC2Metric<CV_8UC4,CV_8UC3>;
 
 template<int src_t, int dst_t> void cv::convertColor(cv::InputArray _src, cv::OutputArray _dst, cv::colorSpaceConverter<src_t, dst_t>& colorConverter)
 {
