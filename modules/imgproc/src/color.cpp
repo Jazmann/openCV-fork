@@ -1576,7 +1576,7 @@ struct HSV2RGB_f
                     do h += 6; while( h < 0 );
                 else if( h >= 6 )
                     do h -= 6; while( h >= 6 );
-                sector = cvFloor(h);
+                sector = cvstd::floor(h);
                 h -= sector;
                 if( (unsigned)sector >= 6u )
                 {
@@ -1781,7 +1781,7 @@ struct HLS2RGB_f
                     do h -= 6; while( h >= 6 );
 
                 assert( 0 <= h && h < 6 );
-                sector = cvFloor(h);
+                sector = cvstd::floor(h);
                 h -= sector;
 
                 tab[0] = p2;
@@ -3966,14 +3966,14 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromV
     cv::sVec<int, 1> v1Norm2 = v1 * v1; // v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2];
     cv::sVec<int, 1> v2Norm2 = v2 * v2; // v2[0] * v2[0] + v2[1] * v2[1] + v2[2] * v2[2];
     cv::sVec<int, 1> v2DotV1 = v2 * v1; // v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
-    float v1V2Sin = sqrtf(v1Norm2(0) * v2Norm2(0) - v2DotV1(0) * v2DotV1(0));
+    float v1V2std::sin = sqrtf(v1Norm2(0) * v2Norm2(0) - v2DotV1(0) * v2DotV1(0));
     
     cv::sVec<int, 3> a1 = v1;
     cv::sVec<int, 3> a2a = v1Norm2(0) * v2;
     cv::sVec<int, 3> a2b = v2DotV1(0) * v1;
-    cv::sVec<int, 3> a2(1.0 / (v1Norm2(0) * v1V2Sin), v1Norm2(0) * v2 - v2DotV1(0) * v1);
+    cv::sVec<int, 3> a2(1.0 / (v1Norm2(0) * v1V2std::sin), v1Norm2(0) * v2 - v2DotV1(0) * v1);
     cv::sVec<int, 3> a3 = v1.cross(v2);
-    a3.scale = 1.0/v1V2Sin;
+    a3.scale = 1.0/v1V2std::sin;
     
     a1.factor(); a2.factor(); a3.factor(); // Remove common factors
     
@@ -4064,6 +4064,65 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransform(cv::
     
     setRanges();
 
+};
+template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromAngle(double theta){
+    using srcInfo = cv::Data_Type<src_t>;
+    using srcType = typename cv::Data_Type<src_t>::type;
+    
+    using dstInfo = cv::Data_Type<dst_t>;
+    using dstType = typename cv::Data_Type<dst_t>::type;
+    
+    using wrkInfo = typename cv::colorSpaceConverter<src_t, dst_t>::wrkInfo;
+    using wrkType = typename cv::colorSpaceConverter<src_t, dst_t>::wrkType;
+    
+    using dcSrcType = typename cv::depthConverter<src_t, dst_t>::srcType;
+    using dcDstType = typename cv::depthConverter<src_t, dst_t>::dstType;
+    using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
+    
+    cv::Matx<double, 3, 3> T(0.3333333333333333,0.3333333333333333,0.3333333333333333,
+        -((1.0/std::cos(theta - (CV_PI*std::floor(0.5 + (3*theta)/CV_PI))/3.))*(std::cos(theta) + std::sqrt(3)*std::sin(theta)))/4.,
+        (std::cos(theta)*(1.0/std::cos(theta - (CV_PI*std::floor(0.5 + (3*theta)/CV_PI))/3.)))/2.,
+        ((1.0/std::cos(theta - (CV_PI*std::floor(0.5 + (3*theta)/CV_PI))/3.))*(-std::cos(theta) + std::sqrt(3)*std::sin(theta)))/4.),
+        ((1.0/std::cos((CV_PI - 6*(theta % CV_PI/3.))/6.))*(-(std::sqrt(3)*std::cos(theta)) + std::sin(theta)))/4.,
+        -((1.0/std::cos((CV_PI - 6*(theta % CV_PI/3.))/6.))*std::sin(theta))/2.,
+    ((1.0/std::cos((CV_PI - 6*(theta % CV_PI/3.))/6.))*(std::sqrt(3)*std::cos(theta) + std::sin(theta)))/4.);
+    
+    // Setup internal data
+    setRanges(T);
+    // Rescale to avoid bit overflow during transform.
+    
+    int TitRowSum[3] = {
+        std::abs(T(0,0))+std::abs(T(0,1))+std::abs(T(0,2)),
+        std::abs(T(1,0))+std::abs(T(1,1))+std::abs(T(1,2)),
+        std::abs(T(2,0))+std::abs(T(2,1))+std::abs(T(2,2))
+    };
+    // Find left most bit.
+    int TitRowLog2Sum[3] = {0,0,0};
+    for (int i=0; i<=2; i++) {
+        while (TitRowSum[i] >>= 1) ++TitRowLog2Sum[i];
+    }
+    
+    // MWB is the number of bits needed for the Working Type storage.
+    // a[0] srcMax + a[1] srcMax + a[2] srcMax  = ( a[0] + a[1] + a[2]) * srcMax
+    // MWB = log2(( a[0] + a[1] + a[2]) * srcMax) = log2( a[0] + a[1] + a[2]) + log2( srcMax )
+    cv::Matx<int, 3, 1> MWB({
+        TitRowLog2Sum[0] + CV_MAT_DEPTH_BITS(src_t),
+        TitRowLog2Sum[1] + CV_MAT_DEPTH_BITS(src_t),
+        TitRowLog2Sum[2] + CV_MAT_DEPTH_BITS(src_t)
+    });
+    
+    int excessWBFactor[3] = {
+        (int) ceil(pow(2, TitRowLog2Sum[0] - CV_MAT_DEPTH_BITS(src_t))),
+        (int) ceil(pow(2, TitRowLog2Sum[1] - CV_MAT_DEPTH_BITS(src_t))),
+        (int) ceil(pow(2, TitRowLog2Sum[2] - CV_MAT_DEPTH_BITS(src_t)))
+    };
+    
+    M[0][0] = T(0,0)/excessWBFactor[0]; M[0][1] = T(0,1)/excessWBFactor[0]; M[0][2] = T(0,2)/excessWBFactor[0];
+    M[1][0] = T(1,0)/excessWBFactor[1]; M[1][1] = T(1,1)/excessWBFactor[1]; M[1][2] = T(1,2)/excessWBFactor[1];
+    M[2][0] = T(2,0)/excessWBFactor[2]; M[2][1] = T(2,1)/excessWBFactor[2]; M[2][2] = T(2,2)/excessWBFactor[2];
+    
+    setRanges();
+    
 };
 
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRanges(cv::Matx<int, 3, 3>& T){
