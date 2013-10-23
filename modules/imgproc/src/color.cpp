@@ -4065,7 +4065,11 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransform(cv::
     setRanges();
 
 };
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromAngle(double theta){
+template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromAngle(double theta, double preserve[3][2], bool preserveInRGB, bool cropToPreserve ){
+    // theta is the rotation in radians about the luminocity axis
+    // preserve gives ranges where the axis scaling should not reduce information.
+    // values outside the preserve range are vulnerable to truncation.
+    
     using srcInfo = cv::Data_Type<src_t>;
     using srcType = typename cv::Data_Type<src_t>::type;
     
@@ -4078,15 +4082,31 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
     using dcSrcType = typename cv::depthConverter<src_t, dst_t>::srcType;
     using dcDstType = typename cv::depthConverter<src_t, dst_t>::dstType;
     using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
-    
-    cv::Matx<double, 3, 3> T(0.3333333333333333,0.3333333333333333,0.3333333333333333,
+    // nT is scaled to give ranges 0:1, -0.5:0.5 -0.5:0.5 with a unit RGB cube.
+    cv::Matx<double, 3, 3> nT(0.3333333333333333,0.3333333333333333,0.3333333333333333,
         -((1.0/std::cos(theta - (CV_PI*std::floor(0.5 + (3*theta)/CV_PI))/3.))*(std::cos(theta) + std::sqrt(3)*std::sin(theta)))/4.,
         (std::cos(theta)*(1.0/std::cos(theta - (CV_PI*std::floor(0.5 + (3*theta)/CV_PI))/3.)))/2.,
         ((1.0/std::cos(theta - (CV_PI*std::floor(0.5 + (3*theta)/CV_PI))/3.))*(-std::cos(theta) + std::sqrt(3)*std::sin(theta)))/4.),
         ((1.0/std::cos((CV_PI - 6*(theta % CV_PI/3.))/6.))*(-(std::sqrt(3)*std::cos(theta)) + std::sin(theta)))/4.,
         -((1.0/std::cos((CV_PI - 6*(theta % CV_PI/3.))/6.))*std::sin(theta))/2.,
     ((1.0/std::cos((CV_PI - 6*(theta % CV_PI/3.))/6.))*(std::sqrt(3)*std::cos(theta) + std::sin(theta)))/4.);
+    //discreteRanges contains the lengths of the unit axis when rotated without scaling. This can be used to assertain any loss of information introduced by the scaling back to unit length.
+    double discreteRanges[3] = {std::sqrt(3), 2.0*std::sqrt(0.6666666666666666)*std::cos(CV_PI/6. - (-CV_PI/6. + theta) % CV_PI/3.),2*std::sqrt(0.6666666666666666)*std::cos(CV_PI/6. - theta % CV_PI/3.);
+        
+    if(cropToPreserve){ // Only the range of the preservation is important because the values will be shifted to the preserve[0] value.
+        double minAxisLenghs[3] = {
+            (preserve[0][1]-preserve[0][0]) * discreteRanges[0],
+            (preserve[1][1]-preserve[1][0]) * discreteRanges[1],
+            (preserve[2][1]-preserve[2][0]) * discreteRanges[2] };
+    } else {
+        double minAxisLenghs[3] = {
+            2.0 * std::max(preserve[0][1]-0.5,0.5-preserve[0][0])) * discreteRanges[0],
+            2.0 * std::max(preserve[1][1]-0.5,0.5-preserve[1][0])) * discreteRanges[1],
+            2.0 * std::max(preserve[2][1]-0.5,0.5-preserve[2][0])) * discreteRanges[2], };
+    }
     
+            
+    cv::Matx<wrkType, 3, 3> T = scale * nT
     // Setup internal data
     setRanges(T);
     // Rescale to avoid bit overflow during transform.
