@@ -575,6 +575,7 @@ template<int src_t, int dst_t> class RGB2Rot: public colorSpaceConverter<src_t, 
        void setRGBIndices(int srcBlueIdx, int dstBlueIdx);
        void setTransformFromVecs(cv::Vec<int, 3> sp0, cv::Vec<int, 3> sp1, cv::Vec<int, 3> sp2);
        void setTransform(cv::Matx<int, 3, 3>& T);
+       void setTransformFromAngle(double theta )
        void setRanges(cv::Matx<int, 3, 3>& T);
        void setRanges();
        void setCinRGB(Vec<int, 3> _c);

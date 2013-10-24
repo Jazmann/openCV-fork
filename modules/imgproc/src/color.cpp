@@ -4065,7 +4065,7 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransform(cv::
     setRanges();
 
 };
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromAngle(double theta, double preserve[3][2], bool preserveInRGB, bool cropToPreserve ){
+template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromAngle(double theta ){
     // theta is the rotation in radians about the luminocity axis
     // preserve gives ranges where the axis scaling should not reduce information.
     // values outside the preserve range are vulnerable to truncation.
@@ -4084,66 +4084,82 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
     using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
     // nT is scaled to give ranges 0:1, -0.5:0.5 -0.5:0.5 with a unit RGB cube.
     cv::Matx<double, 3, 3> nT(0.3333333333333333,0.3333333333333333,0.3333333333333333,
-        -((1.0/std::cos(theta - (CV_PI*std::floor(0.5 + (3*theta)/CV_PI))/3.))*(std::cos(theta) + std::sqrt(3)*std::sin(theta)))/4.,
-        (std::cos(theta)*(1.0/std::cos(theta - (CV_PI*std::floor(0.5 + (3*theta)/CV_PI))/3.)))/2.,
-        ((1.0/std::cos(theta - (CV_PI*std::floor(0.5 + (3*theta)/CV_PI))/3.))*(-std::cos(theta) + std::sqrt(3)*std::sin(theta)))/4.),
-        ((1.0/std::cos((CV_PI - 6*(theta % CV_PI/3.))/6.))*(-(std::sqrt(3)*std::cos(theta)) + std::sin(theta)))/4.,
-        -((1.0/std::cos((CV_PI - 6*(theta % CV_PI/3.))/6.))*std::sin(theta))/2.,
+                              -((1.0/std::cos(theta - (CV_PI*std::floor(0.5 + (3*theta)/CV_PI))/3.))*(std::cos(theta) + std::sqrt(3)*std::sin(theta)))/4.,
+                              (std::cos(theta)*(1.0/std::cos(theta - (CV_PI*std::floor(0.5 + (3*theta)/CV_PI))/3.)))/2.,
+                              ((1.0/std::cos(theta - (CV_PI*std::floor(0.5 + (3*theta)/CV_PI))/3.))*(-std::cos(theta) + std::sqrt(3)*std::sin(theta)))/4.),
+    ((1.0/std::cos((CV_PI - 6*(theta % CV_PI/3.))/6.))*(-(std::sqrt(3)*std::cos(theta)) + std::sin(theta)))/4.,
+    -((1.0/std::cos((CV_PI - 6*(theta % CV_PI/3.))/6.))*std::sin(theta))/2.,
     ((1.0/std::cos((CV_PI - 6*(theta % CV_PI/3.))/6.))*(std::sqrt(3)*std::cos(theta) + std::sin(theta)))/4.);
-    //discreteRanges contains the lengths of the unit axis when rotated without scaling. This can be used to assertain any loss of information introduced by the scaling back to unit length.
-    double discreteRanges[3] = {std::sqrt(3), 2.0*std::sqrt(0.6666666666666666)*std::cos(CV_PI/6. - (-CV_PI/6. + theta) % CV_PI/3.),2*std::sqrt(0.6666666666666666)*std::cos(CV_PI/6. - theta % CV_PI/3.);
+    
+            TRange[0] = srcInfo::max; TMin[0] = 0;
+            TRange[1] = srcInfo::max; TMin[1] = -1.0*srcInfo::max/2.0;
+            TRange[2] = srcInfo::max; TMin[2] = -1.0*srcInfo::max/2.0;
         
-    if(cropToPreserve){ // Only the range of the preservation is important because the values will be shifted to the preserve[0] value.
-        double minAxisLenghs[3] = {
-            (preserve[0][1]-preserve[0][0]) * discreteRanges[0],
-            (preserve[1][1]-preserve[1][0]) * discreteRanges[1],
-            (preserve[2][1]-preserve[2][0]) * discreteRanges[2] };
-    } else {
-        double minAxisLenghs[3] = {
-            2.0 * std::max(preserve[0][1]-0.5,0.5-preserve[0][0])) * discreteRanges[0],
-            2.0 * std::max(preserve[1][1]-0.5,0.5-preserve[1][0])) * discreteRanges[1],
-            2.0 * std::max(preserve[2][1]-0.5,0.5-preserve[2][0])) * discreteRanges[2], };
-    }
-    
-            
-    cv::Matx<wrkType, 3, 3> T = scale * nT
-    // Setup internal data
-    setRanges(T);
-    // Rescale to avoid bit overflow during transform.
-    
-    int TitRowSum[3] = {
-        std::abs(T(0,0))+std::abs(T(0,1))+std::abs(T(0,2)),
-        std::abs(T(1,0))+std::abs(T(1,1))+std::abs(T(1,2)),
-        std::abs(T(2,0))+std::abs(T(2,1))+std::abs(T(2,2))
+        M[0][0] = T(0,0) * srcInfo::max; M[0][1] = T(0,1) * srcInfo::max; M[0][2] = T(0,2) * srcInfo::max;
+        M[1][0] = T(1,0) * srcInfo::max; M[1][1] = T(1,1) * srcInfo::max; M[1][2] = T(1,2) * srcInfo::max;
+        M[2][0] = T(2,0) * srcInfo::max; M[2][1] = T(2,1) * srcInfo::max; M[2][2] = T(2,2) * srcInfo::max;
+        
     };
-    // Find left most bit.
-    int TitRowLog2Sum[3] = {0,0,0};
-    for (int i=0; i<=2; i++) {
-        while (TitRowSum[i] >>= 1) ++TitRowLog2Sum[i];
-    }
-    
-    // MWB is the number of bits needed for the Working Type storage.
-    // a[0] srcMax + a[1] srcMax + a[2] srcMax  = ( a[0] + a[1] + a[2]) * srcMax
-    // MWB = log2(( a[0] + a[1] + a[2]) * srcMax) = log2( a[0] + a[1] + a[2]) + log2( srcMax )
-    cv::Matx<int, 3, 1> MWB({
-        TitRowLog2Sum[0] + CV_MAT_DEPTH_BITS(src_t),
-        TitRowLog2Sum[1] + CV_MAT_DEPTH_BITS(src_t),
-        TitRowLog2Sum[2] + CV_MAT_DEPTH_BITS(src_t)
-    });
-    
-    int excessWBFactor[3] = {
-        (int) ceil(pow(2, TitRowLog2Sum[0] - CV_MAT_DEPTH_BITS(src_t))),
-        (int) ceil(pow(2, TitRowLog2Sum[1] - CV_MAT_DEPTH_BITS(src_t))),
-        (int) ceil(pow(2, TitRowLog2Sum[2] - CV_MAT_DEPTH_BITS(src_t)))
-    };
-    
-    M[0][0] = T(0,0)/excessWBFactor[0]; M[0][1] = T(0,1)/excessWBFactor[0]; M[0][2] = T(0,2)/excessWBFactor[0];
-    M[1][0] = T(1,0)/excessWBFactor[1]; M[1][1] = T(1,1)/excessWBFactor[1]; M[1][2] = T(1,2)/excessWBFactor[1];
-    M[2][0] = T(2,0)/excessWBFactor[2]; M[2][1] = T(2,1)/excessWBFactor[2]; M[2][2] = T(2,2)/excessWBFactor[2];
-    
-    setRanges();
-    
-};
+// For data which can not be pocessed with a type capable of holding double the bit size of the data the following routing needs to be finished.
+//template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromAngle(double theta, double preserve[3][2], bool preserveInRGB, bool cropToPreserve ){
+//    // theta is the rotation in radians about the luminocity axis
+//    // preserve gives ranges where the axis scaling should not reduce information.
+//    // values outside the preserve range are vulnerable to truncation.
+//    
+//    using srcInfo = cv::Data_Type<src_t>;
+//    using srcType = typename cv::Data_Type<src_t>::type;
+//    
+//    using dstInfo = cv::Data_Type<dst_t>;
+//    using dstType = typename cv::Data_Type<dst_t>::type;
+//    
+//    using wrkInfo = typename cv::colorSpaceConverter<src_t, dst_t>::wrkInfo;
+//    using wrkType = typename cv::colorSpaceConverter<src_t, dst_t>::wrkType;
+//    
+//    using dcSrcType = typename cv::depthConverter<src_t, dst_t>::srcType;
+//    using dcDstType = typename cv::depthConverter<src_t, dst_t>::dstType;
+//    using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
+//    // nT is scaled to give ranges 0:1, -0.5:0.5 -0.5:0.5 with a unit RGB cube.
+//    cv::Matx<double, 3, 3> nT(0.3333333333333333,0.3333333333333333,0.3333333333333333,
+//        -((1.0/std::cos(theta - (CV_PI*std::floor(0.5 + (3*theta)/CV_PI))/3.))*(std::cos(theta) + std::sqrt(3)*std::sin(theta)))/4.,
+//        (std::cos(theta)*(1.0/std::cos(theta - (CV_PI*std::floor(0.5 + (3*theta)/CV_PI))/3.)))/2.,
+//        ((1.0/std::cos(theta - (CV_PI*std::floor(0.5 + (3*theta)/CV_PI))/3.))*(-std::cos(theta) + std::sqrt(3)*std::sin(theta)))/4.),
+//        ((1.0/std::cos((CV_PI - 6*(theta % CV_PI/3.))/6.))*(-(std::sqrt(3)*std::cos(theta)) + std::sin(theta)))/4.,
+//        -((1.0/std::cos((CV_PI - 6*(theta % CV_PI/3.))/6.))*std::sin(theta))/2.,
+//    ((1.0/std::cos((CV_PI - 6*(theta % CV_PI/3.))/6.))*(std::sqrt(3)*std::cos(theta) + std::sin(theta)))/4.);
+//    //discreteRanges contains the lengths of the unit axis when rotated without scaling. This can be used to assertain any loss of information introduced by the scaling back to unit length.
+//    double discreteRanges[3] = {std::sqrt(3), 2.0*std::sqrt(0.6666666666666666)*std::cos(CV_PI/6. - (-CV_PI/6. + theta) % CV_PI/3.),2*std::sqrt(0.6666666666666666)*std::cos(CV_PI/6. - theta % CV_PI/3.);
+//        
+//    if(cropToPreserve){ // Only the range of the preservation is important because the values will be shifted to the preserve[0] value.
+//        double minAxisLenghs[3] = {
+//            (preserve[0][1]-preserve[0][0]) * discreteRanges[0],
+//            (preserve[1][1]-preserve[1][0]) * discreteRanges[1],
+//            (preserve[2][1]-preserve[2][0]) * discreteRanges[2] };
+//    } else {
+//        double minAxisLenghs[3] = {
+//            2.0 * std::max(preserve[0][1]-0.5,0.5-preserve[0][0])) * discreteRanges[0],
+//            2.0 * std::max(preserve[1][1]-0.5,0.5-preserve[1][0])) * discreteRanges[1],
+//            2.0 * std::max(preserve[2][1]-0.5,0.5-preserve[2][0])) * discreteRanges[2], };
+//    }
+//    for (int i=0; i<=2; i++) {
+//        if (minAxisLenghs[i] > 1.0) {
+//            nT(i,0) *= minAxisLenghs[i]; nT(i,1) *= minAxisLenghs[i]; nT(i,2) *= minAxisLenghs[i];
+//        } else {
+//            minAxisLenghs[i] = 1.0;
+//        }
+//    }
+//        
+//    if(cropToPreserve){
+//            TRange[0] = srcInfo::max * minAxisLenghs[0]; TMin[0] = srcInfo::max * preserve[0][0];
+//            TRange[1] = srcInfo::max * minAxisLenghs[1]; TMin[1] = srcInfo::max * preserve[1][0];
+//            TRange[2] = srcInfo::max * minAxisLenghs[2]; TMin[2] = srcInfo::max * preserve[2][0];
+//        
+//    } else {
+//        TRange[0] = srcInfo::max * minAxisLenghs[0]; TMin[0] = 0;
+//        TRange[1] = srcInfo::max * minAxisLenghs[1]; TMin[1] = -1.0 * srcInfo::max * minAxisLenghs[1] / 2.0; 
+//        TRange[2] = srcInfo::max * minAxisLenghs[2]; TMin[2] = -1.0 * srcInfo::max * minAxisLenghs[2] / 2.0;
+//    }
+//    
+//};
 
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRanges(cv::Matx<int, 3, 3>& T){
     using srcInfo = cv::Data_Type<src_t>;
