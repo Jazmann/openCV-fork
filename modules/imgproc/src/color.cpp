@@ -4310,7 +4310,7 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcB
 template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, cv::Vec<double, 3> newG, cv::Vec<double, 3> newC){
     
     init();
-    setTransform(theta);
+    setTransformFromAngle(theta);
     setRGBIndices(srcBlueIdx, dstBlueIdx);
     setUnitC(newC); // asumes that c is in rotated color space and with a dstBlueIdx
     setG(newG);
