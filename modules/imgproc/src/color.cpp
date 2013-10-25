@@ -1576,7 +1576,7 @@ struct HSV2RGB_f
                     do h += 6; while( h < 0 );
                 else if( h >= 6 )
                     do h -= 6; while( h >= 6 );
-                sector = cvstd::floor(h);
+                sector = cvFloor(h);
                 h -= sector;
                 if( (unsigned)sector >= 6u )
                 {
@@ -1781,7 +1781,7 @@ struct HLS2RGB_f
                     do h -= 6; while( h >= 6 );
 
                 assert( 0 <= h && h < 6 );
-                sector = cvstd::floor(h);
+                sector = cvFloor(h);
                 h -= sector;
 
                 tab[0] = p2;
@@ -3966,14 +3966,14 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromV
     cv::sVec<int, 1> v1Norm2 = v1 * v1; // v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2];
     cv::sVec<int, 1> v2Norm2 = v2 * v2; // v2[0] * v2[0] + v2[1] * v2[1] + v2[2] * v2[2];
     cv::sVec<int, 1> v2DotV1 = v2 * v1; // v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
-    float v1V2std::sin = sqrtf(v1Norm2(0) * v2Norm2(0) - v2DotV1(0) * v2DotV1(0));
+    float v1V2Sin = sqrtf(v1Norm2(0) * v2Norm2(0) - v2DotV1(0) * v2DotV1(0));
     
     cv::sVec<int, 3> a1 = v1;
     cv::sVec<int, 3> a2a = v1Norm2(0) * v2;
     cv::sVec<int, 3> a2b = v2DotV1(0) * v1;
-    cv::sVec<int, 3> a2(1.0 / (v1Norm2(0) * v1V2std::sin), v1Norm2(0) * v2 - v2DotV1(0) * v1);
+    cv::sVec<int, 3> a2(1.0 / (v1Norm2(0) * v1V2Sin), v1Norm2(0) * v2 - v2DotV1(0) * v1);
     cv::sVec<int, 3> a3 = v1.cross(v2);
-    a3.scale = 1.0/v1V2std::sin;
+    a3.scale = 1.0/v1V2Sin;
     
     a1.factor(); a2.factor(); a3.factor(); // Remove common factors
     
@@ -4083,13 +4083,13 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
     using dcDstType = typename cv::depthConverter<src_t, dst_t>::dstType;
     using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
     // nT is scaled to give ranges 0:1, -0.5:0.5 -0.5:0.5 with a unit RGB cube.
-    cv::Matx<double, 3, 3> nT(0.3333333333333333,0.3333333333333333,0.3333333333333333,
-                              -((1.0/std::cos(theta - (CV_PI*std::floor(0.5 + (3*theta)/CV_PI))/3.))*(std::cos(theta) + std::sqrt(3)*std::sin(theta)))/4.,
-                              (std::cos(theta)*(1.0/std::cos(theta - (CV_PI*std::floor(0.5 + (3*theta)/CV_PI))/3.)))/2.,
-                              ((1.0/std::cos(theta - (CV_PI*std::floor(0.5 + (3*theta)/CV_PI))/3.))*(-std::cos(theta) + std::sqrt(3)*std::sin(theta)))/4.),
-    ((1.0/std::cos((CV_PI - 6*(theta % CV_PI/3.))/6.))*(-(std::sqrt(3)*std::cos(theta)) + std::sin(theta)))/4.,
-    -((1.0/std::cos((CV_PI - 6*(theta % CV_PI/3.))/6.))*std::sin(theta))/2.,
-    ((1.0/std::cos((CV_PI - 6*(theta % CV_PI/3.))/6.))*(std::sqrt(3)*std::cos(theta) + std::sin(theta)))/4.);
+    cv::Matx<double, 3, 3> T(0.3333333333333333,0.3333333333333333,0.3333333333333333,
+            ((-1.0/std::cos(theta - (CV_PI*std::floor(0.5 + (3*theta)/CV_PI))/3.))*(std::cos(theta) + std::sqrt(3)*std::sin(theta)))/4.,
+            (std::cos(theta)*(1.0/std::cos(theta - (CV_PI*std::floor(0.5 + (3*theta)/CV_PI))/3.)))/2.,
+            ((1.0/std::cos(theta - (CV_PI*std::floor(0.5 + (3*theta)/CV_PI))/3.))*(-std::cos(theta) + std::sqrt(3)*std::sin(theta)))/4.,
+            ((1.0/std::cos((CV_PI - 6*std::fmod(theta, CV_PI/3.))/6.))*(-(std::sqrt(3)*std::cos(theta)) + std::sin(theta)))/4.,
+    ((-1.0/std::cos((CV_PI - 6*std::fmod(theta, CV_PI/3.))/6.))*std::sin(theta))/2.,
+    ((1.0/std::cos((CV_PI - 6*std::fmod(theta, CV_PI/3.))/6.))*(std::sqrt(3)*std::cos(theta) + std::sin(theta)))/4.);
     
             TRange[0] = srcInfo::max; TMin[0] = 0;
             TRange[1] = srcInfo::max; TMin[1] = -1.0*srcInfo::max/2.0;
@@ -4200,6 +4200,12 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setCinRGB(Vec<int
     c[2] = newC[indxA]*M[2][0] + newC[indxB]*M[2][1] + newC[indxC]*M[2][2];
 };
 
+template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setUnitC(Vec<double, 3> newC){
+    c[0] = TRange[indxA] * newC[indxA] + TMin[indxA];
+    c[1] = TRange[indxB] * newC[indxB] + TMin[indxB];
+    c[2] = TRange[indxC] * newC[indxC] + TMin[indxC];
+};
+
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setC(Vec<int, 3> newC){
     c[0] = newC[indxA]; c[1] = newC[indxB]; c[2] = newC[indxC];
 };
@@ -4277,19 +4283,7 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setBlueDistributi
 };
 
 template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, Vec<int, 3> sp0, Vec<int, 3> sp1, Vec<int, 3> sp2, Vec<double, 3> newG, Vec<int, 3> newC){
-    using srcInfo = cv::Data_Type<src_t>;
-    using srcType = typename cv::Data_Type<src_t>::type;
-    
-    using dstInfo = cv::Data_Type<dst_t>;
-    using dstType = typename cv::Data_Type<dst_t>::type;
-    
-    using wrkInfo = typename cv::colorSpaceConverter<src_t, dst_t>::wrkInfo;
-    using wrkType = typename cv::colorSpaceConverter<src_t, dst_t>::wrkType;
-    
-    using dcSrcType = typename cv::depthConverter<src_t, dst_t>::srcType;
-    using dcDstType = typename cv::depthConverter<src_t, dst_t>::dstType;
-    using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
-    
+
     init();
     setTransformFromVecs(sp0, sp1, sp2);
     setRGBIndices(srcBlueIdx, dstBlueIdx);
@@ -4302,23 +4296,23 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcB
 };
 
 template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, cv::Matx<int, 3, 3>& T, cv::Vec<double, 3> newG, cv::Vec<int, 3> newC){
-    using srcInfo = cv::Data_Type<src_t>;
-    using srcType = typename cv::Data_Type<src_t>::type;
-    
-    using dstInfo = cv::Data_Type<dst_t>;
-    using dstType = typename cv::Data_Type<dst_t>::type;
-    
-    using wrkInfo = typename cv::colorSpaceConverter<src_t, dst_t>::wrkInfo;
-    using wrkType = typename cv::colorSpaceConverter<src_t, dst_t>::wrkType;
-    
-    using dcSrcType = typename cv::depthConverter<src_t, dst_t>::srcType;
-    using dcDstType = typename cv::depthConverter<src_t, dst_t>::dstType;
-    using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
-    
+
     init();
     setTransform(T);
     setRGBIndices(srcBlueIdx, dstBlueIdx);
     setC(newC); // asumes that c is in rotated color space and with a dstBlueIdx
+    setG(newG);
+    setRedDistributionErf();
+    setGreenDistributionErf();
+    setBlueDistributionErf();
+};
+
+template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, cv::Vec<double, 3> newG, cv::Vec<double, 3> newC){
+    
+    init();
+    setTransform(theta);
+    setRGBIndices(srcBlueIdx, dstBlueIdx);
+    setUnitC(newC); // asumes that c is in rotated color space and with a dstBlueIdx
     setG(newG);
     setRedDistributionErf();
     setGreenDistributionErf();
