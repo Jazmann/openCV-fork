@@ -558,11 +558,18 @@ template<int src_t, int dst_t> class RGB2Rot: public colorSpaceConverter<src_t, 
         int indxA{0}, indxB{1}, indxC{2}; // indices for the axis.
         int dstRGBIndices[3]; // indices for the destination 'RGB' channels
         int srcRGBIndices[3]; // indices for the source RGB channels
-        int c[3];
-        double g[3];
-        wrkType M[dstInfo::channels][srcInfo::channels];
-        wrkType TRange[dstInfo::channels], TMin[dstInfo::channels];
-        dstType cRot[dstInfo::channels];
+        int C[3]; // The center point for the distribution function in the rotated color space
+        Vec<dstType, 3> C_dst; // The center point for the distribution function in the rotated color space
+        Vec<double, 3> uC; // The center point for the distribution function in the rotated color space scaled to 0:1
+        Vec<srcType, 3> C_src; // The center point for the distribution function in the rotated color space scaled to 0:1
+        Vec<double, 3> uC_src; // The center point for the distribution function in the source color space scaled to 0:1
+        double G[3];  // The distribution parameter in the rotated color space
+        double uG[3]; // The distribution parameter in the rotated color space scaled to 0:1
+
+        cv::Matx<double, 3, 3> uT, uiT; // The transformation matrix in 0:1 scale
+        cv::Matx<int, 3, 3> T, iT; // The transformation matrix without overflow protection in the source / destination scale
+        wrkType M[dstInfo::channels][srcInfo::channels]; // The working matrix for the transform computation with overflow protection.
+        wrkType TRange[dstInfo::channels], TMin[dstInfo::channels]; TMax[dstInfo::channels];
         
         distributeErf<wrkInfo::dataType, dstInfo::dataType> *redScale, *greenScale, *blueScale;
         
@@ -577,13 +584,13 @@ template<int src_t, int dst_t> class RGB2Rot: public colorSpaceConverter<src_t, 
        void setTransformFromVecs(cv::Vec<int, 3> sp0, cv::Vec<int, 3> sp1, cv::Vec<int, 3> sp2);
        void setTransform(cv::Matx<int, 3, 3>& T);
        void setTransformFromAngle(double theta );
-       void setRanges(cv::Matx<int, 3, 3>& T);
        void setRanges();
        void setCinRGB(Vec<int, 3> _c);
-        void setC(Vec<int, 3> _c);
-        void setUnitC(Vec<double, 3> _c);
-
+       void setC(Vec<int, 3> _c);
+       void setuCinRGB(Vec<double, 3> _c); // void setUnitC(Vec<double, 3> _c);
+       void setuC(Vec<double, 3> _c); // void setUnitC(Vec<double, 3> _c);
        void setG(Vec<double, 3> _g);
+       void setuG(Vec<double, 3> _g);
        void setRedDistributionErf();
        void setRedDistributionErf(  int center, double gradient);
        void setGreenDistributionErf();

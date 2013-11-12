@@ -4015,7 +4015,7 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromV
     
 };
 
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransform(cv::Matx<int, 3, 3>& T){
+template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransform(cv::Matx<int, 3, 3>& _T): T(_T){
     using srcInfo = cv::Data_Type<src_t>;
     using srcType = typename cv::Data_Type<src_t>::type;
     
@@ -4029,7 +4029,7 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransform(cv::
     using dcDstType = typename cv::depthConverter<src_t, dst_t>::dstType;
     using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
     // Setup internal data
-    setRanges(T);
+    setRanges();
     // Rescale to avoid bit overflow during transform.
     
     int TitRowSum[3] = {
@@ -4083,7 +4083,7 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
     using dcDstType = typename cv::depthConverter<src_t, dst_t>::dstType;
     using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
     // nT is scaled to give ranges 0:1, -0.5:0.5 -0.5:0.5 with a unit RGB cube.
-    cv::Matx<double, 3, 3> T(0.3333333333333333,0.3333333333333333,0.3333333333333333,
+    T(0.3333333333333333,0.3333333333333333,0.3333333333333333,
             ((-1.0/std::cos(theta - (CV_PI*std::floor(0.5 + (3*theta)/CV_PI))/3.))*(std::cos(theta) + std::sqrt(3)*std::sin(theta)))/4.,
             (std::cos(theta)*(1.0/std::cos(theta - (CV_PI*std::floor(0.5 + (3*theta)/CV_PI))/3.)))/2.,
             ((1.0/std::cos(theta - (CV_PI*std::floor(0.5 + (3*theta)/CV_PI))/3.))*(-std::cos(theta) + std::sqrt(3)*std::sin(theta)))/4.,
@@ -4091,9 +4091,20 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
     ((-1.0/std::cos((CV_PI - 6*std::fmod(theta, CV_PI/3.))/6.))*std::sin(theta))/2.,
     ((1.0/std::cos((CV_PI - 6*std::fmod(theta, CV_PI/3.))/6.))*(std::sqrt(3)*std::cos(theta) + std::sin(theta)))/4.);
     
-            TRange[0] = srcInfo::max; TMin[0] = 0;
-            TRange[1] = srcInfo::max; TMin[1] = -1.0*srcInfo::max/2.0;
-            TRange[2] = srcInfo::max; TMin[2] = -1.0*srcInfo::max/2.0;
+    iT(1.,
+    (-2.*std::cos(theta - (CV_PI*std::floor(0.5 + (3.*theta)/CV_PI))/3.)*(std::cos(theta) + std::sqrt(3.)*std::sin(theta)))/3.,
+    ( 2.*std::cos((CV_PI - 6.*std::fmod(theta, CV_PI/3.))/6.)*(-(std::sqrt(3.)*std::cos(theta)) + std::sin(theta)))/3.,
+    1.,
+    (4.*std::cos(theta)*std::cos(theta - (CV_PI*std::floor(0.5 + (3.*theta)/CV_PI))/3.))/3.,
+    (-4.*std::cos((CV_PI - 6.*std::fmod(theta, CV_PI/3.))/6.)*std::sin(theta))/3.,
+    1.,
+    (2.*std::cos(theta - (CV_PI*std::floor(0.5 + (3.*theta)/CV_PI))/3.)*(-std::cos(theta) + std::sqrt(3.)*std::sin(theta)))/3.,
+    (2.*std::cos((CV_PI - 6.*std::fmod(theta, CV_PI/3.))/6.)*(std::sqrt(3.)*std::cos(theta) + std::sin(theta)))/3.
+    );
+    
+        TRange[0] = srcInfo::max; TMin[0] = 0;
+        TRange[1] = srcInfo::max; TMin[1] = -1.0 * srcInfo::max/2.0;
+        TRange[2] = srcInfo::max; TMin[2] = -1.0 * srcInfo::max/2.0;
         
         M[0][0] = T(0,0) * srcInfo::max; M[0][1] = T(0,1) * srcInfo::max; M[0][2] = T(0,2) * srcInfo::max;
         M[1][0] = T(1,0) * srcInfo::max; M[1][1] = T(1,1) * srcInfo::max; M[1][2] = T(1,2) * srcInfo::max;
@@ -4161,14 +4172,7 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
 //    
 //};
 
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRanges(cv::Matx<int, 3, 3>& T){
-    using srcInfo = cv::Data_Type<src_t>;
-    using srcType = typename cv::Data_Type<src_t>::type;
-    
-    using dstInfo = cv::Data_Type<dst_t>;
-    using dstType = typename cv::Data_Type<dst_t>::type;
-    
-    using wrkInfo = typename cv::colorSpaceConverter<src_t, dst_t>::wrkInfo;
+template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRanges(){
     using wrkType = typename cv::colorSpaceConverter<src_t, dst_t>::wrkType;
     
     // Setup internal data
@@ -4181,41 +4185,50 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRanges(cv::Mat
     cv::Matx<wrkType, 3, 1> RGBCubeMin = cv::MinInRow<wrkType, 3, 8>(RGBBoxInNew);
     cv::Matx<wrkType, 3, 1> RGBCubeRange = RGBCubeMax - RGBCubeMin;
     
+    TMin[0] = RGBCubeMin(0,0); TMax[0] = RGBCubeMax(0,0); TRange[0] = RGBCubeRange(0,0);
+    TMin[1] = RGBCubeMin(1,0); TMax[1] = RGBCubeMax(1,0); TRange[1] = RGBCubeRange(1,0);
+    TMin[2] = RGBCubeMin(2,0); TMax[2] = RGBCubeMax(2,0); TRange[2] = RGBCubeRange(2,0);
     
-    TMin[0] = RGBCubeMin(0,0); TRange[0] = RGBCubeRange(0,0);
-    TMin[1] = RGBCubeMin(1,0); TRange[1] = RGBCubeRange(1,0);
-    TMin[2] = RGBCubeMin(2,0); TRange[2] = RGBCubeRange(2,0);
-    
 };
 
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRanges(){
-    cv::Matx<int, 3, 3> T(M[0][0],M[0][1],M[0][2],M[1][0],M[1][1],M[1][2],M[2][0],M[2][1],M[2][2]);
-    // Setup internal data
-    setRanges(T);
+template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setuCinRGB(Vec<double, 3> newC){
+    int C[3]; // The center point for the distribution function in the rotated color space
+    Vec<dstType, 3> C_dst; // The center point for the distribution function in the rotated color space
+    Vec<double, 3> uC; // The center point for the distribution function in the rotated color space scaled to 0:1
+    Vec<srcType, 3> C_src; // The center point for the distribution function in the rotated color space scaled to 0:1
+    Vec<double, 3> uC_src; // The center point for the distribution function in the source color space scaled to 0:1
+    Vec<double, 3> uC_RGB{newC(indxA),newC(indxB),newC(indxC)};
+    Vec<double, 3> shift(0,0.5,0.5);
+    uC = uT * uC_RGB + shift;
+    C{TRange[0] * uC(0), TRange[1] * uC(1), TRange[2] * uC(2)};
 };
 
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setCinRGB(Vec<int, 3> newC){
-    c[0] = newC[indxA]*M[0][0] + newC[indxB]*M[0][1] + newC[indxC]*M[0][2];
-    c[1] = newC[indxA]*M[1][0] + newC[indxB]*M[1][1] + newC[indxC]*M[1][2];
-    c[2] = newC[indxA]*M[2][0] + newC[indxB]*M[2][1] + newC[indxC]*M[2][2];
+template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setCinRGB(Vec<int, 3> newC_RGB){
+    C[0] = newC_RGB[indxA]*M[0][0] + newC_RGB[indxB]*M[0][1] + newC_RGB[indxC]*M[0][2];
+    C[1] = newC_RGB[indxA]*M[1][0] + newC_RGB[indxB]*M[1][1] + newC_RGB[indxC]*M[1][2];
+    C[2] = newC_RGB[indxA]*M[2][0] + newC_RGB[indxB]*M[2][1] + newC_RGB[indxC]*M[2][2];
 };
 
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setUnitC(Vec<double, 3> newC){
-    c[0] = TRange[indxA] * newC[indxA] + TMin[indxA];
-    c[1] = TRange[indxB] * newC[indxB] + TMin[indxB];
-    c[2] = TRange[indxC] * newC[indxC] + TMin[indxC];
+template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setuC(Vec<double, 3> newC){
+    C[0] = TRange[indxA] * newC[indxA] + TMin[indxA];
+    C[1] = TRange[indxB] * newC[indxB] + TMin[indxB];
+    C[2] = TRange[indxC] * newC[indxC] + TMin[indxC];
 };
 
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setC(Vec<int, 3> newC){
-    c[0] = newC[indxA]; c[1] = newC[indxB]; c[2] = newC[indxC];
+    C[0] = newC[indxA]; C[1] = newC[indxB]; C[2] = newC[indxC];
 };
 
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setG(Vec<double, 3> newG){
-    g[0] = newG[indxA]; g[1] = newG[indxB]; g[2] = newG[indxC];
+    G[0] = newG[indxA]; G[1] = newG[indxB]; G[2] = newG[indxC];
+};
+template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setuG(Vec<double, 3> newG){
+    G[0] = newG[indxA]; G[1] = newG[indxB]; G[2] = newG[indxC];
 };
 
+
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRedDistributionErf(){
-    setRedDistributionErf(c[dstRGBIndices[0]],g[dstRGBIndices[0]]);
+    setRedDistributionErf(C[dstRGBIndices[0]],G[dstRGBIndices[0]]);
 };
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRedDistributionErf(  int center, double gradient){
     using srcInfo = cv::Data_Type<src_t>;
@@ -4231,13 +4244,13 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRedDistributio
     using dcDstType = typename cv::depthConverter<src_t, dst_t>::dstType;
     using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
     redScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (   gradient, center, wrkType((srcInfo::max - srcInfo::min) * TMin[0]), wrkType((srcInfo::max - srcInfo::min) * (TMin[0]+TRange[0])), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
-    printf("c[0] : %d\n",c[0]);
+    printf("C[0] : %d\n",C[0]);
     printf("cRot[0] : %u\n",cRot[0]);
-    (*redScale)(  wrkType(c[0]), cRot[0]);
+    (*redScale)(  wrkType(C[0]), cRot[0]);
     printf("cRot[0] : %u\n",cRot[0]);
 };
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setGreenDistributionErf(){
-    setGreenDistributionErf(c[dstRGBIndices[1]],g[dstRGBIndices[1]]);
+    setGreenDistributionErf(C[dstRGBIndices[1]],G[dstRGBIndices[1]]);
 };
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setGreenDistributionErf(int center, double gradient){
     using srcInfo = cv::Data_Type<src_t>;
@@ -4253,14 +4266,14 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setGreenDistribut
     using dcDstType = typename cv::depthConverter<src_t, dst_t>::dstType;
     using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
     greenScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> ( gradient, center, wrkType((srcInfo::max - srcInfo::min) * TMin[1]), wrkType((srcInfo::max - srcInfo::min) * (TMin[1]+TRange[1])), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
-    printf("c[1] : %d\n",c[1]);
+    printf("C[1] : %d\n",C[1]);
     printf("cRot[1] : %u\n",cRot[1]);
-    (*greenScale)(wrkType(c[1]), cRot[1]);
+    (*greenScale)(wrkType(C[1]), cRot[1]);
     printf("cRot[1] : %u\n",cRot[1]);
 
 };
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setBlueDistributionErf(){
-    setBlueDistributionErf(c[dstRGBIndices[2]],g[dstRGBIndices[2]]);
+    setBlueDistributionErf(C[dstRGBIndices[2]],G[dstRGBIndices[2]]);
 };
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setBlueDistributionErf( int center, double gradient){
     using srcInfo = cv::Data_Type<src_t>;
@@ -4276,9 +4289,9 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setBlueDistributi
     using dcDstType = typename cv::depthConverter<src_t, dst_t>::dstType;
     using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
     blueScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (  gradient, center, wrkType((srcInfo::max - srcInfo::min) * TMin[2]), wrkType((srcInfo::max - srcInfo::min) * (TMin[2]+TRange[2])), dcDstType(dstInfo::min), dcDstType(dstInfo::max));
-    printf("c[2] : %d\n",c[2]);
+    printf("C[2] : %d\n",C[2]);
     printf("cRot[2] : %u\n",cRot[2]);
-    (*blueScale)( wrkType(c[2]), cRot[2]);
+    (*blueScale)( wrkType(C[2]), cRot[2]);
     printf("cRot[2] : %u\n",cRot[2]);
 };
 
@@ -4287,7 +4300,7 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcB
     init();
     setTransformFromVecs(sp0, sp1, sp2);
     setRGBIndices(srcBlueIdx, dstBlueIdx);
-    setC(newC); // asumes that c is in rotated color space and with a dstBlueIdx
+    setC(newC); // asumes that C is in rotated color space and with a dstBlueIdx
     setG(newG);
     setRedDistributionErf();
     setGreenDistributionErf();
@@ -4300,7 +4313,7 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcB
     init();
     setTransform(T);
     setRGBIndices(srcBlueIdx, dstBlueIdx);
-    setC(newC); // asumes that c is in rotated color space and with a dstBlueIdx
+    setC(newC); // asumes that C is in rotated color space and with a dstBlueIdx
     setG(newG);
     setRedDistributionErf();
     setGreenDistributionErf();
@@ -4312,7 +4325,7 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcB
     init();
     setTransformFromAngle(theta);
     setRGBIndices(srcBlueIdx, dstBlueIdx);
-    setUnitC(newC); // asumes that c is in rotated color space and with a dstBlueIdx
+    setUnitC(newC); // asumes that C is in rotated color space and with a dstBlueIdx
     setG(newG);
     setRedDistributionErf();
     setGreenDistributionErf();

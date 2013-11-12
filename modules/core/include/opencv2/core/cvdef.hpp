@@ -190,6 +190,10 @@ namespace cv {
     template<int t> struct Data_Type : cv_Data_Type<CV_MAT_DEPTH(t)>{
         constexpr static int channels  = CV_MAT_CN(t);
     };
+    template<int t1,int t2> struct Data_Type : cv_Data_Type<CV_WORKTYPE(CV_MAT_DEPTH(t1),CV_MAT_DEPTH(t2))>{
+        constexpr static int channels  = CV_MAT_CN(t1) * CV_MAT_CN(t2);
+    };
+
 }
 
 
