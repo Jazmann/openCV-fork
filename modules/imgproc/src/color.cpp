@@ -4237,8 +4237,8 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRedDistributio
     using dstInfo = cv::Data_Type<dst_t>;
     using dstType = typename cv::Data_Type<dst_t>::type;
     
-    using wrkInfo = typename cv::colorSpaceConverter<src_t, dst_t>::wrkInfo;
-    using wrkType = typename cv::colorSpaceConverter<src_t, dst_t>::wrkType;
+    using wrkInfo = typename cv::Data_Type<src_t, dst_t>::wrkInfo;
+    using wrkType = typename cv::Data_Type<src_t, dst_t>::wrkType;
     
     using dcSrcType = typename cv::depthConverter<src_t, dst_t>::srcType;
     using dcDstType = typename cv::depthConverter<src_t, dst_t>::dstType;
