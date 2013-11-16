@@ -473,7 +473,8 @@ template<int src_t, int dst_t>  class  depthConverter
         using dstInfo = cv::Data_Type<dst_t>;
         using srcType = typename cv::Data_Type<src_t>::type;
         using dstType = typename cv::Data_Type<dst_t>::type;
-        using wrkType = double;
+        using wrkInfo = typename cv::Work_Type<src_t, dst_t>;
+        using wrkType = typename cv::Work_Type<src_t, dst_t>::type;
         virtual void operator()(const srcType src, dstType &dst) = 0;
     };
         
@@ -521,12 +522,28 @@ template<int src_t, int dst_t>  class  distributeLinear: public depthConverter<s
 //        distributeEuclideanMetric( double _g, typename depthConverter<src_t, dst_t>::srcType _c, typename depthConverter<src_t, dst_t>::srcType sMin, typename depthConverter<src_t, dst_t>::srcType sMax, typename depthConverter<src_t, dst_t>::dstType dMin, typename depthConverter<src_t, dst_t>::dstType dMax);
 //        void operator()(const srcType src, dstType &dst);
 //    };
+    
+//template<int src_t, int dst_t> namespace colorSpaceConverterTypes{
+//        using srcInfo = cv::Data_Type<src_t>;
+//        using srcType = typename cv::Data_Type<src_t>::type;
+//        using src_channel_type = srcType;
+//        
+//        using dstInfo = cv::Data_Type<dst_t>;
+//        using dstType = typename cv::Data_Type<dst_t>::type;
+//        using dst_channel_type = dstType;
+//        
+//        using wrkInfo = typename cv::Work_Type<src_t, dst_t>;
+//        using wrkType = typename cv::Work_Type<src_t, dst_t>::type;
+//    }
 
     
 template<int src_t, int dst_t> class colorSpaceConverter
     {
         public :
         virtual ~colorSpaceConverter<src_t, dst_t>(){};
+//        namespace colorSpaceConverterTypes<src_t, dst_t>
+//        {
+//        struct types{
         using srcInfo = cv::Data_Type<src_t>;
         using srcType = typename cv::Data_Type<src_t>::type;
         using src_channel_type = srcType;
@@ -535,9 +552,11 @@ template<int src_t, int dst_t> class colorSpaceConverter
         using dstType = typename cv::Data_Type<dst_t>::type;
         using dst_channel_type = dstType;
         
-        
-        using wrkInfo = cv::Data_Type<CV_64S>; // ToDo Update this to construct CV_64S from src and dst types.
-        using wrkType = typename cv::Data_Type<CV_64S>::type;
+        using wrkInfo = typename cv::Work_Type<src_t, dst_t>;
+        using wrkType = typename cv::Work_Type<src_t, dst_t>::type;
+//        };
+       // using wrkInfo = cv::Data_Type<CV_64S>; // ToDo Update this to construct CV_64S from src and dst types.
+       // using wrkType = typename cv::Data_Type<CV_64S>::type;
         
         virtual void operator()(const srcType * src, dstType* dst, int n) const = 0;
     };
@@ -548,12 +567,25 @@ template<int src_t, int dst_t> class colorSpaceConverter
 template<int src_t, int dst_t> class RGB2Rot: public colorSpaceConverter<src_t, dst_t>
     {
         public :
-        using srcInfo = typename colorSpaceConverter<src_t, dst_t>::srcInfo;
-        using dstInfo = typename colorSpaceConverter<src_t, dst_t>::dstInfo;
-        using srcType = typename colorSpaceConverter<src_t, dst_t>::srcType;
-        using dstType = typename colorSpaceConverter<src_t, dst_t>::dstType;
-        using wrkInfo = typename colorSpaceConverter<src_t, dst_t>::wrkInfo;
-        using wrkType = typename colorSpaceConverter<src_t, dst_t>::wrkType;
+        using srcInfo = typename RGB2Rot::srcInfo;
+        using dstInfo = typename RGB2Rot::dstInfo;
+        using srcType = typename RGB2Rot::srcType;
+        using dstType = typename RGB2Rot::dstType;
+        using wrkInfo = typename RGB2Rot::wrkInfo;
+        using wrkType = typename RGB2Rot::wrkType;
+//        using csc = RGB2Rot;
+//        using srcInfo = typename csc::srcInfo;
+//        using dstInfo = typename csc::dstInfo;
+//        using srcType = typename csc::srcType;
+//        using dstType = typename csc::dstType;
+//        using wrkInfo = typename csc::wrkInfo;
+//        using wrkType = typename csc::wrkType;
+//        using srcInfo = typename colorSpaceConverter<src_t, dst_t>::srcInfo;
+//        using dstInfo = typename colorSpaceConverter<src_t, dst_t>::dstInfo;
+//        using srcType = typename colorSpaceConverter<src_t, dst_t>::srcType;
+//        using dstType = typename colorSpaceConverter<src_t, dst_t>::dstType;
+//        using wrkInfo = typename colorSpaceConverter<src_t, dst_t>::wrkInfo;
+//        using wrkType = typename colorSpaceConverter<src_t, dst_t>::wrkType;
         
         int indxA{0}, indxB{1}, indxC{2}; // indices for the axis.
         int dstRGBIndices[3]; // indices for the destination 'RGB' channels
@@ -569,7 +601,7 @@ template<int src_t, int dst_t> class RGB2Rot: public colorSpaceConverter<src_t, 
         cv::Matx<double, 3, 3> uT, uiT; // The transformation matrix in 0:1 scale
         cv::Matx<int, 3, 3> T, iT; // The transformation matrix without overflow protection in the source / destination scale
         wrkType M[dstInfo::channels][srcInfo::channels]; // The working matrix for the transform computation with overflow protection.
-        wrkType TRange[dstInfo::channels], TMin[dstInfo::channels]; TMax[dstInfo::channels];
+        wrkType TRange[dstInfo::channels], TMin[dstInfo::channels], TMax[dstInfo::channels];
         
         distributeErf<wrkInfo::dataType, dstInfo::dataType> *redScale, *greenScale, *blueScale;
         
