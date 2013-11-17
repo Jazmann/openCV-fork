@@ -481,24 +481,24 @@ template<int src_t, int dst_t>  class  depthConverter
 template<int src_t, int dst_t>  class  distributeErf: public depthConverter<src_t, dst_t>
     {
         public :
-        using srcType = typename depthConverter<src_t, dst_t>::srcType;
-        using dstType = typename depthConverter<src_t, dst_t>::dstType;
-        using wrkType = typename depthConverter<src_t, dst_t>::wrkType;
+        using srcType = typename distributeErf::srcType;
+        using dstType = typename distributeErf::dstType;
+        using wrkType = typename distributeErf::wrkType;
         srcType sRange, c;
         double g, scale;
         wrkType shift;
         
         distributeErf();
-        distributeErf( double _g, typename depthConverter<src_t, dst_t>::srcType _c, typename depthConverter<src_t, dst_t>::srcType sMin, typename depthConverter<src_t, dst_t>::srcType sMax, typename depthConverter<src_t, dst_t>::dstType dMin, typename depthConverter<src_t, dst_t>::dstType dMax);
+        distributeErf( double _g, srcType _c, srcType sMin, srcType sMax, dstType dMin, dstType dMax);
         void operator()(const srcType src, dstType &dst);
     };
     
 template<int src_t, int dst_t>  class  distributeLinear: public depthConverter<src_t, dst_t>
     {
         public :
-        using srcType = typename depthConverter<src_t, dst_t>::srcType;
-        using dstType = typename depthConverter<src_t, dst_t>::dstType;
-        using wrkType = typename depthConverter<src_t, dst_t>::wrkType;
+        using srcType = typename distributeLinear::srcType;
+        using dstType = typename distributeLinear::dstType;
+        using wrkType = typename distributeLinear::wrkType;
         srcType fMin, fMax;
         wrkType g;
         dstType c, dMin, dMax;
