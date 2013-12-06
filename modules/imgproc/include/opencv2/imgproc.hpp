@@ -495,8 +495,7 @@ template<int src_t, int dst_t> class distributeErfParameters
         srcType linearConstant;
         dstType shiftednErfConstant, dMaxShifted;
         
-        distributeErfParameters( double _g, srcType _c);
-        distributeErfParameters( double _g, srcType _c, srcType sMin, srcType sMax, dstType dMin, dstType dMax);
+        distributeErfParameters( double _g, srcType _c, srcType sMin = srcInfo::min, srcType sMax = srcInfo::max, dstType dMin = dstInfo::min, dstType dMax = dstInfo::max);
     };
 
     
