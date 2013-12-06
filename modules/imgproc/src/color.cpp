@@ -157,6 +157,71 @@ namespace cv
         return sign*y;
     }
     
+double erfinv(double x)
+    {
+        // returns  the inverse error function
+        // x must be  <-1<x<1
+        
+        int kMaxit    = 50;
+        double kEps   = 1e-8;
+        double kConst = 0.8862269254527579;     // sqrt(pi)/2.0
+        
+        if(fabs(x) <= kEps) return kConst*x;
+        
+        // Newton iterations
+        double erfi, derfi, y0,y1,dy0,dy1;
+        if(fabs(x) < 1.0) {
+            erfi  = kConst*fabs(x);
+            y0    = erf(0.9*erfi);
+            derfi = 0.1*erfi;
+            for (int iter=0; iter<kMaxit; iter++) {
+                y1  = 1. - erfc(erfi);
+                dy1 = fabs(x) - y1;
+                if (fabs(dy1) < kEps)  {if (x < 0) return -erfi; else return erfi;}
+                dy0    = y1 - y0;
+                derfi *= dy1/dy0;
+                y0     = y1;
+                erfi  += derfi;
+                if(fabs(derfi/erfi) < kEps) {if (x < 0) return -erfi; else return erfi;}
+            }
+        }
+        return 0; //did not converge
+    }
+    
+    
+    template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distributeErfParameters(double _g, typename distributeErfParameters::srcType _c, typename distributeErfParameters::srcType _sMin, typename distributeErfParameters::srcType _sMax, typename distributeErfParameters::dstType _dMin, typename distributeErfParameters::dstType _dMax): c(_c), g(_g), sMin(_sMin), sMax(_sMax), dMin(_dMin), dMax(_dMax)
+    {
+        CV_Assert((int)sMin <= (int)c && (int)c <= (int)sMax && (int)dMin <= (int)dMax);
+        sRange = (sMax - sMin);
+        dRange = (dMax - dMin);
+        uC = double(c-sMin)/double(sRange);
+        
+        ErfA = erf(g * uC);
+        ErfB = erf((g*(1 - uC)));
+        ErfAB = ErfB + ErfA;
+        shift = dstType(dMin + dRange * ErfA / ErfAB);
+        scale = double(dRange) / ErfAB;
+        
+        sUnitGrad[0] = std::floor(c - (sRange * std::sqrt(std::log((2*dRange * g)/(ErfAB  * std::sqrt(CV_PI) * sRange))))/g);
+        sUnitGrad[1] = std::ceil( c + (sRange * sqrt(log((2*dRange * g)/(ErfAB * std::sqrt(CV_PI) * sRange))))/g);
+        ull = 1./dRange; uul = 1. - ull; // double(dRange - 1)/dRange; 
+        sLowHigh[0] = std::floor(c + sRange * erfinv(ull*ErfB-uul*ErfA)/g);
+        sLowHigh[1] = std::ceil( c - sRange * erfinv(ull*ErfA-uul*ErfB)/g);
+        
+        // srcType sLowHigh[0] = std::floor(c + sRange * erfinv(ull*ErfAB - ErfA)/g);
+        // srcType sLowHigh[1] = std::ceil( c - sRange * erfinv(ull*ErfAB - ErfB)/g);
+        
+        useLookUpTable = sUnitGrad[0] - sLowHigh[0] < lookUpTableMax;
+        linearDistribution = sUnitGrad[0] - sLowHigh[0] < nonLinearMin;
+        
+        dUnitGrad[0] = shift + scale * erf( g * (sUnitGrad[0] - c) / sRange);
+        dUnitGrad[1] = shift + scale * erf( g * (sUnitGrad[1] - c) / sRange);
+        linearConstant = dUnitGrad[0] - sUnitGrad[0];
+        shiftednErfConstant = sUnitGrad[1] + dUnitGrad[0] - sUnitGrad[0] - dUnitGrad[1];
+        dMaxShifted = (dMax + shiftednErfConstant);
+    };
+
+    
 template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf()
     {
         srcType sMax = srcType::max; srcType sMin = srcType::min;
@@ -173,12 +238,37 @@ template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf()
 template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf(double _g, typename distributeErf::srcType _c, typename distributeErf::srcType sMin, typename distributeErf::srcType sMax, typename distributeErf::dstType dMin, typename distributeErf::dstType dMax): c(_c), g(_g)
     {
         CV_Assert((int)sMin <= (int)c && (int)c <= (int)sMax && (int)dMin <= (int)dMax);
+        const int lookUpTableMax = 255;
+        const int nonLinearMin = 3; // Less than this is is not worth keeping the error function at all.
+
         sRange = (sMax - sMin);
-        dstType dRange = dstType(dMax - dMin);
-        double ErfA = erf((g*(c - sMin)), double(sRange));
-        double ErfB = erf((g*(sMax - c)), double(sRange)) + ErfA;
-        shift = wrkType(dMin + dRange * ErfA / ErfB);
-        scale = double(dRange / ErfB);
+        dRange = (dMax - dMin);
+        double uC = double(c-sMin)/double(sRange);
+        
+        double ErfA = erf(g * uC);
+        double ErfB = erf((g*(1 - uC)));
+        double ErfAB = ErfB + ErfA;
+        shift = wrkType(dMin + dRange * ErfA / ErfAB);
+        scale = double(dRange) / ErfAB;
+        
+        srcType sUnitGrad[0] = std::floor(c - (sRange * std::sqrt(std::log((2*dRange * g)/(ErfAB  * std::sqrt(CV_PI) * sRange))))/g);
+        srcType sUnitGrad[1] = std::ceil(c + (sRange * sqrt(log((2*dRange * g)/(ErfAB * std::sqrt(CV_PI) * sRange))))/g);
+        double ull = 1./dRange;
+        double uul = double(dRange - 1)/dRange; // = 1 - ull
+        srcType sLowHigh[0] = std::floor(c + sRange * erfinv(ull*ErfB-uul*ErfA)/g);
+        srcType sLowHigh[1] = std::ceil( c - sRange * erfinv(ull*ErfA-uul*ErfB)/g);
+        
+        // srcType sLowHigh[0] = std::floor(c + sRange * erfinv(ull*ErfAB - ErfA)/g);
+        // srcType sLowHigh[1] = std::ceil( c - sRange * erfinv(ull*ErfAB - ErfB)/g);
+        
+        bool useLookUpTable = sUnitGrad[0] - sLowHigh[0] < lookUpTableMax;
+        bool linearDistribution = sUnitGrad[0] - sLowHigh[0] < nonLinearMin;
+        
+        dUnitGrad[0] = shift + scale * erf( g * (sUnitGrad[0] - c) / sRange);
+        dUnitGrad[1] = shift + scale * erf( g * (sUnitGrad[1] - c) / sRange);
+        linearConstant = dUnitGrad[0] - sUnitGrad[0];
+        shiftednErfConstant = sUnitGrad[1] + dUnitGrad[0] - sUnitGrad[0] - dUnitGrad[1];
+        dMaxShifted = (dMax + shiftednErfConstant);
     };
     
 template<int src_t, int dst_t>  void distributeErf<src_t, dst_t>::operator()(const typename distributeErf::srcType src, typename distributeErf::dstType &dst)
@@ -3792,20 +3882,7 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRGBIndices(int
     }
 };
 
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromVecs(cv::Vec<int, 3> sp0, cv::Vec<int, 3> sp1, cv::Vec<int, 3> sp2){
-//    using srcInfo = cv::Data_Type<src_t>;
-//    using srcType = typename cv::Data_Type<src_t>::type;
-//    
-//    using dstInfo = cv::Data_Type<dst_t>;
-//    using dstType = typename cv::Data_Type<dst_t>::type;
-//    
-//    using wrkInfo = typename cv::colorSpaceConverter<src_t, dst_t>::wrkInfo;
-//    using wrkType = typename cv::colorSpaceConverter<src_t, dst_t>::wrkType;
-    
-//    using dcSrcType = typename cv::depthConverter<src_t, dst_t>::srcType;
-//    using dcDstType = typename cv::depthConverter<src_t, dst_t>::dstType;
-//    using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
-    
+template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromVecs(cv::Vec<int, 3> sp0, cv::Vec<int, 3> sp1, cv::Vec<int, 3> sp2){    
     indxA = 0; indxB = 1; indxC = 2;
     
     cv::sVec<int, 3> v1(1.0, sp1 - sp0);
@@ -3867,18 +3944,6 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromV
 };
 
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransform(cv::Matx<int, 3, 3>& _T){
-//    using srcInfo = cv::Data_Type<src_t>;
-//    using srcType = typename cv::Data_Type<src_t>::type;
-//    
-//    using dstInfo = cv::Data_Type<dst_t>;
-//    using dstType = typename cv::Data_Type<dst_t>::type;
-//    
-//    using wrkInfo = typename cv::colorSpaceConverter<src_t, dst_t>::wrkInfo;
-//    using wrkType = typename cv::colorSpaceConverter<src_t, dst_t>::wrkType;
-    
-//    using dcSrcType = typename cv::depthConverter<src_t, dst_t>::srcType;
-//    using dcDstType = typename cv::depthConverter<src_t, dst_t>::dstType;
-//    using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
     T = _T;
     // Setup internal data
     setRanges();
@@ -3921,20 +3986,7 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
     // theta is the rotation in radians about the luminocity axis
     // preserve gives ranges where the axis scaling should not reduce information.
     // values outside the preserve range are vulnerable to truncation.
-    
-//    using srcInfo = cv::Data_Type<src_t>;
-//    using srcType = typename cv::Data_Type<src_t>::type;
-//    
-//    using dstInfo = cv::Data_Type<dst_t>;
-//    using dstType = typename cv::Data_Type<dst_t>::type;
-//    
-//    using wrkInfo = typename cv::colorSpaceConverter<src_t, dst_t>::wrkInfo;
-//    using wrkType = typename cv::colorSpaceConverter<src_t, dst_t>::wrkType;
-    
-//    using dcSrcType = typename cv::depthConverter<src_t, dst_t>::srcType;
-//    using dcDstType = typename cv::depthConverter<src_t, dst_t>::dstType;
-//    using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
-    
+        
     // nT is scaled to give ranges 0:1, -0.5:0.5 -0.5:0.5 with a unit RGB cube.
     uT = cv::Matx<double, 3, 3>(0.3333333333333333,0.3333333333333333,0.3333333333333333, 
             ((-1.0/std::cos(theta - (CV_PI*std::floor(0.5 + (3*theta)/CV_PI))/3.))*(std::cos(theta) + std::sqrt(3)*std::sin(theta)))/4.,\

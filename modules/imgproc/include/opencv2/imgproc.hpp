@@ -465,6 +465,41 @@ enum { COLOR_BGR2BGRA     = 0,
 double erf(double x);
 double erf(double a, double b);
     
+    
+template<int src_t, int dst_t> class distributeErfParameters
+    {
+        public :
+        using srcInfo = cv::Data_Type<src_t>;
+        using dstInfo = cv::Data_Type<dst_t>;
+        using srcType = typename cv::Data_Type<src_t>::type;
+        using dstType = typename cv::Data_Type<dst_t>::type;
+        using wrkInfo = cv::Work_Type<src_t, dst_t>;
+        using wrkType = typename cv::Work_Type<src_t, dst_t>::type;
+        const int lookUpTableMax = 255;
+        const int nonLinearMin = 3; // Less than this is is not worth keeping the error function at all.
+        
+        srcType sMin, sMax, sRange;
+        dstType dMin, dMax, dRange;
+        srcType c;
+        double uC, g;
+        
+        double ErfA, ErfB, ErfAB, scale;
+        dstType shift;
+        
+        srcType[2] sUnitGrad
+        double ull, uul;
+        srcType[2] sLowHigh;
+        bool useLookUpTable, linearDistribution;
+        
+        dstType[2] dUnitGrad;
+        srcType linearConstant;
+        dstType shiftednErfConstant, dMaxShifted;
+        
+        distributeErfParameters( double _g, srcType _c);
+        distributeErfParameters( double _g, srcType _c, srcType sMin, srcType sMax, dstType dMin, dstType dMax);
+    };
+
+    
 template<int src_t, int dst_t>  class  depthConverter
     {
         public :
@@ -473,7 +508,7 @@ template<int src_t, int dst_t>  class  depthConverter
         using dstInfo = cv::Data_Type<dst_t>;
         using srcType = typename cv::Data_Type<src_t>::type;
         using dstType = typename cv::Data_Type<dst_t>::type;
-        using wrkInfo = typename cv::Work_Type<src_t, dst_t>;
+        using wrkInfo = cv::Work_Type<src_t, dst_t>;
         using wrkType = typename cv::Work_Type<src_t, dst_t>::type;
         virtual void operator()(const srcType src, dstType &dst) = 0;
     };
@@ -573,19 +608,6 @@ template<int src_t, int dst_t> class RGB2Rot: public colorSpaceConverter<src_t, 
         using dstType = typename RGB2Rot::dstType;
         using wrkInfo = typename RGB2Rot::wrkInfo;
         using wrkType = typename RGB2Rot::wrkType;
-//        using csc = RGB2Rot;
-//        using srcInfo = typename csc::srcInfo;
-//        using dstInfo = typename csc::dstInfo;
-//        using srcType = typename csc::srcType;
-//        using dstType = typename csc::dstType;
-//        using wrkInfo = typename csc::wrkInfo;
-//        using wrkType = typename csc::wrkType;
-//        using srcInfo = typename colorSpaceConverter<src_t, dst_t>::srcInfo;
-//        using dstInfo = typename colorSpaceConverter<src_t, dst_t>::dstInfo;
-//        using srcType = typename colorSpaceConverter<src_t, dst_t>::srcType;
-//        using dstType = typename colorSpaceConverter<src_t, dst_t>::dstType;
-//        using wrkInfo = typename colorSpaceConverter<src_t, dst_t>::wrkInfo;
-//        using wrkType = typename colorSpaceConverter<src_t, dst_t>::wrkType;
         
         int indxA{0}, indxB{1}, indxC{2}; // indices for the axis.
         int dstRGBIndices[3]; // indices for the destination 'RGB' channels
