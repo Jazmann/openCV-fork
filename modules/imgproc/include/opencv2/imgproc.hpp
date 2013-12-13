@@ -486,15 +486,16 @@ template<int src_t, int dst_t> class distributeErfParameters
         double ErfA, ErfB, ErfAB, scale;
         dstType shift;
         
-        srcType[2] sUnitGrad
+        srcType sUnitGrad[2];
         double ull, uul;
-        srcType[2] sLowHigh;
+        srcType sLowHigh[2];
         bool useLookUpTable, linearDistribution;
         
-        dstType[2] dUnitGrad;
+        dstType dUnitGrad[2];
         srcType linearConstant;
         dstType shiftednErfConstant, dMaxShifted;
         
+        distributeErfParameters();
         distributeErfParameters( double _g, srcType _c, srcType sMin = srcInfo::min, srcType sMax = srcInfo::max, dstType dMin = dstInfo::min, dstType dMax = dstInfo::max);
     };
 
@@ -518,15 +519,40 @@ template<int src_t, int dst_t>  class  distributeErf: public depthConverter<src_
         using srcType = typename distributeErf::srcType;
         using dstType = typename distributeErf::dstType;
         using wrkType = typename distributeErf::wrkType;
-        srcType sRange, c;
-        double g, scale;
-        wrkType shift;
+        distributeErfParameters<src_t, dst_t> par;
+        dstType* map; // [cv::Data_Type<src_t>::max-cv::Data_Type<src_t>::min];
         
         distributeErf();
         distributeErf( double _g, srcType _c, srcType sMin, srcType sMax, dstType dMin, dstType dMax);
         void operator()(const srcType src, dstType &dst);
     };
     
+    template<int src_t, int dst_t>  class  distributeErfCompact: public depthConverter<src_t, dst_t>
+    {
+        public :
+        using srcType = typename distributeErfCompact::srcType;
+        using dstType = typename distributeErfCompact::dstType;
+        using wrkType = typename distributeErfCompact::wrkType;
+        distributeErfParameters<src_t, dst_t> par;
+        dstType* map; // [cv::Data_Type<src_t>::max-cv::Data_Type<src_t>::min];
+        distributeErfCompact();
+        distributeErfCompact( double _g, srcType _c, srcType sMin, srcType sMax, dstType dMin, dstType dMax);
+        void operator()(const srcType src, dstType &dst);
+    };
+    
+    template<int src_t, int dst_t>  class  distributePartition: public depthConverter<src_t, dst_t>
+    {
+        public :
+        using srcType = typename distributePartition::srcType;
+        using dstType = typename distributePartition::dstType;
+        using wrkType = typename distributePartition::wrkType;
+        srcType sMinCutoff, sMaxCutoff;
+        
+        distributePartition();
+        distributePartition( srcType sMinCutoff, srcType sMaxCutoff, srcType sMin, srcType sMax, dstType dMin, dstType dMax);
+        void operator()(const srcType src, dstType &dst);
+    };
+
 template<int src_t, int dst_t>  class  distributeLinear: public depthConverter<src_t, dst_t>
     {
         public :
@@ -541,44 +567,11 @@ template<int src_t, int dst_t>  class  distributeLinear: public depthConverter<s
         distributeLinear( wrkType _g, srcType _c, srcType sMin, srcType sMax, dstType dMin, dstType dMax);
         void operator()(const srcType src, dstType dst) const;
     };
-    
-//template<int src_t, int dst_t>  class  distributeEuclideanMetric: public depthConverter<src_t, dst_t>
-//    {
-//        public :
-//        using srcType = typename depthConverter<src_t, dst_t>::srcType;
-//        using dstType = typename depthConverter<src_t, dst_t>::dstType;
-//        using wrkType = typename depthConverter<src_t, dst_t>::wrkType;
-//        srcType sRange, c;
-//        double g, scale;
-//        wrkType shift;
-//        
-//        distributeEuclideanMetric();
-//        distributeEuclideanMetric( double _g, typename depthConverter<src_t, dst_t>::srcType _c, typename depthConverter<src_t, dst_t>::srcType sMin, typename depthConverter<src_t, dst_t>::srcType sMax, typename depthConverter<src_t, dst_t>::dstType dMin, typename depthConverter<src_t, dst_t>::dstType dMax);
-//        void operator()(const srcType src, dstType &dst);
-//    };
-    
-//template<int src_t, int dst_t> namespace colorSpaceConverterTypes{
-//        using srcInfo = cv::Data_Type<src_t>;
-//        using srcType = typename cv::Data_Type<src_t>::type;
-//        using src_channel_type = srcType;
-//        
-//        using dstInfo = cv::Data_Type<dst_t>;
-//        using dstType = typename cv::Data_Type<dst_t>::type;
-//        using dst_channel_type = dstType;
-//        
-//        using wrkInfo = typename cv::Work_Type<src_t, dst_t>;
-//        using wrkType = typename cv::Work_Type<src_t, dst_t>::type;
-//    }
-
-    
+        
 template<int src_t, int dst_t> class colorSpaceConverter
     {
         public :
-        virtual ~colorSpaceConverter<src_t, dst_t>(){};
-//        namespace colorSpaceConverterTypes<src_t, dst_t>
-//        {
-//        struct types{
-        using srcInfo = cv::Data_Type<src_t>;
+        virtual ~colorSpaceConverter<src_t, dst_t>(){};        using srcInfo = cv::Data_Type<src_t>;
         using srcType = typename cv::Data_Type<src_t>::type;
         using src_channel_type = srcType;
         
@@ -588,10 +581,6 @@ template<int src_t, int dst_t> class colorSpaceConverter
         
         using wrkInfo = typename cv::Work_Type<src_t, dst_t>;
         using wrkType = typename cv::Work_Type<src_t, dst_t>::type;
-//        };
-       // using wrkInfo = cv::Data_Type<CV_64S>; // ToDo Update this to construct CV_64S from src and dst types.
-       // using wrkType = typename cv::Data_Type<CV_64S>::type;
-        
         virtual void operator()(const srcType * src, dstType* dst, int n) const = 0;
     };
     
@@ -624,7 +613,7 @@ template<int src_t, int dst_t> class RGB2Rot: public colorSpaceConverter<src_t, 
         wrkType M[dstInfo::channels][srcInfo::channels]; // The working matrix for the transform computation with overflow protection.
         wrkType TRange[dstInfo::channels], TMin[dstInfo::channels], TMax[dstInfo::channels];
         
-        distributeErf<wrkInfo::dataType, dstInfo::dataType> *redScale, *greenScale, *blueScale;
+        depthConverter<wrkInfo::dataType, dstInfo::dataType> *redScale, *greenScale, *blueScale;
         
         RGB2Rot(); // todo set default distribution functions.
         
