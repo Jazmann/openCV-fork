@@ -4129,32 +4129,57 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRanges(){
     
 };
 
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setuCinRGB(Vec<double, 3> newC){
+template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setuCinSrc(Vec<double, 3> newC){
     int C[3]; // The center point for the distribution function in the rotated color space
-    Vec<dstType, 3> C_dst; // The center point for the distribution function in the rotated color space
-    Vec<double, 3> uC; // The center point for the distribution function in the rotated color space scaled to 0:1
-    Vec<srcType, 3> C_src; // The center point for the distribution function in the rotated color space scaled to 0:1
-    Vec<double, 3> uC_src; // The center point for the distribution function in the source color space scaled to 0:1
-    Vec<double, 3> uC_RGB{newC(indxA),newC(indxB),newC(indxC)};
+    Vec<double, 3> newC_src_temp(newC(indxA),newC(indxB),newC(indxC));
+    uC_src = newC_src_temp; // The center point for the distribution function in the source color space scaled to 0:1
     Vec<double, 3> shift(0,0.5,0.5);
-    uC = uT * uC_RGB + shift;
+    uC = uT * uC_src + shift;
+    C_dst[0] = TRange[0] * uC(0); C_dst[1] = TRange[1] * uC(1); C_dst[2] = TRange[2] * uC(2);
+    C_src[0] = (srcInfo::max - srcInfo::min) * uC_src(0); C_src[1] = (srcInfo::max - srcInfo::min) * uC_src(1); C_src[2] = (srcInfo::max - srcInfo::min) * uC_src(2);
     C[0] = TRange[0] * uC(0); C[1] = TRange[1] * uC(1); C[2] = TRange[2] * uC(2);
 };
 
-template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setCinRGB(Vec<int, 3> newC_RGB){
-    C[0] = newC_RGB(indxA)*M[0][0] + newC_RGB(indxB)*M[0][1] + newC_RGB(indxC)*M[0][2];
-    C[1] = newC_RGB(indxA)*M[1][0] + newC_RGB(indxB)*M[1][1] + newC_RGB(indxC)*M[1][2];
-    C[2] = newC_RGB(indxA)*M[2][0] + newC_RGB(indxB)*M[2][1] + newC_RGB(indxC)*M[2][2];
+template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setCinSrc(Vec<int, 3> newC_src){
+    
+    Vec<double, 3> shift(0,0.5,0.5);
+    Vec<srcType, 3> newC_src_temp(srcType(newC_src(indxA)),srcType(newC_src(indxB)),srcType(newC_src(indxC)));
+    C_src = newC_src_temp; // The center point for the distribution function in the source color space
+    uC_src = C_src/(srcInfo::max - srcInfo::min);
+    uC = uT * uC_src + shift;
+    C_dst[0] = TRange[0] * uC(0)+ TMin[0];
+    C_dst[1] = TRange[1] * uC(1)+ TMin[1];
+    C_dst[2] = TRange[2] * uC(2)+ TMin[2];
+    C[0] = TRange[0] * uC(0) + TMin[0]; C[1] = TRange[1] * uC(1) + TMin[1]; C[2] = TRange[2] * uC(2) + TMin[2];
 };
 
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setuC(Vec<double, 3> newC){
-    C[0] = TRange[indxA] * newC(indxA) + TMin[indxA];
-    C[1] = TRange[indxB] * newC(indxB) + TMin[indxB];
-    C[2] = TRange[indxC] * newC(indxC) + TMin[indxC];
+    Vec<double, 3> shift(0,0.5,0.5);
+    Vec<double, 3> newC_src_temp(newC(indxA),newC(indxB),newC(indxC));
+    uC = newC_src_temp; // The center point for the distribution function in the source color space
+    C_dst[0] = TRange[0] * uC[0]+ TMin[0];
+    C_dst[1] = TRange[1] * uC[1]+ TMin[1];
+    C_dst[2] = TRange[2] * uC[2]+ TMin[2];
+    uC_src = uiT * (uC - shift);
+    C_src[0] = (srcInfo::max - srcInfo::min) * uC_src[0] + srcInfo::min;
+    C_src[1] = (srcInfo::max - srcInfo::min) * uC_src[1] + srcInfo::min;
+    C_src[2] = (srcInfo::max - srcInfo::min) * uC_src[2] + srcInfo::min;
+
+    C[0] = TRange[0] * uC(0) + TMin[0]; C[1] = TRange[1] * uC(1) + TMin[1]; C[2] = TRange[2] * uC(2) + TMin[2];
+    
 };
 
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setC(Vec<int, 3> newC){
+    Vec<double, 3> shift(0,0.5,0.5);
     C[0] = newC(indxA); C[1] = newC(indxB); C[2] = newC(indxC);
+    C_dst[0] = newC(indxA); C_dst[1] = newC(indxB); C_dst[2] = newC(indxC);
+    uC[0] = (newC(indxA)- TMin[0])/TRange[0];
+    uC[1] = (newC(indxB)- TMin[1])/TRange[1];
+    uC[2] = (newC(indxC)- TMin[2])/TRange[2];
+    uC_src = uiT * (uC - shift);
+    C_src[0] = (srcInfo::max - srcInfo::min) * uC_src(0) + srcInfo::min;
+    C_src[1] = (srcInfo::max - srcInfo::min) * uC_src(1) + srcInfo::min;
+    C_src[2] = (srcInfo::max - srcInfo::min) * uC_src(2) + srcInfo::min;
 };
 
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setG(Vec<double, 3> newG){
@@ -4241,9 +4266,9 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::init()
         }
     }
     
-    TMin[0] = srcInfo::min; TRange[0] = srcInfo::max - srcInfo::min;
-    TMin[1] = srcInfo::min; TRange[1] = srcInfo::max - srcInfo::min;
-    TMin[2] = srcInfo::min; TRange[2] = srcInfo::max - srcInfo::min;
+    TMin[0] = srcInfo::min; TMax[0] = srcInfo::min; TRange[0] = srcInfo::max - srcInfo::min;
+    TMin[1] = srcInfo::min; TMax[1] = srcInfo::max; TRange[1] = srcInfo::max - srcInfo::min;
+    TMin[2] = srcInfo::min; TMax[2] = srcInfo::max; TRange[2] = srcInfo::max - srcInfo::min;
 }
 
 

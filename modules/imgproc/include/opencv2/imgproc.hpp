@@ -603,8 +603,9 @@ template<int src_t, int dst_t> class RGB2Rot: public colorSpaceConverter<src_t, 
         int C[3]; // The center point for the distribution function in the rotated color space
         Vec<dstType, 3> C_dst; // The center point for the distribution function in the rotated color space
         Vec<double, 3> uC; // The center point for the distribution function in the rotated color space scaled to 0:1
-        Vec<srcType, 3> C_src; // The center point for the distribution function in the rotated color space scaled to 0:1
+        Vec<srcType, 3> C_src; // The center point for the distribution function in the source color space
         Vec<double, 3> uC_src; // The center point for the distribution function in the source color space scaled to 0:1
+
         double G[3];  // The distribution parameter in the rotated color space
         double uG[3]; // The distribution parameter in the rotated color space scaled to 0:1
 
@@ -627,9 +628,9 @@ template<int src_t, int dst_t> class RGB2Rot: public colorSpaceConverter<src_t, 
        void setTransform(cv::Matx<int, 3, 3>& T);
        void setTransformFromAngle(double theta );
        void setRanges();
-       void setCinRGB(Vec<int, 3> _c);
+       void setCinSrc(Vec<int, 3> _c);
        void setC(Vec<int, 3> _c);
-       void setuCinRGB(Vec<double, 3> _c); // void setUnitC(Vec<double, 3> _c);
+       void setuCinSrc(Vec<double, 3> _c); // void setUnitC(Vec<double, 3> _c);
        void setuC(Vec<double, 3> _c); // void setUnitC(Vec<double, 3> _c);
        void setG(Vec<double, 3> _g);
        void setuG(Vec<double, 3> _g);
