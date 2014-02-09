@@ -4031,7 +4031,7 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
     ((-1.0/std::cos((CV_PI - 6*std::fmod(theta, CV_PI/3.))/6.))*std::sin(theta))/2.,\
     ((1.0/std::cos((CV_PI - 6*std::fmod(theta, CV_PI/3.))/6.))*(std::sqrt(3)*std::cos(theta) + std::sin(theta)))/4.);
     
-    iT = cv::Matx<double, 3, 3>(1.,
+    uiT = cv::Matx<double, 3, 3>(1.,
     (-2.*std::cos(theta - (CV_PI*std::floor(0.5 + (3.*theta)/CV_PI))/3.)*(std::cos(theta) + std::sqrt(3.)*std::sin(theta)))/3.,
     ( 2.*std::cos((CV_PI - 6.*std::fmod(theta, CV_PI/3.))/6.)*(-(std::sqrt(3.)*std::cos(theta)) + std::sin(theta)))/3.,
     1.,
@@ -4042,13 +4042,17 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
     (2.*std::cos((CV_PI - 6.*std::fmod(theta, CV_PI/3.))/6.)*(std::sqrt(3.)*std::cos(theta) + std::sin(theta)))/3.
     );
     
+    uTRange[0] = 1.0; uTMin[0] = 0;    uTMax[0] = 1.0;
+    uTRange[1] = 1.0; uTMin[1] = -0.5; uTMax[1] = 0.5;
+    uTRange[2] = 1.0; uTMin[2] = -0.5; uTMax[2] = 0.5;
+
         TRange[0] = srcInfo::max; TMin[0] = 0;
-        TRange[1] = srcInfo::max; TMin[1] = -1.0 * srcInfo::max/2.0;
-        TRange[2] = srcInfo::max; TMin[2] = -1.0 * srcInfo::max/2.0;
+        TRange[1] = srcInfo::max/2.0; TMin[1] = -1.0 * srcInfo::max/2.0;
+        TRange[2] = srcInfo::max/2.0; TMin[2] = -1.0 * srcInfo::max/2.0;
         
-        M[0][0] = T(0,0) * srcInfo::max; M[0][1] = T(0,1) * srcInfo::max; M[0][2] = T(0,2) * srcInfo::max;
-        M[1][0] = T(1,0) * srcInfo::max; M[1][1] = T(1,1) * srcInfo::max; M[1][2] = T(1,2) * srcInfo::max;
-        M[2][0] = T(2,0) * srcInfo::max; M[2][1] = T(2,1) * srcInfo::max; M[2][2] = T(2,2) * srcInfo::max;
+        M[0][0] = uT(0,0) * srcInfo::max; M[0][1] = uT(0,1) * srcInfo::max; M[0][2] = uT(0,2) * srcInfo::max;
+        M[1][0] = uT(1,0) * srcInfo::max; M[1][1] = uT(1,1) * srcInfo::max; M[1][2] = uT(1,2) * srcInfo::max;
+        M[2][0] = uT(2,0) * srcInfo::max; M[2][1] = uT(2,1) * srcInfo::max; M[2][2] = uT(2,2) * srcInfo::max;
         
     };
 // For data which can not be pocessed with a type capable of holding double the bit size of the data the following routing needs to be finished.
@@ -4133,20 +4137,17 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setuCinSrc(Vec<do
     int C[3]; // The center point for the distribution function in the rotated color space
     Vec<double, 3> newC_src_temp(newC(indxA),newC(indxB),newC(indxC));
     uC_src = newC_src_temp; // The center point for the distribution function in the source color space scaled to 0:1
-    Vec<double, 3> shift(0,0.5,0.5);
-    uC = uT * uC_src + shift;
+    uC = uT * uC_src - uTMin;
     C_dst[0] = TRange[0] * uC(0); C_dst[1] = TRange[1] * uC(1); C_dst[2] = TRange[2] * uC(2);
     C_src[0] = (srcInfo::max - srcInfo::min) * uC_src(0); C_src[1] = (srcInfo::max - srcInfo::min) * uC_src(1); C_src[2] = (srcInfo::max - srcInfo::min) * uC_src(2);
     C[0] = TRange[0] * uC(0); C[1] = TRange[1] * uC(1); C[2] = TRange[2] * uC(2);
 };
 
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setCinSrc(Vec<int, 3> newC_src){
-    
-    Vec<double, 3> shift(0,0.5,0.5);
     Vec<srcType, 3> newC_src_temp(srcType(newC_src(indxA)),srcType(newC_src(indxB)),srcType(newC_src(indxC)));
     C_src = newC_src_temp; // The center point for the distribution function in the source color space
     uC_src = C_src/(srcInfo::max - srcInfo::min);
-    uC = uT * uC_src + shift;
+    uC = uT * uC_src - uTMin;
     C_dst[0] = TRange[0] * uC(0)+ TMin[0];
     C_dst[1] = TRange[1] * uC(1)+ TMin[1];
     C_dst[2] = TRange[2] * uC(2)+ TMin[2];
@@ -4157,9 +4158,9 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setuC(Vec<double,
     Vec<double, 3> shift(0,0.5,0.5);
     Vec<double, 3> newC_src_temp(newC(indxA),newC(indxB),newC(indxC));
     uC = newC_src_temp; // The center point for the distribution function in the source color space
-    C_dst[0] = TRange[0] * uC[0]+ TMin[0];
-    C_dst[1] = TRange[1] * uC[1]+ TMin[1];
-    C_dst[2] = TRange[2] * uC[2]+ TMin[2];
+    C_dst[0] = (dstInfo::max - dstInfo::min) * uC[0] + dstInfo::min;
+    C_dst[1] = (dstInfo::max - dstInfo::min) * uC[1] + dstInfo::min;
+    C_dst[2] = (dstInfo::max - dstInfo::min) * uC[2] + dstInfo::min;
     uC_src = uiT * (uC - shift);
     C_src[0] = (srcInfo::max - srcInfo::min) * uC_src[0] + srcInfo::min;
     C_src[1] = (srcInfo::max - srcInfo::min) * uC_src[1] + srcInfo::min;

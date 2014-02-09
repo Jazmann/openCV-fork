@@ -571,7 +571,8 @@ template<int src_t, int dst_t>  class  distributeLinear: public depthConverter<s
 template<int src_t, int dst_t> class colorSpaceConverter
     {
         public :
-        virtual ~colorSpaceConverter<src_t, dst_t>(){};        using srcInfo = cv::Data_Type<src_t>;
+        virtual ~colorSpaceConverter<src_t, dst_t>(){};
+        using srcInfo = cv::Data_Type<src_t>;
         using srcType = typename cv::Data_Type<src_t>::type;
         using src_channel_type = srcType;
         
@@ -579,8 +580,10 @@ template<int src_t, int dst_t> class colorSpaceConverter
         using dstType = typename cv::Data_Type<dst_t>::type;
         using dst_channel_type = dstType;
         
-        using wrkInfo = typename cv::Work_Type<src_t, dst_t>;
-        using wrkType = typename cv::Work_Type<src_t, dst_t>::type;
+        using wrkInfo  = typename cv::Work_Type<src_t, dst_t>;
+        using wrkType  = typename cv::Work_Type<src_t, dst_t>::type;
+        using sWrkInfo = typename cv::Signed_Work_Type<src_t, dst_t>;
+        using sWrkType = typename cv::Signed_Work_Type<src_t, dst_t>::type;
         virtual void operator()(const srcType * src, dstType* dst, int n) const = 0;
     };
     
@@ -596,6 +599,8 @@ template<int src_t, int dst_t> class RGB2Rot: public colorSpaceConverter<src_t, 
         using dstType = typename RGB2Rot::dstType;
         using wrkInfo = typename RGB2Rot::wrkInfo;
         using wrkType = typename RGB2Rot::wrkType;
+        using sWrkInfo = typename RGB2Rot::sWrkInfo;
+        using sWrkType = typename RGB2Rot::sWrkType;
         
         int indxA{0}, indxB{1}, indxC{2}; // indices for the axis.
         int dstRGBIndices[3]; // indices for the destination 'RGB' channels
@@ -610,9 +615,10 @@ template<int src_t, int dst_t> class RGB2Rot: public colorSpaceConverter<src_t, 
         double uG[3]; // The distribution parameter in the rotated color space scaled to 0:1
 
         cv::Matx<double, 3, 3> uT, uiT; // The transformation matrix in 0:1 scale
+        Vec<double, dstInfo::channels> uTRange, uTMin, uTMax; // The range info for the result of the transformed space. The axis lengths and positions in the 0:1 space.
         cv::Matx<int, 3, 3> T, iT; // The transformation matrix without overflow protection in the source / destination scale
-        wrkType M[dstInfo::channels][srcInfo::channels]; // The working matrix for the transform computation with overflow protection.
-        wrkType TRange[dstInfo::channels], TMin[dstInfo::channels], TMax[dstInfo::channels];
+        sWrkType M[dstInfo::channels][srcInfo::channels]; // The working matrix for the transform computation with overflow protection.
+        sWrkType TRange[dstInfo::channels], TMin[dstInfo::channels], TMax[dstInfo::channels];
         
         depthConverter<wrkInfo::dataType, dstInfo::dataType> *redScale, *greenScale, *blueScale;
         

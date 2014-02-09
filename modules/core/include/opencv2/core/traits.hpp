@@ -305,14 +305,14 @@ public:
             fmt   = DataType<_Tp>::fmt
         };
     };
-    template<> class DataDepth<uint8_t>  { public: enum { value = CV_8U,  fmt=(int)'hhu' }; };
-    template<> class DataDepth< int8_t>  { public: enum { value = CV_8S,  fmt=(int)'hhi' }; };
-    template<> class DataDepth<uint16_t> { public: enum { value = CV_16U, fmt=(int)'hu' }; };
-    template<> class DataDepth< int16_t> { public: enum { value = CV_16S, fmt=(int)'hi' }; };
+    template<> class DataDepth<uint8_t>  { public: enum { value = CV_8U,  fmt=(int)'u' }; }; // should be hhu
+    template<> class DataDepth< int8_t>  { public: enum { value = CV_8S,  fmt=(int)'i' }; }; // should be hhi
+    template<> class DataDepth<uint16_t> { public: enum { value = CV_16U, fmt=(int)'u' }; }; // should be hu
+    template<> class DataDepth< int16_t> { public: enum { value = CV_16S, fmt=(int)'i' }; }; // should be hi
     template<> class DataDepth<uint32_t> { public: enum { value = CV_32U, fmt=(int)'u' }; };
     template<> class DataDepth< int32_t> { public: enum { value = CV_32S, fmt=(int)'i' }; };
-    template<> class DataDepth<uint64_t> { public: enum { value = CV_64U, fmt=(int)'llu' }; };
-    template<> class DataDepth< int64_t> { public: enum { value = CV_64S, fmt=(int)'lli' }; };
+    template<> class DataDepth<uint64_t> { public: enum { value = CV_64U, fmt=(int)'u' }; }; // should be llu
+    template<> class DataDepth< int64_t> { public: enum { value = CV_64S, fmt=(int)'i' }; }; // should be lli
     
     template<> class DataDepth<float> { public: enum { value = CV_32F, fmt=(int)'f' }; };
     template<> class DataDepth<double> { public: enum { value = CV_64F, fmt=(int)'d' }; };

@@ -467,6 +467,293 @@ template struct cv_Work_Type<CV_64F,CV_64S>;
 template struct cv_Work_Type<CV_64F,CV_32F>; 
 template struct cv_Work_Type<CV_64F,CV_64F>; 
 
+// Signed Working types
+
+template<int t1, int t2> struct cv_Signed_Work_Type;
+
+template<> struct cv_Signed_Work_Type<CV_2U, CV_2U> : cv_Data_Type<CV_8S>{};
+template<> struct cv_Signed_Work_Type<CV_2U, CV_4U> : cv_Data_Type<CV_8S>{};
+template<> struct cv_Signed_Work_Type<CV_2U, CV_8U> : cv_Data_Type<CV_16S>{};
+template<> struct cv_Signed_Work_Type<CV_2U,CV_16U> : cv_Data_Type<CV_32S>{};
+template<> struct cv_Signed_Work_Type<CV_2U,CV_32U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_2U,CV_64U> : cv_Data_Type<CV_64S>{};
+
+template<> struct cv_Signed_Work_Type<CV_2U, CV_8S> : cv_Data_Type<CV_16S>{};
+template<> struct cv_Signed_Work_Type<CV_2U,CV_16S> : cv_Data_Type<CV_32S>{};
+template<> struct cv_Signed_Work_Type<CV_2U,CV_32S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_2U,CV_64S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_2U,CV_32F> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_2U,CV_64F> : cv_Data_Type<CV_64F>{};
+
+template<> struct cv_Signed_Work_Type<CV_4U, CV_2U> : cv_Data_Type<CV_8S>{};
+template<> struct cv_Signed_Work_Type<CV_4U, CV_4U> : cv_Data_Type<CV_16S>{};
+template<> struct cv_Signed_Work_Type<CV_4U, CV_8U> : cv_Data_Type<CV_32S>{};
+template<> struct cv_Signed_Work_Type<CV_4U,CV_16U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_4U,CV_32U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_4U,CV_64U> : cv_Data_Type<CV_64S>{};
+
+template<> struct cv_Signed_Work_Type<CV_4U, CV_8S> : cv_Data_Type<CV_32S>{};
+template<> struct cv_Signed_Work_Type<CV_4U,CV_16S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_4U,CV_32S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_4U,CV_64S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_4U,CV_32F> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_4U,CV_64F> : cv_Data_Type<CV_64F>{};
+
+template<> struct cv_Signed_Work_Type<CV_8U, CV_2U> : cv_Data_Type<CV_16S>{};
+template<> struct cv_Signed_Work_Type<CV_8U, CV_4U> : cv_Data_Type<CV_32S>{};
+template<> struct cv_Signed_Work_Type<CV_8U, CV_8U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_8U,CV_16U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_8U,CV_32U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_8U,CV_64U> : cv_Data_Type<CV_64S>{};
+
+template<> struct cv_Signed_Work_Type<CV_8U, CV_8S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_8U,CV_16S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_8U,CV_32S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_8U,CV_64S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_8U,CV_32F> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_8U,CV_64F> : cv_Data_Type<CV_64F>{};
+
+template<> struct cv_Signed_Work_Type<CV_8S, CV_2U> : cv_Data_Type<CV_16S>{};
+template<> struct cv_Signed_Work_Type<CV_8S, CV_4U> : cv_Data_Type<CV_32S>{};
+template<> struct cv_Signed_Work_Type<CV_8S, CV_8U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_8S,CV_16U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_8S,CV_32U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_8S,CV_64U> : cv_Data_Type<CV_64S>{};
+
+template<> struct cv_Signed_Work_Type<CV_8S, CV_8S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_8S,CV_16S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_8S,CV_32S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_8S,CV_64S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_8S,CV_32F> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_8S,CV_64F> : cv_Data_Type<CV_64F>{};
+
+template<> struct cv_Signed_Work_Type<CV_16U, CV_2U> : cv_Data_Type<CV_32S>{};
+template<> struct cv_Signed_Work_Type<CV_16U, CV_4U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_16U, CV_8U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_16U,CV_16U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_16U,CV_32U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_16U,CV_64U> : cv_Data_Type<CV_64S>{};
+
+template<> struct cv_Signed_Work_Type<CV_16U, CV_8S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_16U,CV_16S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_16U,CV_32S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_16U,CV_64S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_16U,CV_32F> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_16U,CV_64F> : cv_Data_Type<CV_64F>{};
+
+template<> struct cv_Signed_Work_Type<CV_16S, CV_2U> : cv_Data_Type<CV_32S>{};
+template<> struct cv_Signed_Work_Type<CV_16S, CV_4U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_16S, CV_8U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_16S,CV_16U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_16S,CV_32U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_16S,CV_64U> : cv_Data_Type<CV_64S>{};
+
+template<> struct cv_Signed_Work_Type<CV_16S, CV_8S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_16S,CV_16S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_16S,CV_32S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_16S,CV_64S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_16S,CV_32F> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_16S,CV_64F> : cv_Data_Type<CV_64F>{};
+
+template<> struct cv_Signed_Work_Type<CV_32U, CV_2U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_32U, CV_4U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_32U, CV_8U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_32U,CV_16U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_32U,CV_32U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_32U,CV_64U> : cv_Data_Type<CV_64S>{};
+
+template<> struct cv_Signed_Work_Type<CV_32U, CV_8S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_32U,CV_16S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_32U,CV_32S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_32U,CV_64S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_32U,CV_32F> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_32U,CV_64F> : cv_Data_Type<CV_64F>{};
+
+template<> struct cv_Signed_Work_Type<CV_32S, CV_2U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_32S, CV_4U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_32S, CV_8U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_32S,CV_16U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_32S,CV_32U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_32S,CV_64U> : cv_Data_Type<CV_64S>{};
+
+template<> struct cv_Signed_Work_Type<CV_32S, CV_8S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_32S,CV_16S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_32S,CV_32S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_32S,CV_64S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_32S,CV_32F> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_32S,CV_64F> : cv_Data_Type<CV_64F>{};
+
+template<> struct cv_Signed_Work_Type<CV_64U, CV_2U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_64U, CV_4U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_64U, CV_8U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_64U,CV_16U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_64U,CV_32U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_64U,CV_64U> : cv_Data_Type<CV_64S>{};
+
+template<> struct cv_Signed_Work_Type<CV_64U, CV_8S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_64U,CV_16S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_64U,CV_32S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_64U,CV_64S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_64U,CV_32F> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_64U,CV_64F> : cv_Data_Type<CV_64F>{};
+
+template<> struct cv_Signed_Work_Type<CV_64S, CV_2U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_64S, CV_4U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_64S, CV_8U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_64S,CV_16U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_64S,CV_32U> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_64S,CV_64U> : cv_Data_Type<CV_64S>{};
+
+template<> struct cv_Signed_Work_Type<CV_64S, CV_8S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_64S,CV_16S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_64S,CV_32S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_64S,CV_64S> : cv_Data_Type<CV_64S>{};
+template<> struct cv_Signed_Work_Type<CV_64S,CV_32F> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_64S,CV_64F> : cv_Data_Type<CV_64F>{};
+
+template<> struct cv_Signed_Work_Type<CV_32F, CV_2U> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_32F, CV_4U> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_32F, CV_8U> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_32F,CV_16U> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_32F,CV_32U> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_32F,CV_64U> : cv_Data_Type<CV_64F>{};
+
+template<> struct cv_Signed_Work_Type<CV_32F, CV_8S> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_32F,CV_16S> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_32F,CV_32S> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_32F,CV_64S> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_32F,CV_32F> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_32F,CV_64F> : cv_Data_Type<CV_64F>{};
+
+template<> struct cv_Signed_Work_Type<CV_64F, CV_2U> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_64F, CV_4U> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_64F, CV_8U> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_64F,CV_16U> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_64F,CV_32U> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_64F,CV_64U> : cv_Data_Type<CV_64F>{};
+
+template<> struct cv_Signed_Work_Type<CV_64F, CV_8S> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_64F,CV_16S> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_64F,CV_32S> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_64F,CV_64S> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_64F,CV_32F> : cv_Data_Type<CV_64F>{};
+template<> struct cv_Signed_Work_Type<CV_64F,CV_64F> : cv_Data_Type<CV_64F>{};
+
+//
+
+
+template struct cv_Signed_Work_Type<CV_2U, CV_2U>;
+template struct cv_Signed_Work_Type<CV_2U, CV_4U>;
+template struct cv_Signed_Work_Type<CV_2U, CV_8U>;
+template struct cv_Signed_Work_Type<CV_2U,CV_16U>;
+template struct cv_Signed_Work_Type<CV_2U,CV_32U>;
+template struct cv_Signed_Work_Type<CV_2U,CV_64U>;
+
+template struct cv_Signed_Work_Type<CV_2U, CV_8S>;
+template struct cv_Signed_Work_Type<CV_2U,CV_16S>;
+template struct cv_Signed_Work_Type<CV_2U,CV_32S>;
+template struct cv_Signed_Work_Type<CV_2U,CV_64S>;
+template struct cv_Signed_Work_Type<CV_2U,CV_32F>;
+template struct cv_Signed_Work_Type<CV_2U,CV_64F>;
+
+template struct cv_Signed_Work_Type<CV_4U, CV_2U>;
+template struct cv_Signed_Work_Type<CV_4U, CV_4U>;
+template struct cv_Signed_Work_Type<CV_4U, CV_8U>;
+template struct cv_Signed_Work_Type<CV_4U,CV_16U>;
+template struct cv_Signed_Work_Type<CV_4U,CV_32U>;
+template struct cv_Signed_Work_Type<CV_4U,CV_64U>;
+
+template struct cv_Signed_Work_Type<CV_4U, CV_8S>;
+template struct cv_Signed_Work_Type<CV_4U,CV_16S>;
+template struct cv_Signed_Work_Type<CV_4U,CV_32S>;
+template struct cv_Signed_Work_Type<CV_4U,CV_64S>;
+template struct cv_Signed_Work_Type<CV_4U,CV_32F>;
+template struct cv_Signed_Work_Type<CV_4U,CV_64F>;
+
+template struct cv_Signed_Work_Type<CV_8U, CV_2U>;
+template struct cv_Signed_Work_Type<CV_8U, CV_4U>;
+template struct cv_Signed_Work_Type<CV_8U, CV_8U>;
+template struct cv_Signed_Work_Type<CV_8U,CV_16U>;
+template struct cv_Signed_Work_Type<CV_8U,CV_32U>;
+template struct cv_Signed_Work_Type<CV_8U,CV_64U>;
+
+template struct cv_Signed_Work_Type<CV_8U, CV_8S>;
+template struct cv_Signed_Work_Type<CV_8U,CV_16S>;
+template struct cv_Signed_Work_Type<CV_8U,CV_32S>;
+template struct cv_Signed_Work_Type<CV_8U,CV_64S>;
+template struct cv_Signed_Work_Type<CV_8U,CV_32F>;
+template struct cv_Signed_Work_Type<CV_8U,CV_64F>;
+
+template struct cv_Signed_Work_Type<CV_16U, CV_2U>;
+template struct cv_Signed_Work_Type<CV_16U, CV_4U>;
+template struct cv_Signed_Work_Type<CV_16U, CV_8U>;
+template struct cv_Signed_Work_Type<CV_16U,CV_16U>;
+template struct cv_Signed_Work_Type<CV_16U,CV_32U>;
+template struct cv_Signed_Work_Type<CV_16U,CV_64U>;
+
+template struct cv_Signed_Work_Type<CV_16U, CV_8S>;
+template struct cv_Signed_Work_Type<CV_16U,CV_16S>;
+template struct cv_Signed_Work_Type<CV_16U,CV_32S>;
+template struct cv_Signed_Work_Type<CV_16U,CV_64S>;
+template struct cv_Signed_Work_Type<CV_16U,CV_32F>;
+template struct cv_Signed_Work_Type<CV_16U,CV_64F>;
+
+template struct cv_Signed_Work_Type<CV_32U, CV_2U>;
+template struct cv_Signed_Work_Type<CV_32U, CV_4U>;
+template struct cv_Signed_Work_Type<CV_32U, CV_8U>;
+template struct cv_Signed_Work_Type<CV_32U,CV_16U>;
+template struct cv_Signed_Work_Type<CV_32U,CV_32U>;
+template struct cv_Signed_Work_Type<CV_32U,CV_64U>;
+
+template struct cv_Signed_Work_Type<CV_32U, CV_8S>;
+template struct cv_Signed_Work_Type<CV_32U,CV_16S>;
+template struct cv_Signed_Work_Type<CV_32U,CV_32S>;
+template struct cv_Signed_Work_Type<CV_32U,CV_64S>;
+template struct cv_Signed_Work_Type<CV_32U,CV_32F>;
+template struct cv_Signed_Work_Type<CV_32U,CV_64F>;
+
+template struct cv_Signed_Work_Type<CV_64U, CV_2U>;
+template struct cv_Signed_Work_Type<CV_64U, CV_4U>;
+template struct cv_Signed_Work_Type<CV_64U, CV_8U>;
+template struct cv_Signed_Work_Type<CV_64U,CV_16U>;
+template struct cv_Signed_Work_Type<CV_64U,CV_32U>;
+template struct cv_Signed_Work_Type<CV_64U,CV_64U>;
+
+template struct cv_Signed_Work_Type<CV_64U, CV_8S>;
+template struct cv_Signed_Work_Type<CV_64U,CV_16S>;
+template struct cv_Signed_Work_Type<CV_64U,CV_32S>;
+template struct cv_Signed_Work_Type<CV_64U,CV_64S>;
+template struct cv_Signed_Work_Type<CV_64U,CV_32F>;
+template struct cv_Signed_Work_Type<CV_64U,CV_64F>;
+
+template struct cv_Signed_Work_Type<CV_32F, CV_2U>;
+template struct cv_Signed_Work_Type<CV_32F, CV_4U>;
+template struct cv_Signed_Work_Type<CV_32F, CV_8U>;
+template struct cv_Signed_Work_Type<CV_32F,CV_16U>;
+template struct cv_Signed_Work_Type<CV_32F,CV_32U>;
+template struct cv_Signed_Work_Type<CV_32F,CV_64U>;
+
+template struct cv_Signed_Work_Type<CV_32F, CV_8S>;
+template struct cv_Signed_Work_Type<CV_32F,CV_16S>;
+template struct cv_Signed_Work_Type<CV_32F,CV_32S>;
+template struct cv_Signed_Work_Type<CV_32F,CV_64S>;
+template struct cv_Signed_Work_Type<CV_32F,CV_32F>;
+template struct cv_Signed_Work_Type<CV_32F,CV_64F>;
+
+template struct cv_Signed_Work_Type<CV_64F, CV_2U>;
+template struct cv_Signed_Work_Type<CV_64F, CV_4U>;
+template struct cv_Signed_Work_Type<CV_64F, CV_8U>;
+template struct cv_Signed_Work_Type<CV_64F,CV_16U>;
+template struct cv_Signed_Work_Type<CV_64F,CV_32U>;
+template struct cv_Signed_Work_Type<CV_64F,CV_64U>;
+
+template struct cv_Signed_Work_Type<CV_64F, CV_8S>;
+template struct cv_Signed_Work_Type<CV_64F,CV_16S>;
+template struct cv_Signed_Work_Type<CV_64F,CV_32S>;
+template struct cv_Signed_Work_Type<CV_64F,CV_64S>;
+template struct cv_Signed_Work_Type<CV_64F,CV_32F>;
+template struct cv_Signed_Work_Type<CV_64F,CV_64F>;
+
 
 
 
@@ -481,6 +768,10 @@ namespace cv {
     template<int t1,int t2> struct Work_Type : cv_Work_Type<CV_MAT_DEPTH(t1),CV_MAT_DEPTH(t2)>{
         constexpr static int channels  = CV_MAT_CN(t1) + CV_MAT_CN(t2);
     };
+    template<int t1,int t2> struct Signed_Work_Type : cv_Signed_Work_Type<CV_MAT_DEPTH(t1),CV_MAT_DEPTH(t2)>{
+        constexpr static int channels  = CV_MAT_CN(t1) + CV_MAT_CN(t2);
+    };
+
 
 }
 
