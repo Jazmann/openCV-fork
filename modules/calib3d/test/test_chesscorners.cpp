@@ -185,13 +185,13 @@ void CV_ChessboardDetectorTest::run_batch( const string& filename )
     switch( pattern )
     {
         case CHESSBOARD:
-            folder = string(ts->get_data_path()) + "cameracalibration/";
+            folder = string(ts->get_data_path()) + "cv/cameracalibration/";
             break;
         case CIRCLES_GRID:
-            folder = string(ts->get_data_path()) + "cameracalibration/circles/";
+            folder = string(ts->get_data_path()) + "cv/cameracalibration/circles/";
             break;
         case ASYMMETRIC_CIRCLES_GRID:
-            folder = string(ts->get_data_path()) + "cameracalibration/asymmetric_circles/";
+            folder = string(ts->get_data_path()) + "cv/cameracalibration/asymmetric_circles/";
             break;
     }
 
@@ -208,7 +208,7 @@ void CV_ChessboardDetectorTest::run_batch( const string& filename )
     }
 
     int progress = 0;
-    int max_idx = board_list.size()/2;
+    int max_idx = (int)board_list.size()/2;
     double sum_error = 0.0;
     int count = 0;
 

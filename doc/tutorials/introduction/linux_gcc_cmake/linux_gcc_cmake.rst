@@ -41,7 +41,7 @@ Let's use a simple program such as DisplayImage.cpp shown below.
          return -1;
        }
 
-     namedWindow( "Display Image", CV_WINDOW_AUTOSIZE );
+     namedWindow( "Display Image", WINDOW_AUTOSIZE );
      imshow( "Display Image", image );
 
      waitKey(0);
@@ -58,6 +58,7 @@ Now you have to create your CMakeLists.txt file. It should look like this:
    cmake_minimum_required(VERSION 2.8)
    project( DisplayImage )
    find_package( OpenCV REQUIRED )
+   include_directories( ${OpenCV_INCLUDE_DIRS} )
    add_executable( DisplayImage DisplayImage.cpp )
    target_link_libraries( DisplayImage ${OpenCV_LIBS} )
 

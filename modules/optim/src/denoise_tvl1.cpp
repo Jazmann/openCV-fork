@@ -1,3 +1,43 @@
+/*M///////////////////////////////////////////////////////////////////////////////////////
+//
+//  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.
+//
+//  By downloading, copying, installing or using the software you agree to this license.
+//  If you do not agree to this license, do not download, install,
+//  copy or use the software.
+//
+//
+//                           License Agreement
+//                For Open Source Computer Vision Library
+//
+// Copyright (C) 2013, OpenCV Foundation, all rights reserved.
+// Third party copyrights are property of their respective owners.
+//
+// Redistribution and use in source and binary forms, with or without modification,
+// are permitted provided that the following conditions are met:
+//
+//   * Redistribution's of source code must retain the above copyright notice,
+//     this list of conditions and the following disclaimer.
+//
+//   * Redistribution's in binary form must reproduce the above copyright notice,
+//     this list of conditions and the following disclaimer in the documentation
+//     and/or other materials provided with the distribution.
+//
+//   * The name of the copyright holders may not be used to endorse or promote products
+//     derived from this software without specific prior written permission.
+//
+// This software is provided by the copyright holders and contributors "as is" and
+// any express or implied warranties, including, but not limited to, the implied
+// warranties of merchantability and fitness for a particular purpose are disclaimed.
+// In no event shall the OpenCV Foundation or contributors be liable for any direct,
+// indirect, incidental, special, exemplary, or consequential damages
+// (including, but not limited to, procurement of substitute goods or services;
+// loss of use, data, or profits; or business interruption) however caused
+// and on any theory of liability, whether in contract, strict liability,
+// or tort (including negligence or otherwise) arising in any way out of
+// the use of this software, even if advised of the possibility of such damage.
+//
+//M*/
 #include "precomp.hpp"
 #undef ALEX_DEBUG
 #include "debug.hpp"
@@ -18,6 +58,21 @@ namespace cv{namespace optim{
             double _scale;
     };
 
+#ifndef OPENCV_NOSTL
+    using std::transform;
+#else
+    template <class InputIterator, class InputIterator2, class OutputIterator, class BinaryOperator>
+    static OutputIterator transform (InputIterator first1, InputIterator last1, InputIterator2 first2,
+                                     OutputIterator result, BinaryOperator binary_op)
+    {
+        while (first1 != last1)
+        {
+            *result = binary_op(*first1, *first2);
+            ++result; ++first1; ++first2;
+        }
+        return result;
+    }
+#endif
     void denoise_TVL1(const std::vector<Mat>& observations,Mat& result, double lambda, int niters){
 
         CV_Assert(observations.size()>0 && niters>0 && lambda>0);
@@ -68,7 +123,7 @@ namespace cv{namespace optim{
 
             //Rs = clip(Rs + sigma*(X-imgs), -clambda, clambda)
             for(count=0;count<(int)Rs.size();count++){
-                std::transform<MatIterator_<double>,MatConstIterator_<uchar>,MatIterator_<double>,AddFloatToCharScaled>(
+                transform<MatIterator_<double>,MatConstIterator_<uchar>,MatIterator_<double>,AddFloatToCharScaled>(
                         Rs[count].begin(),Rs[count].end(),observations[count].begin<uchar>(),
                         Rs[count].begin(),AddFloatToCharScaled(-sigma/255.0));
                 Rs[count]+=sigma*X;

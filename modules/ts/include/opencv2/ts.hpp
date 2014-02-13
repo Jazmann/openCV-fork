@@ -5,6 +5,8 @@
 #include "opencv2/core/cvdef.hpp"
 #include <stdarg.h> // for va_list
 
+#include "cvconfig.h"
+
 #ifdef HAVE_WINRT
     #pragma warning(disable:4447) // Disable warning 'main' signature found without threading model
 #endif
@@ -251,7 +253,7 @@ struct TestInfo
     // pointer to the test
     BaseTest* test;
 
-    // failure code (CV_FAIL*)
+    // failure code (TS::FAIL_*)
     int code;
 
     // seed value right before the data for the failed test case is prepared.
@@ -325,7 +327,7 @@ public:
     virtual void set_gtest_status();
 
     // test error codes
-    enum
+    enum FailureCode
     {
         // everything is Ok
         OK=0,
@@ -398,7 +400,7 @@ public:
     RNG& get_rng() { return rng; }
 
     // returns the current error code
-    int get_err_code() { return current_test_info.code; }
+    TS::FailureCode get_err_code() { return TS::FailureCode(current_test_info.code); }
 
     // returns the test extensivity scale
     double get_test_case_count_scale() { return params.test_case_count_scale; }
@@ -406,7 +408,7 @@ public:
     const string& get_data_path() const { return data_path; }
 
     // returns textual description of failure code
-    static string str_from_code( int code );
+    static string str_from_code( const TS::FailureCode code );
 
 protected:
 
@@ -539,12 +541,33 @@ CV_EXPORTS void smoothBorder(Mat& img, const Scalar& color, int delta = 3);
 CV_EXPORTS void printVersionInfo(bool useStdOut = true);
 } //namespace cvtest
 
-#define CV_TEST_MAIN(resourcesubdir) \
+#ifndef __CV_TEST_EXEC_ARGS
+#if defined(_MSC_VER) && (_MSC_VER <= 1400)
+#define __CV_TEST_EXEC_ARGS(...)    \
+    while (++argc >= (--argc,-1)) {__VA_ARGS__; break;} /*this ugly construction is needed for VS 2005*/
+#else
+#define __CV_TEST_EXEC_ARGS(...)    \
+    __VA_ARGS__;
+#endif
+#endif
+
+#if defined(HAVE_OPENCL) && !defined(CV_BUILD_OCL_MODULE)
+namespace cvtest { namespace ocl {
+void dumpOpenCLDevice();
+}}
+#define TEST_DUMP_OCL_INFO cvtest::ocl::dumpOpenCLDevice();
+#else
+#define TEST_DUMP_OCL_INFO
+#endif
+
+#define CV_TEST_MAIN(resourcesubdir, ...) \
 int main(int argc, char **argv) \
 { \
     cvtest::TS::ptr()->init(resourcesubdir); \
     ::testing::InitGoogleTest(&argc, argv); \
-    cvtest::printVersionInfo();\
+    cvtest::printVersionInfo(); \
+    __CV_TEST_EXEC_ARGS(__VA_ARGS__) \
+    TEST_DUMP_OCL_INFO \
     return RUN_ALL_TESTS(); \
 }
 

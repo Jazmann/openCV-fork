@@ -283,6 +283,7 @@ public:
 */
 typedef Size_<int> Size2i;
 typedef Size_<float> Size2f;
+typedef Size_<double> Size2d;
 typedef Size2i Size;
 
 /*!
@@ -350,7 +351,10 @@ public:
 /*!
   \typedef
 */
-typedef Rect_<int> Rect;
+typedef Rect_<int> Rect2i;
+typedef Rect_<float> Rect2f;
+typedef Rect_<double> Rect2d;
+typedef Rect2i Rect;
 
 /*!
   traits

@@ -712,6 +712,12 @@ BRISK::descriptorType() const
   return CV_8U;
 }
 
+int
+BRISK::defaultNorm() const
+{
+  return NORM_HAMMING;
+}
+
 BRISK::~BRISK()
 {
   delete[] patternPoints_;
@@ -745,13 +751,13 @@ BRISK::computeKeypointsNoOrientation(InputArray _image, InputArray _mask, std::v
 
 
 void
-BRISK::detectImpl( const Mat& image, std::vector<KeyPoint>& keypoints, const Mat& mask) const
+BRISK::detectImpl( InputArray image, std::vector<KeyPoint>& keypoints, InputArray mask) const
 {
-    (*this)(image, mask, keypoints);
+    (*this)(image.getMat(), mask.getMat(), keypoints);
 }
 
 void
-BRISK::computeImpl( const Mat& image, std::vector<KeyPoint>& keypoints, Mat& descriptors) const
+    BRISK::computeImpl( InputArray image, std::vector<KeyPoint>& keypoints, OutputArray descriptors) const
 {
     (*this)(image, Mat(), keypoints, descriptors, true);
 }
@@ -2223,7 +2229,7 @@ BriskLayer::halfsample(const cv::Mat& srcimg, cv::Mat& dstimg)
   CV_Assert(srcimg.cols / 2 == dstimg.cols);
   CV_Assert(srcimg.rows / 2 == dstimg.rows);
 
-  // handle non-SSE case
+  // handle non-SSE case
   resize(srcimg, dstimg, dstimg.size(), 0, 0, INTER_AREA);
 }
 

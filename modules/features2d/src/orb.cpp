@@ -138,13 +138,16 @@ static void computeOrbDescriptor(const KeyPoint& kpt,
     const uchar* center = &img.at<uchar>(cvRound(kpt.pt.y), cvRound(kpt.pt.x));
     int step = (int)img.step;
 
-#if 1
-    #define GET_VALUE(idx) \
-        center[cvRound(pattern[idx].x*b + pattern[idx].y*a)*step + \
-               cvRound(pattern[idx].x*a - pattern[idx].y*b)]
-#else
     float x, y;
     int ix, iy;
+#if 1
+    #define GET_VALUE(idx) \
+           (x = pattern[idx].x*a - pattern[idx].y*b, \
+            y = pattern[idx].x*b + pattern[idx].y*a, \
+            ix = cvRound(x), \
+            iy = cvRound(y), \
+            *(center + iy*step + ix) )
+#else
     #define GET_VALUE(idx) \
         (x = pattern[idx].x*a - pattern[idx].y*b, \
         y = pattern[idx].x*b + pattern[idx].y*a, \
@@ -572,6 +575,11 @@ int ORB::descriptorType() const
     return CV_8U;
 }
 
+int ORB::defaultNorm() const
+{
+    return NORM_HAMMING;
+}
+
 /** Compute the ORB features and descriptors on an image
  * @param img the image to compute the features and descriptors on
  * @param mask the mask to apply
@@ -935,12 +943,12 @@ void ORB::operator()( InputArray _image, InputArray _mask, std::vector<KeyPoint>
     }
 }
 
-void ORB::detectImpl( const Mat& image, std::vector<KeyPoint>& keypoints, const Mat& mask) const
+void ORB::detectImpl( InputArray image, std::vector<KeyPoint>& keypoints, InputArray mask) const
 {
-    (*this)(image, mask, keypoints, noArray(), false);
+    (*this)(image.getMat(), mask.getMat(), keypoints, noArray(), false);
 }
 
-void ORB::computeImpl( const Mat& image, std::vector<KeyPoint>& keypoints, Mat& descriptors) const
+void ORB::computeImpl( InputArray image, std::vector<KeyPoint>& keypoints, OutputArray descriptors) const
 {
     (*this)(image, Mat(), keypoints, descriptors, true);
 }
