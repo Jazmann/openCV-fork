@@ -438,7 +438,7 @@ static bool ocl_pyrDown( InputArray _src, OutputArray _dst, const Size& _dsz, in
     k.args(ocl::KernelArg::ReadOnly(src), ocl::KernelArg::WriteOnly(dst));
 
     size_t localThreads[2]  = { 256, 1 };
-    size_t globalThreads[2] = { src.cols, dst.rows };
+    size_t globalThreads[2] = { static_cast<size_t>(src.cols), static_cast<size_t>(dst.rows) };
     return k.run(2, globalThreads, localThreads, false);
 }
 
@@ -474,7 +474,7 @@ static bool ocl_pyrUp( InputArray _src, OutputArray _dst, const Size& _dsz, int 
         return false;
 
     k.args(ocl::KernelArg::ReadOnly(src), ocl::KernelArg::WriteOnly(dst));
-    size_t globalThreads[2] = {dst.cols, dst.rows};
+    size_t globalThreads[2] = {static_cast<size_t>(dst.cols), static_cast<size_t>(dst.rows)};
     size_t localThreads[2]  = {16, 16};
 
     return k.run(2, globalThreads, localThreads, false);

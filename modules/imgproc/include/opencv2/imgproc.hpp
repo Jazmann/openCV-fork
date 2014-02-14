@@ -1621,7 +1621,10 @@ CV_EXPORTS_W int floodFill( InputOutputArray image, InputOutputArray mask,
 
 //! converts image from one color space to another
 CV_EXPORTS_W void cvtColor( InputArray src, OutputArray dst, int code, int dstCn = 0 );
-
+    
+/* Converts input array pixels from one color space to another */
+CV_EXPORTS_W void CvtColor( const CvArr* src, CvArr* dst, int code );
+    
 // main function for all demosaicing procceses
 CV_EXPORTS_W void demosaicing(InputArray _src, OutputArray _dst, int code, int dcn = 0);
 

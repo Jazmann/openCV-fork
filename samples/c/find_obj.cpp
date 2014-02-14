@@ -8,6 +8,7 @@
 #include "opencv2/features2d/features2d.hpp"
 #include "opencv2/calib3d/calib3d.hpp"
 #include "opencv2/nonfree/nonfree.hpp"
+#include <opencv2/imgproc.hpp>
 #include "opencv2/imgproc/imgproc_c.h"
 #include "opencv2/highgui/highgui_c.h"
 #include "opencv2/legacy/legacy.hpp"
@@ -245,7 +246,7 @@ int main(int argc, char** argv)
     };
 
     IplImage* object_color = cvCreateImage(cvGetSize(object), 8, 3);
-    cvCvtColor( object, object_color, CV_GRAY2BGR );
+    cv::CvtColor( object, object_color, CV_GRAY2BGR );
 
     CvSeq* objectKeypoints = 0, *objectDescriptors = 0;
     CvSeq* imageKeypoints = 0, *imageDescriptors = 0;

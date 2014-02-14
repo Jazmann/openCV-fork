@@ -3052,7 +3052,7 @@ static bool ocl_cvtColor( InputArray _src, OutputArray _dst, int code, int dcn )
     Size sz = src.size(), dstSz = sz;
     int scn = src.channels(), depth = src.depth(), bidx;
     int dims = 2, stripeSize = 1;
-    size_t globalsize[] = { src.cols, src.rows };
+    size_t globalsize[] = { static_cast<size_t>(src.cols), static_cast<size_t>(src.rows) };
     ocl::Kernel k;
 
     if(depth != CV_8U && depth != CV_16U && depth != CV_32F)
@@ -3404,7 +3404,7 @@ static bool ocl_cvtColor( InputArray _src, OutputArray _dst, int code, int dcn )
 //                                   The main function                                  //
 //////////////////////////////////////////////////////////////////////////////////////////
 
-void cv::cvtColor( InputArray _src, OutputArray _dst, int code, int dcn )
+void cvtColor( InputArray _src, OutputArray _dst, int code, int dcn )
 {
     int stype = _src.type();
     int scn = CV_MAT_CN(stype), depth = CV_MAT_DEPTH(stype), bidx;
@@ -3573,24 +3573,19 @@ void cv::cvtColor( InputArray _src, OutputArray _dst, int code, int dcn )
                     return;
             }
 #endif
-*/
             bidx = code == CV_BGR2GRAY || code == CV_BGRA2GRAY ? 0 : 2;
-            printf("BGR2Gray : Jasper bidx = %d \n",bidx);
-
-
+            
             if( depth == CV_8U )
             {
 #ifdef HAVE_TEGRA_OPTIMIZATION
                 if(!tegra::cvtRGB2Gray(src, dst, bidx))
 #endif
-                    printf("BGR2Gray : Jasper\n");
                 CvtColorLoop(src, dst, RGB2Gray<uchar>(scn, bidx, 0));
             }
             else if( depth == CV_16U )
                 CvtColorLoop(src, dst, RGB2Gray<ushort>(scn, bidx, 0));
             else
                 CvtColorLoop(src, dst, RGB2Gray<float>(scn, bidx, 0));
-            printf("Out of cvtColor\n");
             break;
 
         case CV_BGR5652GRAY: case CV_BGR5552GRAY:
@@ -4709,7 +4704,7 @@ template<int src_t, int dst_t> inline void cv::ABC2Metric<src_t, dst_t>::operato
 template class cv::ABC2Metric<CV_8UC3,CV_8UC3>;
 template class cv::ABC2Metric<CV_8UC4,CV_8UC3>;
 
-template<int src_t, int dst_t> void cv::convertColor(cv::InputArray _src, cv::OutputArray _dst, cv::colorSpaceConverter<src_t, dst_t>& colorConverter)
+template<int src_t, int dst_t> void convertColor(cv::InputArray _src, cv::OutputArray _dst, cv::colorSpaceConverter<src_t, dst_t>& colorConverter)
 {
     cv::Mat src = _src.getMat(), dst;
     cv::Size sz = src.size();
@@ -4733,6 +4728,16 @@ template<int src_t, int dst_t> void cv::convertColor(cv::InputArray _src, cv::Ou
 
 template void cv::convertColor<CV_8UC3,CV_8UC3>(cv::InputArray _src, cv::OutputArray _dst, cv::colorSpaceConverter<CV_8UC3, CV_8UC3>& colorConverter);
 template void cv::convertColor<CV_8UC4,CV_8UC3>(cv::InputArray _src, cv::OutputArray _dst, cv::colorSpaceConverter<CV_8UC4, CV_8UC3>& colorConverter);
+    
+void  CvtColor( const CvArr* srcarr, CvArr* dstarr, int code )
+    {
+        cv::Mat src = cv::cvarrToMat(srcarr), dst0 = cv::cvarrToMat(dstarr), dst = dst0;
+        CV_Assert( src.depth() == dst.depth() );
+        
+        cv::cvtColor(src, dst, code, dst.channels());
+        CV_Assert( dst.data == dst0.data );
+    }
+}
 
 CV_IMPL void
 cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )
@@ -4743,6 +4748,5 @@ cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )
     cv::cvtColor(src, dst, code, dst.channels());
     CV_Assert( dst.data == dst0.data );
 }
-
 
 /* End of file. */

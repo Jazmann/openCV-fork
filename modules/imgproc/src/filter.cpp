@@ -3226,7 +3226,7 @@ static bool ocl_filter2D( InputArray _src, OutputArray _dst, int ddepth,
 
 
     cv::Size sz = _src.size();
-    size_t globalsize[2] = {sz.width, sz.height};
+    size_t globalsize[2] = {static_cast<size_t>(sz.width), static_cast<size_t>(sz.height)};
     size_t localsize[2] = {0, 1};
 
     ocl::Kernel kernel;

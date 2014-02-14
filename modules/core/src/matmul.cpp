@@ -2261,7 +2261,7 @@ static bool ocl_scaleAdd( InputArray _src1, double alpha, InputArray _src2, Outp
     else
         k.args(src1arg, src2arg, dstarg, alpha);
 
-    size_t globalsize[2] = { dst.cols * cn, dst.rows };
+    size_t globalsize[2] = { static_cast<size_t>(dst.cols * cn), static_cast<size_t>(dst.rows) };
     return k.run(2, globalsize, NULL, false);
 }
 

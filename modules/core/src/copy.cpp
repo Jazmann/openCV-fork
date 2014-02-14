@@ -517,7 +517,7 @@ static bool ocl_flip(InputArray _src, OutputArray _dst, int flipCode )
     cols = flipType == FLIP_COLS ? ((cols+1)/2) : cols;
     rows = flipType & FLIP_ROWS ? ((rows+1)/2) : rows;
 
-    size_t globalsize[2] = { cols, rows };
+    size_t globalsize[2] = { static_cast<size_t>(cols), static_cast<size_t>(rows) };
     return k.args(ocl::KernelArg::ReadOnlyNoSize(src), ocl::KernelArg::WriteOnly(dst), rows, cols).run(2, globalsize, NULL, false);
 }
 
@@ -822,7 +822,7 @@ static bool ocl_copyMakeBorder( InputArray _src, OutputArray _dst, int top, int 
     k.args(ocl::KernelArg::ReadOnly(src), ocl::KernelArg::WriteOnly(dst),
            top, left, ocl::KernelArg::Constant(Mat(1, 1, type, value)));
 
-    size_t globalsize[2] = { dst.cols, dst.rows };
+    size_t globalsize[2] = { static_cast<size_t>(dst.cols), static_cast<size_t>(dst.rows) };
     return k.run(2, globalsize, NULL, false);
 }
 

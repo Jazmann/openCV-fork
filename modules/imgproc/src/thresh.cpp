@@ -737,7 +737,7 @@ static bool ocl_threshold( InputArray _src, OutputArray _dst, double & thresh, d
            ocl::KernelArg::Constant(Mat(1, 1, ktype, thresh)),
            ocl::KernelArg::Constant(Mat(1, 1, ktype, maxval)));
 
-    size_t globalsize[2] = { dst.cols * cn, dst.rows };
+    size_t globalsize[2] = { static_cast<size_t>(dst.cols * cn), static_cast<size_t>(dst.rows) };
     return k.run(2, globalsize, NULL, false);
 }
 

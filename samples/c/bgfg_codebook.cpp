@@ -24,6 +24,7 @@
 #include "opencv2/core/utility.hpp"
 #include "opencv2/video/background_segm.hpp"
 #include "opencv2/imgproc/imgproc_c.h"
+#include <opencv2/imgproc.hpp>
 #include "opencv2/highgui/highgui_c.h"
 #include "opencv2/legacy.hpp"
 
@@ -151,7 +152,7 @@ int main(int argc, const char** argv)
         // If we've got an rawImage and are good to go:
         if( rawImage )
         {
-            cvCvtColor( rawImage, yuvImage, CV_BGR2YCrCb );//YUV For codebook method
+            cv::CvtColor( rawImage, yuvImage, CV_BGR2YCrCb );//YUV For codebook method
             //This is where we build our background model
             if( !pause && nframes-1 < nframesToLearnBG  )
                 cvBGCodeBookUpdate( model, yuvImage );

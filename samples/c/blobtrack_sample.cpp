@@ -2,6 +2,7 @@
 #include "opencv2/legacy/blobtrack.hpp"
 #include "opencv2/legacy/legacy.hpp"
 #include <opencv2/highgui/highgui_c.h>
+#include <opencv2/imgproc.hpp>
 #include <opencv2/imgproc/imgproc_c.h>
 
 #include <stdio.h>
@@ -166,7 +167,7 @@ static int RunBlobTrackingAuto( CvCapture* pCap, CvBlobTrackerAuto* pTracker,cha
             static IplImage*    pI = NULL;
 
             if(pI==NULL)pI = cvCreateImage(S,pFG->depth,3);
-            cvCvtColor( pFG, pI, CV_GRAY2BGR );
+            cv::CvtColor( pFG, pI, CV_GRAY2BGR );
 
             if(fgavi_name)
             {   /* Save fg to avi file: */

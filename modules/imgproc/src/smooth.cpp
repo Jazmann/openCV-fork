@@ -656,7 +656,7 @@ static bool ocl_boxFilter( InputArray _src, OutputArray _dst, int ddepth,
     int wdepth = std::max(CV_32F, std::max(ddepth, sdepth));
 
     const char * const borderMap[] = { "BORDER_CONSTANT", "BORDER_REPLICATE", "BORDER_REFLECT", 0, "BORDER_REFLECT_101" };
-    size_t globalsize[2] = { size.width, size.height };
+    size_t globalsize[2] = { static_cast<size_t>(size.width), static_cast<size_t>(size.height) };
     size_t localsize[2] = { 0, 1 };
 
     UMat src = _src.getUMat();
@@ -1939,7 +1939,7 @@ static bool ocl_medianFilter ( InputArray _src, OutputArray _dst, int m)
     _dst.create(_src.size(),type);
     UMat dst = _dst.getUMat();
 
-    size_t globalsize[2] = {(src.cols + 18) / 16 * 16, (src.rows + 15) / 16 * 16};
+    size_t globalsize[2] = {static_cast<size_t>((src.cols + 18) / 16 * 16), static_cast<size_t>((src.rows + 15) / 16 * 16)};
     size_t localsize[2] = {16, 16};
 
     return k.args(ocl::KernelArg::ReadOnlyNoSize(src), ocl::KernelArg::WriteOnly(dst)).run(2,globalsize,localsize,false);
@@ -2289,7 +2289,7 @@ static bool ocl_bilateralFilter_8u(InputArray _src, OutputArray _dst, int d,
            ocl::KernelArg::PtrReadOnly(uspace_weight),
            ocl::KernelArg::PtrReadOnly(uspace_ofs));
 
-    size_t globalsize[2] = { dst.cols, dst.rows };
+    size_t globalsize[2] = { static_cast<size_t>(dst.cols), static_cast<size_t>(dst.rows) };
     return k.run(2, globalsize, NULL, false);
 }
 

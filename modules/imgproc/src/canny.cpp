@@ -107,7 +107,7 @@ static bool ocl_Canny(InputArray _src, OutputArray _dst, float low_thresh, float
     Size esize(size.width + 2, size.height + 2);
 
     UMat mag;
-    size_t globalsize[2] = { size.width * cn, size.height }, localsize[2] = { 16, 16 };
+    size_t globalsize[2] = { static_cast<size_t>(size.width * cn), static_cast<size_t>(size.height) }, localsize[2] = { 16, 16 };
 
     if (aperture_size == 3 && !_src.isSubmatrix())
     {
@@ -211,7 +211,7 @@ static bool ocl_Canny(InputArray _src, OutputArray _dst, float low_thresh, float
                                          size.height, size.width, count);
 
 #define divUp(total, grain) ((total + grain - 1) / grain)
-        size_t localsize2[2] = { 128, 1 }, globalsize2[2] = { std::min(count, 65535) * 128, divUp(count, 65535) };
+        size_t localsize2[2] = { 128, 1 }, globalsize2[2] = { static_cast<size_t>(std::min(count, 65535) * 128), static_cast<size_t>(divUp(count, 65535)) };
 #undef divUp
 
         if (!edgesHysteresisGlobalKernel.run(2, globalsize2, localsize2, false))
@@ -246,17 +246,12 @@ void cv::Canny( InputArray _src, OutputArray _dst,
     CV_Assert( depth == CV_8U );
     _dst.create(size, CV_8U);
     
-    printf("aperture_size : %i \n",aperture_size);
-    printf("~CV_CANNY_L2_GRADIENT : %i \n",~CV_CANNY_L2_GRADIENT);
     if (!L2gradient && (aperture_size & CV_CANNY_L2_GRADIENT) == CV_CANNY_L2_GRADIENT)
     {
         // backward compatibility
         aperture_size &= ~CV_CANNY_L2_GRADIENT;
         L2gradient = true;
     }
-    printf("aperture_size : %i \n",aperture_size);
-    printf("src.size[0] : %i \n",src.size[0]);
-    printf("src.size[1] : %i \n",src.size[1]);
     if ((aperture_size & 1) == 0 || (aperture_size != -1 && (aperture_size < 3 || aperture_size > 7)))
         CV_Error(CV_StsBadFlag, "");
 

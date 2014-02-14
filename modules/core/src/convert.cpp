@@ -307,7 +307,7 @@ static bool ocl_split( InputArray _m, OutputArrayOfArrays _mv )
     for (int i = 0; i < cn; ++i)
         argidx = k.set(argidx, ocl::KernelArg::WriteOnlyNoSize(dst[i]));
 
-    size_t globalsize[2] = { size.width, size.height };
+    size_t globalsize[2] = { static_cast<size_t>(size.width), static_cast<size_t>(size.height) };
     return k.run(2, globalsize, NULL, false);
 }
 
@@ -460,7 +460,7 @@ static bool ocl_merge( InputArrayOfArrays _mv, OutputArray _dst )
         argidx = k.set(argidx, ocl::KernelArg::ReadOnlyNoSize(src[i]));
     k.set(argidx, ocl::KernelArg::WriteOnly(dst));
 
-    size_t globalsize[2] = { dst.cols, dst.rows };
+    size_t globalsize[2] = { static_cast<size_t>(dst.cols), static_cast<size_t>(dst.rows) };
     return k.run(2, globalsize, NULL, false);
 }
 
@@ -577,9 +577,7 @@ void cv::mixChannels( const Mat* src, size_t nsrcs, Mat* dst, size_t ndsts, cons
 
     size_t i, j, k, esz1 = dst[0].elemSize1();
     int depth = dst[0].depth();
-    printf("mixChannels_ : depth : %i",i);
     AutoBuffer<uchar> buf((nsrcs + ndsts + 1)*(sizeof(Mat*) + sizeof(uchar*)) + npairs*(sizeof(uchar*)*2 + sizeof(int)*6));
-    printf("mixChannels_ : ");
     const Mat** arrays = (const Mat**)(uchar*)buf;
     printf("mixChannels_ : ");
     uchar** ptrs = (uchar**)(arrays + nsrcs + ndsts);
@@ -745,7 +743,7 @@ static bool ocl_mixChannels(InputArrayOfArrays _src, InputOutputArrayOfArrays _d
         argindex = k.set(argindex, ocl::KernelArg::WriteOnlyNoSize(dstargs[i]));
     k.set(k.set(argindex, size.height), size.width);
 
-    size_t globalsize[2] = { size.width, size.height };
+    size_t globalsize[2] = { static_cast<size_t>(size.width), static_cast<size_t>(size.height) };
     return k.run(2, globalsize, NULL, false);
 }
 
@@ -1803,7 +1801,7 @@ static bool ocl_convertScaleAbs( InputArray _src, OutputArray _dst, double alpha
     else if (wdepth == CV_64F)
         k.args(srcarg, dstarg, alpha, beta);
 
-    size_t globalsize[2] = { src.cols * cn, src.rows };
+    size_t globalsize[2] = { static_cast<size_t>(src.cols * cn), static_cast<size_t>(src.rows) };
     return k.run(2, globalsize, NULL, false);
 }
 
@@ -1981,7 +1979,7 @@ static bool ocl_LUT(InputArray _src, InputArray _lut, OutputArray _dst)
     k.args(ocl::KernelArg::ReadOnlyNoSize(src), ocl::KernelArg::ReadOnlyNoSize(lut),
            ocl::KernelArg::WriteOnly(dst));
 
-    size_t globalSize[2] = { dst.cols, dst.rows };
+    size_t globalSize[2] = { static_cast<size_t>(dst.cols), static_cast<size_t>(dst.rows) };
     return k.run(2, globalSize, NULL, false);
 }
 

@@ -81,7 +81,7 @@ static bool matchTemplateNaive_CCORR(InputArray _image, InputArray _templ, Outpu
     _result.create(image.rows - templ.rows + 1, image.cols - templ.cols + 1, CV_32F);
     UMat result = _result.getUMat();
 
-    size_t globalsize[2] = { result.cols, result.rows };
+    size_t globalsize[2] = { static_cast<size_t>(result.cols), static_cast<size_t>(result.rows) };
     return k.args(ocl::KernelArg::ReadOnlyNoSize(image), ocl::KernelArg::ReadOnly(templ),
                   ocl::KernelArg::WriteOnly(result)).run(2, globalsize, NULL, false);
 }
@@ -112,7 +112,7 @@ static bool matchTemplate_CCORR_NORMED(InputArray _image, InputArray _templ, Out
     for (int i = 0; i < cn; ++i)
         templ_sqsum += static_cast<float>(s[i]);
 
-    size_t globalsize[2] = { result.cols, result.rows };
+    size_t globalsize[2] = { static_cast<size_t>(result.cols), static_cast<size_t>(result.rows) };
     return k.args(ocl::KernelArg::ReadOnlyNoSize(image_sqsums), ocl::KernelArg::ReadWrite(result),
                   templ.rows, templ.cols, templ_sqsum).run(2, globalsize, NULL, false);
 }
@@ -141,7 +141,7 @@ static bool matchTemplateNaive_SQDIFF(InputArray _image, InputArray _templ, Outp
     _result.create(image.rows - templ.rows + 1, image.cols - templ.cols + 1, CV_32F);
     UMat result = _result.getUMat();
 
-    size_t globalsize[2] = { result.cols, result.rows };
+    size_t globalsize[2] = { static_cast<size_t>(result.cols), static_cast<size_t>(result.rows) };
     return k.args(ocl::KernelArg::ReadOnlyNoSize(image), ocl::KernelArg::ReadOnly(templ),
                   ocl::KernelArg::WriteOnly(result)).run(2, globalsize, NULL, false);
 }
@@ -172,7 +172,7 @@ static bool matchTemplate_SQDIFF_NORMED(InputArray _image, InputArray _templ, Ou
     for (int i = 0; i < cn; ++i)
         templ_sqsum += (float)s[i];
 
-    size_t globalsize[2] = { result.cols, result.rows };
+    size_t globalsize[2] = { static_cast<size_t>(result.cols), static_cast<size_t>(result.rows) };
     return k.args(ocl::KernelArg::ReadOnlyNoSize(image_sqsums), ocl::KernelArg::ReadWrite(result),
                   templ.rows, templ.cols, templ_sqsum).run(2, globalsize, NULL, false);
 }
@@ -211,7 +211,7 @@ static bool matchTemplate_CCOEFF(InputArray _image, InputArray _templ, OutputArr
     _result.create(size.height - templ.rows + 1, size.width - templ.cols + 1, CV_32F);
     UMat result = _result.getUMat();
 
-    size_t globalsize[2] = { result.cols, result.rows };
+    size_t globalsize[2] = { static_cast<size_t>(result.cols), static_cast<size_t>(result.rows) };
 
     if (cn == 1)
     {
@@ -251,7 +251,7 @@ static bool matchTemplate_CCOEFF_NORMED(InputArray _image, InputArray _templ, Ou
     _result.create(size.height - templ.rows + 1, size.width - templ.cols + 1, CV_32F);
     UMat result = _result.getUMat();
 
-    size_t globalsize[2] = { result.cols, result.rows };
+    size_t globalsize[2] = { static_cast<size_t>(result.cols), static_cast<size_t>(result.rows) };
     float scale = 1.f / tsize.area();
 
     if (cn == 1)

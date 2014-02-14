@@ -94,7 +94,7 @@ static bool ocl_math_op(InputArray _src1, InputArray _src2, OutputArray _dst, in
     else
         k.args(src1arg, src2arg, dstarg);
 
-    size_t globalsize[] = { src1.cols*cn1, src1.rows};
+    size_t globalsize[] = { static_cast<size_t>(src1.cols*cn1), static_cast<size_t>(src1.rows)};
 
     return k.run(2, globalsize, 0, false);
 }
@@ -528,7 +528,7 @@ static bool ocl_cartToPolar( InputArray _src1, InputArray _src2,
            ocl::KernelArg::WriteOnly(dst1, cn),
            ocl::KernelArg::WriteOnlyNoSize(dst2));
 
-    size_t globalsize[2] = { dst1.cols * cn, dst1.rows };
+    size_t globalsize[2] = { static_cast<size_t>(dst1.cols * cn), static_cast<size_t>(dst1.rows) };
     return k.run(2, globalsize, NULL, false);
 }
 
@@ -713,7 +713,7 @@ static bool ocl_polarToCart( InputArray _mag, InputArray _angle,
     k.args(ocl::KernelArg::ReadOnlyNoSize(mag), ocl::KernelArg::ReadOnlyNoSize(angle),
            ocl::KernelArg::WriteOnly(dst1, cn), ocl::KernelArg::WriteOnlyNoSize(dst2));
 
-    size_t globalsize[2] = { dst1.cols * cn, dst1.rows };
+    size_t globalsize[2] = { static_cast<size_t>(dst1.cols * cn), static_cast<size_t>(dst1.rows) };
     return k.run(2, globalsize, NULL, false);
 }
 
@@ -2078,7 +2078,7 @@ static bool ocl_pow(InputArray _src, double power, OutputArray _dst,
             k.args(srcarg, dstarg, power);
     }
 
-    size_t globalsize[2] = { dst.cols *  cn, dst.rows };
+    size_t globalsize[2] = { static_cast<size_t>(dst.cols *  cn), static_cast<size_t>(dst.rows) };
     return k.run(2, globalsize, NULL, false);
 }
 
@@ -2409,7 +2409,7 @@ static bool ocl_patchNaNs( InputOutputArray _a, float value )
     k.args(ocl::KernelArg::ReadOnlyNoSize(a),
            ocl::KernelArg::WriteOnly(a, cn), (float)value);
 
-    size_t globalsize[2] = { a.cols * cn, a.rows };
+    size_t globalsize[2] = { static_cast<size_t>(a.cols * cn), static_cast<size_t>(a.rows) };
     return k.run(2, globalsize, NULL, false);
 }
 

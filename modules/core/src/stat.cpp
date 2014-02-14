@@ -2008,7 +2008,7 @@ static bool ocl_norm( InputArray _src, int normType, InputArray _mask, double & 
             abssrc.create(src.size(), CV_MAKE_TYPE(wdepth, cn));
             kabs.args(ocl::KernelArg::ReadOnlyNoSize(src), ocl::KernelArg::WriteOnly(abssrc, cn));
 
-            size_t globalsize[2] = { src.cols * cn, src.rows };
+            size_t globalsize[2] = { static_cast<size_t>(src.cols * cn), static_cast<size_t>(src.rows) };
             if (!kabs.run(2, globalsize, NULL, false))
                 return false;
         }
@@ -2367,7 +2367,7 @@ static bool ocl_norm( InputArray _src1, InputArray _src2, int normType, double &
     k.args(ocl::KernelArg::ReadOnlyNoSize(src1), ocl::KernelArg::ReadOnlyNoSize(src2),
            ocl::KernelArg::WriteOnly(diff, cn));
 
-    size_t globalsize[2] = { diff.cols * cn, diff.rows };
+    size_t globalsize[2] = { static_cast<size_t>(diff.cols * cn), static_cast<size_t>(diff.rows) };
     if (!k.run(2, globalsize, NULL, false))
         return false;
 

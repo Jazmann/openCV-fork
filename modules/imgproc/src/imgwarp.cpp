@@ -1967,7 +1967,7 @@ static bool ocl_resize( InputArray _src, OutputArray _dst, Size dsize,
     UMat dst = _dst.getUMat();
 
     ocl::Kernel k;
-    size_t globalsize[] = { dst.cols, dst.rows };
+    size_t globalsize[] = { static_cast<size_t>(dst.cols), static_cast<size_t>(dst.rows) };
 
     if (interpolation == INTER_LINEAR)
     {
@@ -3463,7 +3463,7 @@ static bool ocl_remap(InputArray _src, OutputArray _dst, InputArray _map1, Input
     else
         k.args(srcarg, dstarg, map1arg, ocl::KernelArg::ReadOnlyNoSize(map2), scalararg);
 
-    size_t globalThreads[2] = { dst.cols, dst.rows };
+    size_t globalThreads[2] = { static_cast<size_t>(dst.cols), static_cast<size_t>(dst.rows) };
     return k.run(2, globalThreads, NULL, false);
 }
 
@@ -3958,7 +3958,7 @@ static bool ocl_warpTransform(InputArray _src, OutputArray _dst, InputArray _M0,
     k.args(ocl::KernelArg::ReadOnly(src), ocl::KernelArg::WriteOnly(dst), ocl::KernelArg::PtrReadOnly(M0),
            ocl::KernelArg::Constant(Mat(1, 1, CV_MAKE_TYPE(wdepth, cn), borderValue)));
 
-    size_t globalThreads[2] = { dst.cols, dst.rows };
+    size_t globalThreads[2] = { static_cast<size_t>(dst.cols), static_cast<size_t>(dst.rows) };
     return k.run(2, globalThreads, NULL, false);
 }
 

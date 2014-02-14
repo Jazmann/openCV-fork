@@ -164,61 +164,7 @@ void vBinOp32(const T* src1, size_t step1, const T* src2, size_t step2,
                 }
             }
         }
-template<class Op, class Op32>
-void vBinOp32u(const unsigned int* src1, size_t step1, const unsigned int* src2, size_t step2,
-               unsigned int* dst, size_t step, Size sz)
-{
-#if CV_SSE2
-    Op32 op32;
-#endif
-    Op op;
-    
-    for( ; sz.height--; src1 += step1/sizeof(src1[0]),
-        src2 += step2/sizeof(src2[0]),
-        dst += step/sizeof(dst[0]) )
-    {
-        int x = 0;
-        
-#if CV_SSE2
-        if( USE_SSE2 )
-        {
-            if( (((size_t)src1|(size_t)src2|(size_t)dst)&15) == 0 )
-                for( ; x <= sz.width - 8; x += 8 )
-                {
-                    __m128i r0 = _mm_load_si128((const __m128i*)(src1 + x));
-                    __m128i r1 = _mm_load_si128((const __m128i*)(src1 + x + 4));
-                    r0 = op32(r0,_mm_load_si128((const __m128i*)(src2 + x)));
-                    r1 = op32(r1,_mm_load_si128((const __m128i*)(src2 + x + 4)));
-                    _mm_store_si128((__m128i*)(dst + x), r0);
-                    _mm_store_si128((__m128i*)(dst + x + 4), r1);
-                }
-            else
-                for( ; x <= sz.width - 8; x += 8 )
-                {
-                    __m128i r0 = _mm_loadu_si128((const __m128i*)(src1 + x));
-                    __m128i r1 = _mm_loadu_si128((const __m128i*)(src1 + x + 4));
-                    r0 = op32(r0,_mm_loadu_si128((const __m128i*)(src2 + x)));
-                    r1 = op32(r1,_mm_loadu_si128((const __m128i*)(src2 + x + 4)));
-                    _mm_storeu_si128((__m128i*)(dst + x), r0);
-                    _mm_storeu_si128((__m128i*)(dst + x + 4), r1);
-                }
-        }
-#endif
-#if CV_ENABLE_UNROLLED
-        for( ; x <= sz.width - 4; x += 4 )
-        {
-            unsigned int v0 = op(src1[x], src2[x]);
-            unsigned int v1 = op(src1[x+1], src2[x+1]);
-            dst[x] = v0; dst[x+1] = v1;
-            v0 = op(src1[x+2], src2[x+2]);
-            v1 = op(src1[x+3], src2[x+3]);
-            dst[x+2] = v0; dst[x+3] = v1;
-        }
-#endif
-        for( ; x < sz.width; x++ )
-            dst[x] = op(src1[x], src2[x]);
-    }
-}
+
     
 
 #endif
@@ -253,6 +199,61 @@ void vBinOp32u(const unsigned int* src1, size_t step1, const unsigned int* src2,
     }
 }
 
+    template<class Op, class Op32>
+    void vBinOp32u(const unsigned int* src1, size_t step1, const unsigned int* src2, size_t step2,
+                   unsigned int* dst, size_t step, Size sz)
+    {
+#if CV_SSE2
+        Op32 op32;
+#endif
+        Op op;
+        
+        for( ; sz.height--; src1 += step1/sizeof(src1[0]),
+            src2 += step2/sizeof(src2[0]),
+            dst += step/sizeof(dst[0]) )
+        {
+            int x = 0;
+            
+#if CV_SSE2
+            if( USE_SSE2 )
+            {
+                if( (((size_t)src1|(size_t)src2|(size_t)dst)&15) == 0 )
+                    for( ; x <= sz.width - 8; x += 8 )
+                    {
+                        __m128i r0 = _mm_load_si128((const __m128i*)(src1 + x));
+                        __m128i r1 = _mm_load_si128((const __m128i*)(src1 + x + 4));
+                        r0 = op32(r0,_mm_load_si128((const __m128i*)(src2 + x)));
+                        r1 = op32(r1,_mm_load_si128((const __m128i*)(src2 + x + 4)));
+                        _mm_store_si128((__m128i*)(dst + x), r0);
+                        _mm_store_si128((__m128i*)(dst + x + 4), r1);
+                    }
+                else
+                    for( ; x <= sz.width - 8; x += 8 )
+                    {
+                        __m128i r0 = _mm_loadu_si128((const __m128i*)(src1 + x));
+                        __m128i r1 = _mm_loadu_si128((const __m128i*)(src1 + x + 4));
+                        r0 = op32(r0,_mm_loadu_si128((const __m128i*)(src2 + x)));
+                        r1 = op32(r1,_mm_loadu_si128((const __m128i*)(src2 + x + 4)));
+                        _mm_storeu_si128((__m128i*)(dst + x), r0);
+                        _mm_storeu_si128((__m128i*)(dst + x + 4), r1);
+                    }
+            }
+#endif
+#if CV_ENABLE_UNROLLED
+            for( ; x <= sz.width - 4; x += 4 )
+            {
+                unsigned int v0 = op(src1[x], src2[x]);
+                unsigned int v1 = op(src1[x+1], src2[x+1]);
+                dst[x] = v0; dst[x+1] = v1;
+                v0 = op(src1[x+2], src2[x+2]);
+                v1 = op(src1[x+3], src2[x+3]);
+                dst[x+2] = v0; dst[x+3] = v1;
+            }
+#endif
+            for( ; x < sz.width; x++ )
+                dst[x] = op(src1[x], src2[x]);
+        }
+    }
 
 template<typename T, class Op, class Op64>
 void vBinOp64(const T* src1, size_t step1, const T* src2, size_t step2,
@@ -405,13 +406,17 @@ FUNCTOR_CLOSURE_2arg(VMax,  short, return _mm_max_epi16(a, b));
 FUNCTOR_CLOSURE_2arg(VMax,    int,
         __m128i m = _mm_cmpgt_epi32(b, a);
         return _mm_xor_si128(a, _mm_and_si128(_mm_xor_si128(a, b), m));
-    );
+                     );
+//FUNCTOR_CLOSURE_2arg(VMax, unsigned int,
+//                         __m128i m = _mm_cmpgt_epi32(b, a);
+//                         return _mm_xor_si128(a, _mm_and_si128(_mm_xor_si128(a, b), m));
+//                         ); // CODE NOT OPTIMISED!
 FUNCTOR_CLOSURE_2arg(VMax,  float, return _mm_max_ps(a, b));
 FUNCTOR_CLOSURE_2arg(VMax, double, return _mm_max_pd(a, b));
 
 
-static int CV_DECL_ALIGNED(16) v32f_absmask[] = { 0x7fffffff, 0x7fffffff, 0x7fffffff, 0x7fffffff };
-static int CV_DECL_ALIGNED(16) v64f_absmask[] = { 0xffffffff, 0x7fffffff, 0xffffffff, 0x7fffffff };
+static int CV_DECL_ALIGNED(16) v32f_absmask[] = { static_cast<int>(0x7fffffff), static_cast<int>(0x7fffffff), static_cast<int>(0x7fffffff), static_cast<int>(0x7fffffff) };
+static int CV_DECL_ALIGNED(16) v64f_absmask[] = { static_cast<int>(0xffffffff), static_cast<int>(0x7fffffff), static_cast<int>(0xffffffff), static_cast<int>(0x7fffffff) };
 
 FUNCTOR_TEMPLATE(VAbsDiff);
 FUNCTOR_CLOSURE_2arg(VAbsDiff,  uchar,
@@ -727,7 +732,7 @@ static void max32u( const CV_32U_TYPE * src1, size_t step1,
         }
     }
 #else
-    vBinOp32u<OpMax<CV_32U_TYPE>, IF_SIMD(_VMax32s)>(src1, step1, src2, step2, dst, step, sz); // Change for _VMax32u
+    vBinOp32u<OpMax<CV_32U_TYPE>, IF_SIMD(VMax<int>)>(src1, step1, src2, step2, dst, step, sz); // Change for VMax<unsigned 32 int>
 #endif
     
     //    IF_IPP(fixSteps(sz, sizeof(dst[0]), step1, step2, step);
@@ -1071,7 +1076,7 @@ static bool ocl_binary_op(InputArray _src1, InputArray _src2, OutputArray _dst,
             k.args(src1arg, src2arg, maskarg, dstarg);
     }
 
-    size_t globalsize[] = { src1.cols*(cn/kercn), src1.rows };
+    size_t globalsize[] = { static_cast<size_t>(src1.cols*(cn/kercn)), static_cast<size_t>(src1.rows) };
     return k.run(2, globalsize, 0, false);
 }
 
@@ -1492,7 +1497,7 @@ static bool ocl_arithm_op(InputArray _src1, InputArray _src2, OutputArray _dst,
             k.args(src1arg, src2arg, maskarg, dstarg);
     }
 
-    size_t globalsize[] = { src1.cols * cscale, src1.rows };
+    size_t globalsize[] = { static_cast<size_t>(src1.cols * cscale), static_cast<size_t>(src1.rows) };
     return k.run(2, globalsize, NULL, false);
 }
 
@@ -2788,7 +2793,7 @@ static bool ocl_compare(InputArray _src1, InputArray _src2, OutputArray _dst, in
            ocl::KernelArg::ReadOnlyNoSize(src2),
            ocl::KernelArg::WriteOnly(dst, cn));
 
-    size_t globalsize[2] = { dst.cols * cn, dst.rows };
+    size_t globalsize[2] = { static_cast<size_t>(dst.cols * cn), static_cast<size_t>(dst.rows) };
     return k.run(2, globalsize, NULL, false);
 }
 
@@ -3144,7 +3149,7 @@ static bool ocl_inRange( InputArray _src, InputArray _lowerb,
         ker.args(srcarg, dstarg, ocl::KernelArg::ReadOnlyNoSize(lscalaru),
                ocl::KernelArg::ReadOnlyNoSize(uscalaru));
 
-    size_t globalsize[2] = { ssize.width, ssize.height };
+    size_t globalsize[2] = { static_cast<size_t>(ssize.width), static_cast<size_t>(ssize.height) };
     return ker.run(2, globalsize, NULL, false);
 }
 

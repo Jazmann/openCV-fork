@@ -684,7 +684,7 @@ void UMat::copyTo(OutputArray _dst, InputArray _mask) const
             k.args(ocl::KernelArg::ReadOnlyNoSize(*this), ocl::KernelArg::ReadOnlyNoSize(_mask.getUMat()),
                    ocl::KernelArg::WriteOnly(dst));
 
-            size_t globalsize[2] = { cols, rows };
+            size_t globalsize[2] = { static_cast<size_t>(cols), static_cast<size_t>(rows) };
             if (k.run(2, globalsize, NULL, false))
                 return;
         }
@@ -730,7 +730,7 @@ void UMat::convertTo(OutputArray _dst, int _type, double alpha, double beta) con
             float alphaf = (float)alpha, betaf = (float)beta;
             k.args(ocl::KernelArg::ReadOnlyNoSize(src), ocl::KernelArg::WriteOnly(dst, cn), alphaf, betaf);
 
-            size_t globalsize[2] = { dst.cols * cn, dst.rows };
+            size_t globalsize[2] = { static_cast<size_t>(dst.cols * cn), static_cast<size_t>(dst.rows) };
             if (k.run(2, globalsize, NULL, false))
                 return;
         }
@@ -774,7 +774,7 @@ UMat& UMat::setTo(InputArray _value, InputArray _mask)
                 setK.args(dstarg, scalararg);
             }
 
-            size_t globalsize[] = { cols, rows };
+            size_t globalsize[] = { static_cast<size_t>(cols), static_cast<size_t>(rows) };
             if( setK.run(2, globalsize, 0, false) )
                 return *this;
         }

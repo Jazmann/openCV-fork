@@ -72,7 +72,7 @@ Rect PlaneWarperOcl::buildMaps(Size src_size, InputArray K, InputArray R, InputA
                    ocl::KernelArg::PtrReadOnly(ur_kinv), ocl::KernelArg::PtrReadOnly(ut),
                    dst_tl.x, dst_tl.y, projector_.scale);
 
-            size_t globalsize[2] = { dsize.width, dsize.height };
+            size_t globalsize[2] = { static_cast<size_t>(dsize.width), static_cast<size_t>(dsize.height) };
             if (k.run(2, globalsize, NULL, true))
                 return Rect(dst_tl, dst_br);
         }
@@ -117,7 +117,7 @@ Rect SphericalWarperOcl::buildMaps(Size src_size, InputArray K, InputArray R, Ou
             k.args(ocl::KernelArg::WriteOnlyNoSize(uxmap), ocl::KernelArg::WriteOnly(uymap),
                    ocl::KernelArg::PtrReadOnly(ur_kinv), dst_tl.x, dst_tl.y, projector_.scale);
 
-            size_t globalsize[2] = { dsize.width, dsize.height };
+            size_t globalsize[2] = { static_cast<size_t>(dsize.width), static_cast<size_t>(dsize.height) };
             if (k.run(2, globalsize, NULL, true))
                 return Rect(dst_tl, dst_br);
         }
@@ -162,7 +162,7 @@ Rect CylindricalWarperOcl::buildMaps(Size src_size, InputArray K, InputArray R, 
             k.args(ocl::KernelArg::WriteOnlyNoSize(uxmap), ocl::KernelArg::WriteOnly(uymap),
                    ocl::KernelArg::PtrReadOnly(ur_kinv), dst_tl.x, dst_tl.y, projector_.scale);
 
-            size_t globalsize[2] = { dsize.width, dsize.height };
+            size_t globalsize[2] = { static_cast<size_t>(dsize.width), static_cast<size_t>(dsize.height) };
             if (k.run(2, globalsize, NULL, true))
                 return Rect(dst_tl, dst_br);
         }
