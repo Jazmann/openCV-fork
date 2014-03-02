@@ -4237,19 +4237,6 @@ template class cv::colorSpaceConverter<CV_8UC4,CV_8UC3>;
 
 
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRGBIndices(int srcBlueIdx, int dstBlueIdx){
-//    using srcInfo = cv::Data_Type<src_t>;
-//    using srcType = typename cv::Data_Type<src_t>::type;
-//    
-//    using dstInfo = cv::Data_Type<dst_t>;
-//    using dstType = typename cv::Data_Type<dst_t>::type;
-//    
-//    using wrkInfo = typename cv::colorSpaceConverter<src_t, dst_t>::wrkInfo;
-//    using wrkType = typename cv::colorSpaceConverter<src_t, dst_t>::wrkType;
-    
-//    using dcSrcType = typename cv::depthConverter<src_t, dst_t>::srcType;
-//    using dcDstType = typename cv::depthConverter<src_t, dst_t>::dstType;
-//    using dcWrkType = typename cv::depthConverter<src_t, dst_t>::wrkType;
-    
     wrkType _M[dstInfo::channels][srcInfo::channels];
     wrkType _TRange[dstInfo::channels], _TMin[dstInfo::channels];
     
@@ -4601,6 +4588,20 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcB
     setGreenDistributionErf();
     setBlueDistributionErf();
 };
+    
+    template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, std::vector<double>  newG, std::vector<double> newC){
+        init();
+        setTransformFromAngle(theta);
+        setRGBIndices(srcBlueIdx, dstBlueIdx);
+        cv::Vec<double, 3> c{newC[0],newC[1],newC[2]};
+        cv::Vec<double, 3> g{newG[0],newG[1],newG[2]};
+        setuC(c); // asumes that C is in rotated color space and with a dstBlueIdx
+        setG(g);
+        setRedDistributionErf();
+        setGreenDistributionErf();
+        setBlueDistributionErf();
+    };
+
 
 template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot()
 {

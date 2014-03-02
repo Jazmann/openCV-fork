@@ -632,9 +632,12 @@ template<int src_t, int dst_t> class RGB2Rot: public colorSpaceConverter<src_t, 
         RGB2Rot(); // todo set default distribution functions.
         
         RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, Vec<int, 3> sp0, Vec<int, 3> sp1, Vec<int, 3> sp2, Vec<double, 3> _g, Vec<int, 3> _c);
-        
+        RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, std::vector<double>  newG, std::vector<double> newC);
         RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, cv::Matx<int, 3, 3>& T, cv::Vec<double, 3> _g, cv::Vec<int, 3> _c);
+        
         RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, cv::Vec<double, 3> _g, cv::Vec<double, 3> _c);
+        RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, double* g, double* c);
+
        void init();
        void setRGBIndices(int srcBlueIdx, int dstBlueIdx);
        void setTransformFromVecs(cv::Vec<int, 3> sp0, cv::Vec<int, 3> sp1, cv::Vec<int, 3> sp2);
