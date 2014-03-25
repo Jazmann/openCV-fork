@@ -469,11 +469,11 @@ enum { INTERSECT_NONE = 0,
        INTERSECT_PARTIAL  = 1,
        INTERSECT_FULL  = 2
      };
-double erf(double x);
-double erf(double a, double b);
+double CV_EXPORTS erf(double x);
+double CV_EXPORTS erf(double a, double b);
+double CV_EXPORTS erfinv(double x); // returns  the inverse error function
     
-    
-template<int src_t, int dst_t> class distributeErfParameters
+template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
     {
         public :
         using srcInfo = cv::Data_Type<src_t>;
@@ -507,7 +507,7 @@ template<int src_t, int dst_t> class distributeErfParameters
     };
 
     
-template<int src_t, int dst_t>  class  depthConverter
+template<int src_t, int dst_t>  class depthConverter
     {
         public :
         virtual ~depthConverter<src_t, dst_t>(){};
@@ -520,7 +520,7 @@ template<int src_t, int dst_t>  class  depthConverter
         virtual void operator()(const srcType src, dstType &dst) = 0;
     };
         
-template<int src_t, int dst_t>  class  distributeErf: public depthConverter<src_t, dst_t>
+template<int src_t, int dst_t>  class  CV_EXPORTS distributeErf: public depthConverter<src_t, dst_t>
     {
         public :
         using srcType = typename distributeErf::srcType;
@@ -534,7 +534,7 @@ template<int src_t, int dst_t>  class  distributeErf: public depthConverter<src_
         void operator()(const srcType src, dstType &dst);
     };
     
-    template<int src_t, int dst_t>  class  distributeErfCompact: public depthConverter<src_t, dst_t>
+    template<int src_t, int dst_t>  class CV_EXPORTS distributeErfCompact: public depthConverter<src_t, dst_t>
     {
         public :
         using srcType = typename distributeErfCompact::srcType;
@@ -547,7 +547,7 @@ template<int src_t, int dst_t>  class  distributeErf: public depthConverter<src_
         void operator()(const srcType src, dstType &dst);
     };
     
-    template<int src_t, int dst_t>  class  distributePartition: public depthConverter<src_t, dst_t>
+    template<int src_t, int dst_t>  class CV_EXPORTS distributePartition: public depthConverter<src_t, dst_t>
     {
         public :
         using srcType = typename distributePartition::srcType;
@@ -560,7 +560,7 @@ template<int src_t, int dst_t>  class  distributeErf: public depthConverter<src_
         void operator()(const srcType src, dstType &dst);
     };
 
-template<int src_t, int dst_t>  class  distributeLinear: public depthConverter<src_t, dst_t>
+template<int src_t, int dst_t>  class CV_EXPORTS distributeLinear: public depthConverter<src_t, dst_t>
     {
         public :
         using srcType = typename distributeLinear::srcType;
@@ -575,7 +575,7 @@ template<int src_t, int dst_t>  class  distributeLinear: public depthConverter<s
         void operator()(const srcType src, dstType dst) const;
     };
         
-template<int src_t, int dst_t> class colorSpaceConverter
+template<int src_t, int dst_t> class CV_EXPORTS colorSpaceConverter
     {
         public :
         virtual ~colorSpaceConverter<src_t, dst_t>(){};
@@ -597,7 +597,7 @@ template<int src_t, int dst_t> class colorSpaceConverter
     // template class colorSpaceConverter<CV_8UC3,CV_8UC3>;
     // template class colorSpaceConverter<CV_8UC4,CV_8UC3>;
     
-template<int src_t, int dst_t> class RGB2Rot: public colorSpaceConverter<src_t, dst_t>
+template<int src_t, int dst_t> class CV_EXPORTS RGB2Rot: public colorSpaceConverter<src_t, dst_t>
     {
         public :
         using srcInfo = typename RGB2Rot::srcInfo;
@@ -659,6 +659,7 @@ template<int src_t, int dst_t> class RGB2Rot: public colorSpaceConverter<src_t, 
 
        void operator()(const typename cv::Data_Type<src_t>::type* src, typename cv::Data_Type<dst_t>::type* dst, int n) const;
     };
+
     
 template<int src_t, int dst_t> class ABC2Metric: public colorSpaceConverter<src_t, dst_t>
     {
@@ -683,9 +684,9 @@ template<int src_t, int dst_t> class ABC2Metric: public colorSpaceConverter<src_
     };
 
     
-template<int src_t, int dst_t> void convertColor(InputArray _src, OutputArray _dst, colorSpaceConverter<src_t, dst_t>& colorConverter);
+template<int src_t, int dst_t> void CV_EXPORTS convertColor(InputArray _src, OutputArray _dst, colorSpaceConverter<src_t, dst_t>& colorConverter);
     
-    template <typename Cvt> CV_EXPORTS_W void CvtColorLoop(const Mat& src, Mat& dst, const Cvt& cvt);
+template <typename Cvt> CV_EXPORTS_W void CvtColorLoop(const Mat& src, Mat& dst, const Cvt& cvt);
     
 
 /*!

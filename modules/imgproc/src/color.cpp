@@ -3510,46 +3510,9 @@ void cvtColor( InputArray _src, OutputArray _dst, int code, int dcn )
             break;
 
         case CV_BGR2GRAY: case CV_BGRA2GRAY: case CV_RGB2GRAY: case CV_RGBA2GRAY:
-            printf("BGR2Gray : Jasper\n");
             CV_Assert( scn == 3 || scn == 4 );
-            printf("BGR2Gray :  %d == 3  %d == 4 \n",scn,scn);
             _dst.create(sz, CV_MAKETYPE(depth, 1));
-            printf("BGR2Gray : sz.height = %d  sz.width = %d \n",sz.height,sz.width);
-            printf("BGR2Gray : CV_MAKETYPE(%d, 1) = %d \n",depth,CV_MAKETYPE(depth, 1));
-
             dst = _dst.getMat();
-            printf("BGR2Gray : Jasper dst made depth = %d\n",dst.depth());
-            
-     //       inline bool Mat::isContinuous() const { return (flags & CONTINUOUS_FLAG) != 0; }
-     //       inline bool Mat::isSubmatrix() const { return (flags & SUBMATRIX_FLAG) != 0; }
-     //       inline size_t Mat::elemSize() const { return dims > 0 ? step.p[dims-1] : 0; }
-     //       inline size_t Mat::elemSize1() const { return CV_ELEM_SIZE1(flags); }
-     //       inline int Mat::type() const { return CV_MAT_TYPE(flags); }
-     //       inline int Mat::depth() const { return CV_MAT_DEPTH(flags); }
-     //       inline int Mat::channels() const { return CV_MAT_CN(flags); }
-     //       inline size_t Mat::step1(int i) const { return step.p[i]/elemSize1(); }
-     //       inline bool Mat::empty() const { return data == 0 || total() == 0; }
-            
-            printf( " CV_2U   : CV_DEPTH_BITS(CV_2U)  = %d : CV_DEPTH_BYTES(CV_2U)  = %d\n",CV_DEPTH_BITS(CV_2U), CV_DEPTH_BYTES(CV_2U));
-            printf( " CV_4U   : CV_DEPTH_BITS(CV_4U)  = %d : CV_DEPTH_BYTES(CV_4U)  = %d\n",CV_DEPTH_BITS(CV_4U), CV_DEPTH_BYTES(CV_4U));
-            printf( " CV_8U   : CV_DEPTH_BITS(CV_8U)  = %d : CV_DEPTH_BYTES(CV_8U)  = %d\n",CV_DEPTH_BITS(CV_8U), CV_DEPTH_BYTES(CV_8U));
-            printf( " CV_8S   : CV_DEPTH_BITS(CV_8S)  = %d : CV_DEPTH_BYTES(CV_8S)  = %d\n",CV_DEPTH_BITS(CV_8S), CV_DEPTH_BYTES(CV_8S));
-            printf( " CV_16U  : CV_DEPTH_BITS(CV_16U) = %d : CV_DEPTH_BYTES(CV_16U) = %d\n",CV_DEPTH_BITS(CV_16U), CV_DEPTH_BYTES(CV_16U));
-            printf( " CV_16S  : CV_DEPTH_BITS(CV_16S) = %d : CV_DEPTH_BYTES(CV_16S) = %d\n",CV_DEPTH_BITS(CV_16S), CV_DEPTH_BYTES(CV_16S));
-            printf( " CV_32U  : CV_DEPTH_BITS(CV_32U) = %d : CV_DEPTH_BYTES(CV_32U) = %d\n",CV_DEPTH_BITS(CV_32U), CV_DEPTH_BYTES(CV_32U));
-            printf( " CV_32S  : CV_DEPTH_BITS(CV_32S) = %d : CV_DEPTH_BYTES(CV_32S) = %d\n",CV_DEPTH_BITS(CV_32S), CV_DEPTH_BYTES(CV_32S));
-            printf( " CV_32F  : CV_DEPTH_BITS(CV_32F) = %d : CV_DEPTH_BYTES(CV_32F) = %d\n",CV_DEPTH_BITS(CV_32F), CV_DEPTH_BYTES(CV_32F));
-            printf( " CV_64F  : CV_DEPTH_BITS(CV_64F) = %d : CV_DEPTH_BYTES(CV_64F) = %d\n",CV_DEPTH_BITS(CV_64F), CV_DEPTH_BYTES(CV_64F));
-            
-            printf("Mat : dst :  rows = %d, cols = %d \n", dst.rows, dst.rows);
-            printf("Mat : dst :  elemSize = %lu     \n", dst.elemSize());
-            printf("Mat : dst :  elemSize = %lu     \n", dst.elemSize());
-            printf("Mat : dst :  elemSize1() = %lu  \n", dst.elemSize1());
-            printf("Mat : dst :  type() = %d  \n", dst.type());
-            printf("Mat : dst :  depth() = %d  \n", dst.depth());
-            printf("Mat : dst :  channels() = %d  \n", dst.channels());
-            printf("Mat : dst :  step1(0) = %lu  \n", dst.step1(0));
-            
 
 #if defined (HAVE_IPP) && (IPP_VERSION_MAJOR >= 7)
             if( code == CV_BGR2GRAY )
@@ -3776,26 +3739,6 @@ void cvtColor( InputArray _src, OutputArray _dst, int code, int dcn )
 
             _dst.create(sz, CV_MAKETYPE(depth, 3));
             dst = _dst.getMat();
-                
-                printf( " CV_2U   : CV_DEPTH_BITS(CV_2U)  = %d : CV_DEPTH_BYTES(CV_2U)  = %d\n",CV_DEPTH_BITS(CV_2U), CV_DEPTH_BYTES(CV_2U));
-                printf( " CV_4U   : CV_DEPTH_BITS(CV_4U)  = %d : CV_DEPTH_BYTES(CV_4U)  = %d\n",CV_DEPTH_BITS(CV_4U), CV_DEPTH_BYTES(CV_4U));
-                printf( " CV_8U   : CV_DEPTH_BITS(CV_8U)  = %d : CV_DEPTH_BYTES(CV_8U)  = %d\n",CV_DEPTH_BITS(CV_8U), CV_DEPTH_BYTES(CV_8U));
-                printf( " CV_8S   : CV_DEPTH_BITS(CV_8S)  = %d : CV_DEPTH_BYTES(CV_8S)  = %d\n",CV_DEPTH_BITS(CV_8S), CV_DEPTH_BYTES(CV_8S));
-                printf( " CV_16U  : CV_DEPTH_BITS(CV_16U) = %d : CV_DEPTH_BYTES(CV_16U) = %d\n",CV_DEPTH_BITS(CV_16U), CV_DEPTH_BYTES(CV_16U));
-                printf( " CV_16S  : CV_DEPTH_BITS(CV_16S) = %d : CV_DEPTH_BYTES(CV_16S) = %d\n",CV_DEPTH_BITS(CV_16S), CV_DEPTH_BYTES(CV_16S));
-                printf( " CV_32U  : CV_DEPTH_BITS(CV_32U) = %d : CV_DEPTH_BYTES(CV_32U) = %d\n",CV_DEPTH_BITS(CV_32U), CV_DEPTH_BYTES(CV_32U));
-                printf( " CV_32S  : CV_DEPTH_BITS(CV_32S) = %d : CV_DEPTH_BYTES(CV_32S) = %d\n",CV_DEPTH_BITS(CV_32S), CV_DEPTH_BYTES(CV_32S));
-                printf( " CV_32F  : CV_DEPTH_BITS(CV_32F) = %d : CV_DEPTH_BYTES(CV_32F) = %d\n",CV_DEPTH_BITS(CV_32F), CV_DEPTH_BYTES(CV_32F));
-                printf( " CV_64F  : CV_DEPTH_BITS(CV_64F) = %d : CV_DEPTH_BYTES(CV_64F) = %d\n",CV_DEPTH_BITS(CV_64F), CV_DEPTH_BYTES(CV_64F));
-                
-                printf("Mat : dst :  rows = %d, cols = %d \n", dst.rows, dst.rows);
-                printf("Mat : dst :  elemSize = %lu     \n", dst.elemSize());
-                printf("Mat : dst :  elemSize = %lu     \n", dst.elemSize());
-                printf("Mat : dst :  elemSize1() = %lu  \n", dst.elemSize1());
-                printf("Mat : dst :  type() = %d  \n", dst.type());
-                printf("Mat : dst :  depth() = %d  \n", dst.depth());
-                printf("Mat : dst :  channels() = %d  \n", dst.channels());
-                printf("Mat : dst :  step1(0) = %lu  \n", dst.step1(0));
 
 #if defined (HAVE_IPP) && (IPP_VERSION_MAJOR >= 7)
             if( depth == CV_8U || depth == CV_16U )
@@ -4274,8 +4217,8 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromV
     float v1V2Sin = sqrtf(v1Norm2(0) * v2Norm2(0) - v2DotV1(0) * v2DotV1(0));
     
     cv::sVec<int, 3> a1 = v1;
-    cv::sVec<int, 3> a2a = v1Norm2(0) * v2;
-    cv::sVec<int, 3> a2b = v2DotV1(0) * v1;
+    // cv::sVec<int, 3> a2a = v1Norm2(0) * v2;
+    // cv::sVec<int, 3> a2b = v2DotV1(0) * v1;
     cv::sVec<int, 3> a2(1.0 / (v1Norm2(0) * v1V2Sin), v1Norm2(0) * v2 - v2DotV1(0) * v1);
     cv::sVec<int, 3> a3 = v1.cross(v2);
     a3.scale = 1.0/v1V2Sin;
@@ -4643,11 +4586,10 @@ template<int src_t, int dst_t> inline void cv::RGB2Rot<src_t, dst_t>::operator()
         (*blueScale)(Z, dst[i+2]);
     }
 }
-
+    
 template class cv::RGB2Rot<CV_8UC3,CV_8UC3>;
 template class cv::RGB2Rot<CV_8UC4,CV_8UC3>;
-
-
+    
 
 template<int src_t, int dst_t> cv::ABC2Metric<src_t, dst_t>::ABC2Metric(cv::Matx<int, 3, 3>& T, cv::Vec<int, 3> newC){
     init();
