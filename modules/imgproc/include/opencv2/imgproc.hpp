@@ -651,7 +651,7 @@ template<int src_t, int dst_t> class CV_EXPORTS RGB2Rot: public colorSpaceConver
        void setG(Vec<double, 3> _g);
        void setuG(Vec<double, 3> _g);
        void setRedDistributionErf();
-       void setRedDistributionErf(  dstType center, double gradient);
+       void setRedDistributionErf(  int center, double gradient);
        void setGreenDistributionErf();
        void setGreenDistributionErf(int center, double gradient);
        void setBlueDistributionErf();

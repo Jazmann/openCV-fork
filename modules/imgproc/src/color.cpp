@@ -4531,18 +4531,18 @@ template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcB
     setBlueDistributionErf();
 };
     
-    template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, std::vector<double>  newG, std::vector<double> newC){
-        init();
-        setTransformFromAngle(theta);
-        setRGBIndices(srcBlueIdx, dstBlueIdx);
-        cv::Vec<double, 3> c{newC[0],newC[1],newC[2]};
-        cv::Vec<double, 3> g{newG[0],newG[1],newG[2]};
-        setuC(c); // asumes that C is in rotated color space and with a dstBlueIdx
-        setG(g);
-        setRedDistributionErf();
-        setGreenDistributionErf();
-        setBlueDistributionErf();
-    };
+template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot(const int srcBlueIdx, const int dstBlueIdx, const double theta, std::vector<double>  newG, std::vector<double> newC){
+    init();
+    setTransformFromAngle(theta);
+    setRGBIndices(srcBlueIdx, dstBlueIdx);
+    cv::Vec<double, 3> c{newC[0],newC[1],newC[2]};
+    cv::Vec<double, 3> g{newG[0],newG[1],newG[2]};
+    setuC(c); // asumes that C is in rotated color space and with a dstBlueIdx
+    setG(g);
+    setRedDistributionErf();
+    setGreenDistributionErf();
+    setBlueDistributionErf();
+};
 
 
 template<int src_t, int dst_t> cv::RGB2Rot<src_t, dst_t>::RGB2Rot()
