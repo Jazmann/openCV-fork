@@ -189,8 +189,7 @@ double erfinv(double x)
         return 0; //did not converge
     }
     
-    
-    template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distributeErfParameters()
+template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distributeErfParameters()
     {
         sMax = srcInfo::max;  sMin = srcInfo::min; sRange = (sMax - sMin);
         dMax = dstInfo::max;  dMin = dstInfo::min; dRange = dMax - dMin;
@@ -218,7 +217,7 @@ double erfinv(double x)
         dMaxShifted = (dMax + shiftednErfConstant);
     };
 
-    template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distributeErfParameters(double _g, typename distributeErfParameters::srcType _c, typename distributeErfParameters::srcType _sMin, typename distributeErfParameters::srcType _sMax, typename distributeErfParameters::dstType _dMin, typename distributeErfParameters::dstType _dMax): c(_c), g(_g), sMin(_sMin), sMax(_sMax), dMin(_dMin), dMax(_dMax)
+template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distributeErfParameters(double _g, typename distributeErfParameters::srcType _c, typename distributeErfParameters::srcType _sMin, typename distributeErfParameters::srcType _sMax, typename distributeErfParameters::dstType _dMin, typename distributeErfParameters::dstType _dMax): c(_c), g(_g), sMin(_sMin), sMax(_sMax), dMin(_dMin), dMax(_dMax)
     {
         CV_Assert((int)sMin <= (int)c && (int)c <= (int)sMax && (int)dMin <= (int)dMax);
         sRange = (sMax - sMin);
@@ -258,7 +257,7 @@ template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf()
         par(1.0,srcType((sMax-sMin)/2),sMin,sMax,dMin,dMax);
     };
 
-    template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf(double _g, typename distributeErf::srcType _c, typename distributeErf::srcType sMin, typename distributeErf::srcType sMax, typename distributeErf::dstType dMin, typename distributeErf::dstType dMax):par(_g,_c,sMin,sMax,dMin,dMax)
+template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf(double _g, typename distributeErf::srcType _c, typename distributeErf::srcType sMin, typename distributeErf::srcType sMax, typename distributeErf::dstType dMin, typename distributeErf::dstType dMax):par(_g,_c,sMin,sMax,dMin,dMax)
     {
         CV_Assert((int)sMin <= (int)_c && (int)_c <= (int)sMax && (int)dMin <= (int)dMax);
     };
@@ -274,7 +273,7 @@ template<int src_t, int dst_t>  void distributeErf<src_t, dst_t>::operator()(con
     };
     
     
-    template<int src_t, int dst_t> distributeErfCompact<src_t, dst_t>::distributeErfCompact(double _g, typename distributeErfCompact::srcType _c, typename distributeErfCompact::srcType sMin, typename distributeErfCompact::srcType sMax, typename distributeErfCompact::dstType dMin, typename distributeErfCompact::dstType dMax): par(_g,_c,sMin,sMax,dMin,dMax)
+template<int src_t, int dst_t> distributeErfCompact<src_t, dst_t>::distributeErfCompact(double _g, typename distributeErfCompact::srcType _c, typename distributeErfCompact::srcType sMin, typename distributeErfCompact::srcType sMax, typename distributeErfCompact::dstType dMin, typename distributeErfCompact::dstType dMax): par(_g,_c,sMin,sMax,dMin,dMax)
     {
         CV_Assert((int)sMin <= (int)_c && (int)_c <= (int)sMax && (int)dMin <= (int)dMax);    };
     
@@ -305,7 +304,7 @@ template<int src_t, int dst_t> distributePartition<src_t, dst_t>::distributePart
         CV_Assert((int)_sMin <= (int)sMinCutoff && (int)sMinCutoff <= (int)_sMax && (int)_sMin <= (int)sMaxCutoff && (int)sMaxCutoff <= (int)_sMax && (int)_dMin <= (int)_dMax);
     };
     
-    template<int src_t, int dst_t>  void distributePartition<src_t, dst_t>::operator()(const typename distributePartition::srcType src, typename distributePartition::dstType &dst)
+template<int src_t, int dst_t>  void distributePartition<src_t, dst_t>::operator()(const typename distributePartition::srcType src, typename distributePartition::dstType &dst)
     {
         if(src >= sMinCutoff && src <= sMaxCutoff){
             dst = dstType(src);
@@ -317,7 +316,7 @@ template<int src_t, int dst_t> distributePartition<src_t, dst_t>::distributePart
 
 
     
-    template<int src_t, int dst_t> distributeLinear<src_t, dst_t>::distributeLinear()
+template<int src_t, int dst_t> distributeLinear<src_t, dst_t>::distributeLinear()
     {
         srcType sMax = srcType::max; srcType sMin = srcType::min;
         dstType dMax = dstType::max; dstType dMin = dstType::min;
@@ -331,7 +330,7 @@ template<int src_t, int dst_t> distributePartition<src_t, dst_t>::distributePart
     };
 
    // distributeLinear(wrkType _g, srcType _c, srcType sMin, srcType sMax, dstType dMin, dMax)
-    template<int src_t, int dst_t> distributeLinear<src_t, dst_t>::distributeLinear(typename distributeLinear::wrkType _g, typename distributeLinear::srcType _c, typename distributeLinear::srcType sMin, typename distributeLinear::srcType sMax, typename distributeLinear::dstType _dMin, typename distributeLinear::dstType _dMax): dMin(_dMin), dMax(_dMax)
+template<int src_t, int dst_t> distributeLinear<src_t, dst_t>::distributeLinear(typename distributeLinear::wrkType _g, typename distributeLinear::srcType _c, typename distributeLinear::srcType sMin, typename distributeLinear::srcType sMax, typename distributeLinear::dstType _dMin, typename distributeLinear::dstType _dMax): dMin(_dMin), dMax(_dMax)
     {        
         CV_Assert((int)sMin <= (int)c && (int)c <= (int)sMax && (int)dMin <= (int)sMax);
         dstType sRange = (sMax - sMin);
@@ -342,7 +341,7 @@ template<int src_t, int dst_t> distributePartition<src_t, dst_t>::distributePart
         fMax = srcType(wrktype(dMax - c)/g);
     };
     
-    template<int src_t, int dst_t>  void distributeLinear<src_t, dst_t>::operator()(const typename distributeLinear::srcType src, typename distributeLinear::dstType dst) const
+template<int src_t, int dst_t>  void distributeLinear<src_t, dst_t>::operator()(const typename distributeLinear::srcType src, typename distributeLinear::dstType dst) const
     {
         if(src <= fMin){
             dst = dMin;

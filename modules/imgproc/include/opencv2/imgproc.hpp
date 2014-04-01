@@ -482,8 +482,8 @@ template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
         using dstType = typename cv::Data_Type<dst_t>::type;
         using wrkInfo = cv::Work_Type<src_t, dst_t>;
         using wrkType = typename cv::Work_Type<src_t, dst_t>::type;
-        const int lookUpTableMax = 255;
-        const int nonLinearMin = 3; // Less than this is is not worth keeping the error function at all.
+        const srcType lookUpTableMax = 255;
+        const srcType nonLinearMin = 3; // Less than this is is not worth keeping the error function at all.
         
         srcType sMin, sMax, sRange;
         dstType dMin, dMax, dRange;
@@ -507,7 +507,7 @@ template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
     };
 
     
-template<int src_t, int dst_t>  class depthConverter
+template<int src_t, int dst_t>  class CV_EXPORTS depthConverter
     {
         public :
         virtual ~depthConverter<src_t, dst_t>(){};
@@ -591,7 +591,7 @@ template<int src_t, int dst_t> class CV_EXPORTS colorSpaceConverter
         using wrkType  = typename cv::Work_Type<src_t, dst_t>::type;
         using sWrkInfo = typename cv::Signed_Work_Type<src_t, dst_t>;
         using sWrkType = typename cv::Signed_Work_Type<src_t, dst_t>::type;
-        virtual void operator()(const srcType * src, dstType* dst, int n) const = 0;
+        virtual void CV_EXPORTS operator()(const srcType * src, dstType* dst, int n) const = 0;
     };
     
     // template class colorSpaceConverter<CV_8UC3,CV_8UC3>;
@@ -651,7 +651,7 @@ template<int src_t, int dst_t> class CV_EXPORTS RGB2Rot: public colorSpaceConver
        void setG(Vec<double, 3> _g);
        void setuG(Vec<double, 3> _g);
        void setRedDistributionErf();
-       void setRedDistributionErf(  int center, double gradient);
+       void setRedDistributionErf(  dstType center, double gradient);
        void setGreenDistributionErf();
        void setGreenDistributionErf(int center, double gradient);
        void setBlueDistributionErf();
