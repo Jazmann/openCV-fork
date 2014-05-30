@@ -4314,6 +4314,62 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
             ((1.0/std::cos((CV_PI - 6*std::fmod(theta, CV_PI/3.))/6.))*(-(std::sqrt(3)*std::cos(theta)) + std::sin(theta)))/4.,\
     ((-1.0/std::cos((CV_PI - 6*std::fmod(theta, CV_PI/3.))/6.))*std::sin(theta))/2.,\
     ((1.0/std::cos((CV_PI - 6*std::fmod(theta, CV_PI/3.))/6.))*(std::sqrt(3)*std::cos(theta) + std::sin(theta)))/4.);
+    switch (std::floor(6*theta/CV_PI))
+    {
+        case 0:
+            fRScale = cv::Matx<double, 3>(1,(-2*Sin(Pi/6. + \[Theta]))/rRange,(-2*Cos(Pi/6. + \[Theta]))/rRange);
+            fR = cv::Matx<double, 3, 3>(
+                                        1,1,1,
+                                        rRange/2.,-(rRange*Cos(theta)*Csc(Pi/6. + theta))/2., (rRange*Csc(Pi/6. + theta)*Sin(Pi/6. - theta))/2.,
+                                        rRange/2., (rRange*Sin(theta)*Sec(Pi/6. + theta))/2.,-(rRange*Sec(Pi/6. + theta)*Cos(Pi/6. - theta))/2.
+                                        );
+            break;
+        case 1:
+            fRScale = cv::Matx<double, 3>(1,(2*Cos(\[Theta]))/rRange,(-2*Sin(\[Theta]))/rRange);
+            fR = cv::Matx<double, 3, 3>(
+                                        1,1,1,
+                                        -(rRange*Sec(theta)*Sin(Pi/6. + theta))/2., rRange/2., -(rRange*Sec(theta)*Sin(Pi/6. - theta))/2.,
+                                         (rRange*Csc(theta)*Cos(Pi/6. + theta))/2., rRange/2., -(rRange*Csc(theta)*Cos(Pi/6. - theta))/2.
+                                        );
+            break;
+        case 2:
+            fRScale = cv::Matx<double, 3>(1,(-2*Sin(Pi/6. - \[Theta]))/rRange,(2*Cos(Pi/6. - \[Theta]))/rRange);
+            fR = cv::Matx<double, 3, 3>(
+                                        1,1,1,
+                                        (rRange*Csc(Pi/6. - theta)*Sin(Pi/6. + theta))/2., -(rRange*Cos(theta)*Csc(Pi/6. - theta))/2., rRange/2.,
+                                       -(rRange*Sec(Pi/6. - theta)*Cos(Pi/6. + theta))/2., -(rRange*Sin(theta)*Sec(Pi/6. - theta))/2., rRange/2.
+                                        );
+            break;
+        case 3:
+            fRScale = cv::Matx<double, 3>(1,(-2*Sin(Pi/6. + \[Theta]))/rRange,(-2*Cos(Pi/6. + \[Theta]))/rRange);
+            fR = cv::Matx<double, 3, 3>(
+                                        1,1,1,
+                                        rRange/2.,-(rRange*Cos(theta)*Csc(Pi/6. + theta))/2., (rRange*Csc(Pi/6. + theta)*Sin(Pi/6. - theta))/2.,
+                                        rRange/2., (rRange*Sin(theta)*Sec(Pi/6. + theta))/2.,-(rRange*Sec(Pi/6. + theta)*Cos(Pi/6. - theta))/2.
+                                        );
+            break;
+        case 4:
+            fRScale = cv::Matx<double, 3>(1,(2*Cos(\[Theta]))/rRange,(-2*Sin(\[Theta]))/rRange);
+            fR = cv::Matx<double, 3, 3>(
+                                        1,1,1,
+                                        -(rRange*Sec(theta)*Sin(Pi/6. + theta))/2., rRange/2., -(rRange*Sec(theta)*Sin(Pi/6. - theta))/2.,
+                                         (rRange*Csc(theta)*Cos(Pi/6. + theta))/2., rRange/2., -(rRange*Csc(theta)*Cos(Pi/6. - theta))/2.
+                                        );
+            break;
+        case 5:
+            fRScale = cv::Matx<double, 3>(1,(-2*Sin(Pi/6. - \[Theta]))/rRange,(2*Cos(Pi/6. - \[Theta]))/rRange);
+            fR = cv::Matx<double, 3, 3>(
+                                        1,1,1,
+                                        (rRange*Csc(Pi/6. - theta)*Sin(Pi/6. + theta))/2., -(rRange*Cos(theta)*Csc(Pi/6. - theta))/2., rRange/2.,
+                                       -(rRange*Sec(Pi/6. - theta)*Cos(Pi/6. + theta))/2., -(rRange*Sin(theta)*Sec(Pi/6. - theta))/2., rRange/2.
+                                        );
+            break;
+        default:
+            fR = cv::Matx<double, 3, 3>();
+    }
+    
+
+    
     
     uiT = cv::Matx<double, 3, 3>(1.,
     (-2.*std::cos(theta - (CV_PI*std::floor(0.5 + (3.*theta)/CV_PI))/3.)*(std::cos(theta) + std::sqrt(3.)*std::sin(theta)))/3.,

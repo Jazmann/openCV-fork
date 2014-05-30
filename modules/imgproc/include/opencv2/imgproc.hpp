@@ -608,22 +608,26 @@ template<int src_t, int dst_t> class CV_EXPORTS RGB2Rot: public colorSpaceConver
         using wrkType = typename RGB2Rot::wrkType;
         using sWrkInfo = typename RGB2Rot::sWrkInfo;
         using sWrkType = typename RGB2Rot::sWrkType;
+        // Values are expressed in three spaces; src, wrk, dst or source, rotated(working) and destination.
+        // Values are expressed in two ranges; u, q or unitary and quantized
         
         int indxA{0}, indxB{1}, indxC{2}; // indices for the axis.
         int dstRGBIndices[3]; // indices for the destination 'RGB' channels
         int srcRGBIndices[3]; // indices for the source RGB channels
-        int C[3]; // The center point for the distribution function in the rotated color space
-        Vec<dstType, 3> C_dst; // The center point for the distribution function in the rotated color space
-        Vec<double, 3> uC; // The center point for the distribution function in the rotated color space scaled to 0:1
-        Vec<srcType, 3> C_src; // The center point for the distribution function in the source color space
-        Vec<double, 3> uC_src; // The center point for the distribution function in the source color space scaled to 0:1
+        wrkType C[3]; // The center point for the distribution function in the rotated color space
+        Vec<wrkType, 3> qC_wrk; // The center point for the distribution function in the rotated color space
+        Vec<double, 3>  uC_wrk; // The center point for the distribution function in the rotated color space scaled to 0:1
+        Vec<srcType, 3> qC_src; // The center point for the distribution function in the source color space
+        Vec<double, 3>  uC_src; // The center point for the distribution function in the source color space scaled to 0:1
 
-        double G[3];  // The distribution parameter in the rotated color space
+        double qG[3];  // The distribution parameter in the rotated color space
         double uG[3]; // The distribution parameter in the rotated color space scaled to 0:1
 
         cv::Matx<double, 3, 3> uT, uiT; // The transformation matrix in 0:1 scale
+        cv::Matx<double, 3, 3> R, fR; // The transformation matrix in 0:1 scale
+        cv::Matx<double, 3> fRScale; // The transformation matrix in 0:1 scale
         Vec<double, dstInfo::channels> uTRange, uTMin, uTMax; // The range info for the result of the transformed space. The axis lengths and positions in the 0:1 space.
-        cv::Matx<int, 3, 3> T, iT; // The transformation matrix without overflow protection in the source / destination scale
+        cv::Matx<sWrkType, 3, 3> T, iT; // The transformation matrix without overflow protection in the source / destination scale
         sWrkType M[dstInfo::channels][srcInfo::channels]; // The working matrix for the transform computation with overflow protection.
         sWrkType TRange[dstInfo::channels], TMin[dstInfo::channels], TMax[dstInfo::channels];
         
