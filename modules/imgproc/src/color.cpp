@@ -4314,54 +4314,48 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
             ((1.0/std::cos((CV_PI - 6*std::fmod(theta, CV_PI/3.))/6.))*(-(std::sqrt(3)*std::cos(theta)) + std::sin(theta)))/4.,\
     ((-1.0/std::cos((CV_PI - 6*std::fmod(theta, CV_PI/3.))/6.))*std::sin(theta))/2.,\
     ((1.0/std::cos((CV_PI - 6*std::fmod(theta, CV_PI/3.))/6.))*(std::sqrt(3)*std::cos(theta) + std::sin(theta)))/4.);
-    switch (std::floor(6*theta/CV_PI))
+    
+    double Cos      = std::cos(theta);
+    double CosPlus  = std::cos(CV_PI/6. + theta);
+    double CosMinus = std::cos(CV_PI/6. - theta);
+    
+    double Sin      = std::sin(theta);
+    double SinPlus  = std::sin(CV_PI/6. + theta);
+    double SinMinus = std::sin(CV_PI/6. - theta);
+    
+    double Csc      = std::csc(theta);
+    double CscPlus  = std::csc(CV_PI/6. + theta);
+    double CscMinus = std::csc(CV_PI/6. - theta);
+    
+    double Sec      = std::sec(theta);
+    double SecPlus  = std::sec(CV_PI/6. + theta);
+    double SecMinus = std::sec(CV_PI/6. - theta);
+
+    
+    switch (std::floor(6*std::mod(theta, CV_PI/2.)/CV_PI)
     {
         case 0:
-            fRScale = cv::Matx<double, 3>(1,(-2*Sin(Pi/6. + \[Theta]))/rRange,(-2*Cos(Pi/6. + \[Theta]))/rRange);
-            fR = cv::Matx<double, 3, 3>(
+            fRScale = cv::Matx<double, 3>(1,(-2*SinPlus)/rRange,(-2*CosPlus)/rRange);
+            fR = cv::Matx<sWrkType, 3, 3>(
                                         1,1,1,
-                                        rRange/2.,-(rRange*Cos(theta)*Csc(Pi/6. + theta))/2., (rRange*Csc(Pi/6. + theta)*Sin(Pi/6. - theta))/2.,
-                                        rRange/2., (rRange*Sin(theta)*Sec(Pi/6. + theta))/2.,-(rRange*Sec(Pi/6. + theta)*Cos(Pi/6. - theta))/2.
+                                        sWrkType(rRange/2.), sWrkType(-(rRange*Cos*CscPlus)/2.), sWrkType( (rRange*CscPlus*SinMinus)/2.),
+                                        sWrkType(rRange/2.), sWrkType( (rRange*Sin*SecPlus)/2.), sWrkType(-(rRange*SecPlus*CosMinus)/2.)
                                         );
             break;
         case 1:
-            fRScale = cv::Matx<double, 3>(1,(2*Cos(\[Theta]))/rRange,(-2*Sin(\[Theta]))/rRange);
+            fRScale = cv::Matx<double, 3>(1,(2*Cos)/rRange,(-2*Sin)/rRange);
             fR = cv::Matx<double, 3, 3>(
                                         1,1,1,
-                                        -(rRange*Sec(theta)*Sin(Pi/6. + theta))/2., rRange/2., -(rRange*Sec(theta)*Sin(Pi/6. - theta))/2.,
-                                         (rRange*Csc(theta)*Cos(Pi/6. + theta))/2., rRange/2., -(rRange*Csc(theta)*Cos(Pi/6. - theta))/2.
+                                        sWrkType(-(rRange*Sec*SinPlus)/2.), sWrkType(rRange/2.), sWrkType(-(rRange*Sec*SinMinus)/2.),
+                                        sWrkType( (rRange*Csc*CosPlus)/2.), sWrkType(rRange/2.), sWrkType(-(rRange*Csc*CosMinus)/2.)
                                         );
             break;
         case 2:
-            fRScale = cv::Matx<double, 3>(1,(-2*Sin(Pi/6. - \[Theta]))/rRange,(2*Cos(Pi/6. - \[Theta]))/rRange);
+            fRScale = cv::Matx<double, 3>(1,(-2*SinMinus)/rRange,(2*CosMinus)/rRange);
             fR = cv::Matx<double, 3, 3>(
                                         1,1,1,
-                                        (rRange*Csc(Pi/6. - theta)*Sin(Pi/6. + theta))/2., -(rRange*Cos(theta)*Csc(Pi/6. - theta))/2., rRange/2.,
-                                       -(rRange*Sec(Pi/6. - theta)*Cos(Pi/6. + theta))/2., -(rRange*Sin(theta)*Sec(Pi/6. - theta))/2., rRange/2.
-                                        );
-            break;
-        case 3:
-            fRScale = cv::Matx<double, 3>(1,(-2*Sin(Pi/6. + \[Theta]))/rRange,(-2*Cos(Pi/6. + \[Theta]))/rRange);
-            fR = cv::Matx<double, 3, 3>(
-                                        1,1,1,
-                                        rRange/2.,-(rRange*Cos(theta)*Csc(Pi/6. + theta))/2., (rRange*Csc(Pi/6. + theta)*Sin(Pi/6. - theta))/2.,
-                                        rRange/2., (rRange*Sin(theta)*Sec(Pi/6. + theta))/2.,-(rRange*Sec(Pi/6. + theta)*Cos(Pi/6. - theta))/2.
-                                        );
-            break;
-        case 4:
-            fRScale = cv::Matx<double, 3>(1,(2*Cos(\[Theta]))/rRange,(-2*Sin(\[Theta]))/rRange);
-            fR = cv::Matx<double, 3, 3>(
-                                        1,1,1,
-                                        -(rRange*Sec(theta)*Sin(Pi/6. + theta))/2., rRange/2., -(rRange*Sec(theta)*Sin(Pi/6. - theta))/2.,
-                                         (rRange*Csc(theta)*Cos(Pi/6. + theta))/2., rRange/2., -(rRange*Csc(theta)*Cos(Pi/6. - theta))/2.
-                                        );
-            break;
-        case 5:
-            fRScale = cv::Matx<double, 3>(1,(-2*Sin(Pi/6. - \[Theta]))/rRange,(2*Cos(Pi/6. - \[Theta]))/rRange);
-            fR = cv::Matx<double, 3, 3>(
-                                        1,1,1,
-                                        (rRange*Csc(Pi/6. - theta)*Sin(Pi/6. + theta))/2., -(rRange*Cos(theta)*Csc(Pi/6. - theta))/2., rRange/2.,
-                                       -(rRange*Sec(Pi/6. - theta)*Cos(Pi/6. + theta))/2., -(rRange*Sin(theta)*Sec(Pi/6. - theta))/2., rRange/2.
+                                        sWrkType( (rRange*CscMinus*SinPlus)/2.), sWrkType(-(rRange*Cos*CscMinus)/2.), sWrkType(rRange/2.),
+                                        sWrkType(-(rRange*SecMinus*CosPlus)/2.), sWrkType(-(rRange*Sin*SecMinus)/2.), sWrkType(rRange/2.)
                                         );
             break;
         default:
