@@ -4431,7 +4431,7 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
             break;
         case 1:
             fRScale = Vec<double, 3>(1,(2*Cos)/rRange,(-2*Sin)/rRange);
-            fR = cv::Matx<double, 3, 3>(
+            fR = cv::Matx<sWrkType, 3, 3>(
                                         1,1,1,
                                         sWrkType(-(rRange*Sec*SinPlus)/2.), sWrkType(rRange/2.), sWrkType(-(rRange*Sec*SinMinus)/2.),
                                         sWrkType( (rRange*Csc*CosPlus)/2.), sWrkType(rRange/2.), sWrkType(-(rRange*Csc*CosMinus)/2.)
@@ -4439,14 +4439,14 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
             break;
         case 2:
             fRScale = Vec<double, 3>(1,(-2*SinMinus)/rRange,(2*CosMinus)/rRange);
-            fR = cv::Matx<double, 3, 3>(
+            fR = cv::Matx<sWrkType, 3, 3>(
                                         1,1,1,
                                         sWrkType( (rRange*CscMinus*SinPlus)/2.), sWrkType(-(rRange*Cos*CscMinus)/2.), sWrkType(rRange/2.),
                                         sWrkType(-(rRange*SecMinus*CosPlus)/2.), sWrkType(-(rRange*Sin*SecMinus)/2.), sWrkType(rRange/2.)
                                         );
             break;
         default:
-            fR = cv::Matx<double, 3, 3>();
+            fR = cv::Matx<sWrkType, 3, 3>();
     }
     
 
