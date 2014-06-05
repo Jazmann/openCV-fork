@@ -4269,9 +4269,9 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransform(cv::
     // Rescale to avoid bit overflow during transform.
     
     int TitRowSum[3] = {
-        std::abs(T(0,0))+std::abs(T(0,1))+std::abs(T(0,2)),
-        std::abs(T(1,0))+std::abs(T(1,1))+std::abs(T(1,2)),
-        std::abs(T(2,0))+std::abs(T(2,1))+std::abs(T(2,2))
+        static_cast<int>(std::abs(T(0,0))+std::abs(T(0,1))+std::abs(T(0,2))),
+        static_cast<int>(std::abs(T(1,0))+std::abs(T(1,1))+std::abs(T(1,2))),
+        static_cast<int>(std::abs(T(2,0))+std::abs(T(2,1))+std::abs(T(2,2)))
     };
     // Find left most bit.
     int TitRowLog2Sum[3] = {0,0,0};
@@ -4315,27 +4315,114 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
     ((-1.0/std::cos((CV_PI - 6*std::fmod(theta, CV_PI/3.))/6.))*std::sin(theta))/2.,\
     ((1.0/std::cos((CV_PI - 6*std::fmod(theta, CV_PI/3.))/6.))*(std::sqrt(3)*std::cos(theta) + std::sin(theta)))/4.);
     
-    double Cos      = std::cos(theta);
-    double CosPlus  = std::cos(CV_PI/6. + theta);
-    double CosMinus = std::cos(CV_PI/6. - theta);
+    int nBits = srcInfo::bitDepth -1; // The number of bits in which to store the numeric value of the matrix (-1 to account for the sign bit)
+    double rRange = std::pow(2,nBits);
+    std::vector<double> halfErrorTheta;
+    switch (nBits) {
+        case 1:
+            halfErrorTheta = {};
+            break;
+        case 2:
+            halfErrorTheta = {0.,0.10886183494346285,0.10886183494346287,0.41473694065483596,0.5235987755982988};
+            break;
+        case 3:
+            halfErrorTheta = {0.,0.04974211481989622,0.24039088244617904,0.2832078931521198,0.4738566607784026,0.5235987755982988};
+            break;
+        case 4:
+            halfErrorTheta = {0.,0.02382875155918041,0.1191873023378467,0.1191873023378467,0.4044114732604521,0.4044114732604521,0.4997700240391184};
+            break;
+        case 5:
+            halfErrorTheta = {0.,0.01167063791933511,0.05679488716658566,0.1044178009296215,0.1545182674211429,0.1545182674211429,0.3690805081771559,0.3690805081771559,0.4191809746686773,0.4668038884317132,0.5119281376789637};
+            break;
+        case 6:
+            halfErrorTheta = {0.,0.0057765174418745,0.02772167522691876,0.03392014437529911,0.05679446852810379,0.0802939605338449,0.104417573788231,0.1291612930085838,0.1722932693638452,0.2165510027160033,0.2165510027160033,0.234638487404298,0.234638487404298,0.2527437737231354,0.2708550018751634,0.2889602881940008,0.2889602881940008,0.3070477728822954,0.3070477728822955,0.3513055062344535,0.394437482589715,0.4191812018100679,0.443304815064454,0.466804307070195,0.4896786312229997,0.49587710037138,0.5178222581564244};
+            break;
+        case 7:
+            halfErrorTheta = {0.,0.002873826466825116,0.01369513420353454,0.01667236271308153,0.02772164604250074,0.04208598593288929,0.0535218498208757,0.06511305351829584,0.06846598524564325,0.0802938944017795,0.0922778712885465,0.1044175146479055,0.1167122289795317,0.1253932727181939,0.1379103799281862,0.1505789772074858,0.1594118816488859,0.1722932290353949,0.1812029944119282,0.2032685061008143,0.2122571930128846,0.2212539001530706,0.2302571800673693,0.2933415955309295,0.3023448754452281,0.3113415825854142,0.3203302694974845,0.3423957811863706,0.3513055465629039,0.3641868939494129,0.373019798390813,0.3856883956701126,0.398205502880105,0.4068865466187671,0.4191812609503933,0.4313209043097523,0.4433048811965193,0.4551327903526555,0.458485722080003,0.4700769257774231,0.4815127896654095,0.4958771295557981,0.5069264128852174,0.5099036413947643,0.5207249491314737};
+            break;
+        case 8:
+            halfErrorTheta = {
+                  0.00000000000000000,  0.001433338769129397, 0.006806555776714487, 0.00826548590429161, 0.01369513229128979, 0.01518002945927459, \
+                  0.02066655537455433,  0.02772163860627415,  0.0333039271920405,   0.03486118185290951, 0.04050139198163311, 0.04618026731815111, \
+                  0.04778449621550018,  0.05352184290195053, 0.05929802636112587, 0.0651130529660851, 0.06678531510543312, 0.07265941521887802, \
+                  0.078572453591325,    0.0845244010891211, 0.0905152171543227, 0.096544849530101, 0.1026132339853463, 0.1087202940392298, \
+                  0.1148659406865638,   0.1191918958508316, 0.1253932702341959, 0.131632808169502, 0.1379103726597715, 0.1422922051640896, \
+                  0.1486240311147137,   0.1530266508792692, 0.1594118777966095, 0.1638344410406033, 0.1702721492848532, 0.1747137794632526, \
+                  0.1812029900437036,   0.1856627783684537, 0.1966794589160462, 0.2011590806639654, 0.2056411405150068, 0.216754631906266, \
+                  0.221253898577271,    0.2257548083454001, 0.2302571796591067, 0.234760830607675, 0.2595405384106058, 0.2595405384106058, \
+                  0.264058237187693,    0.264058237187693,  0.2888379449906238, 0.2933415959391921, 0.2978439672528987, 0.3023448770210279, \
+                  0.3068441436920328,   0.317957635083292,  0.3224396949343334, 0.3269193166822526, 0.3379359972298452, 0.3423957855545952, \
+                  0.3488849961350462,   0.3533266263134456, 0.3597643345576955, 0.3641868978016893, 0.3705721247190296, 0.3749747444835851, \
+                  0.3813065704342092,   0.3856884029385274, 0.3919659674287968, 0.3982055053641029, 0.4044068797474672, 0.408732834911735,  \
+                  0.414878481559069,    0.4209855416129525, 0.4270539260681979, 0.4330835584439761, 0.4390743745091777, 0.4450263220069738, \
+                  0.4509393603794208,   0.4568134604928657, 0.4584857226322137, 0.464300749237173, 0.4700769326963482, 0.4758142793827986, \
+                  0.4774185082801477,   0.4830973836166657, 0.4887375937453894, 0.4902948484062583, 0.4958771369920247, 0.5029322202237445, \
+                  0.5084187461390242,   0.509903643307009,   0.5153332896940071, 0.5167922198215843, 0.5221654368291694};
+            break;
+        case 9:
+            halfErrorTheta = {};
+            break;
+        case 10:
+            halfErrorTheta = {};
+            break;
+        case 11:
+            halfErrorTheta = {};
+            break;
+        case 12:
+            halfErrorTheta = {};
+            break;
+        case 13:
+            halfErrorTheta = {};
+            break;
+        case 14:
+            halfErrorTheta = {};
+            break;
+        case 15:
+            halfErrorTheta = {};
+            break;
+        case 16:
+            halfErrorTheta = {};
+            break;
+        case 17:
+            halfErrorTheta = {};
+            break;
+        case 18:
+            halfErrorTheta = {};
+            break;
+        case 19:
+            halfErrorTheta = {};
+            break;
+            
+        default:
+            halfErrorTheta = {};
+            break;
+    }
+    auto indx = std::lower_bound(halfErrorTheta.cbegin(),halfErrorTheta.cend(), std::fmod(theta, CV_PI/6.));
+    double newTheta = std::floor(6. * theta/CV_PI) * CV_PI/6. + *indx;
     
-    double Sin      = std::sin(theta);
-    double SinPlus  = std::sin(CV_PI/6. + theta);
-    double SinMinus = std::sin(CV_PI/6. - theta);
     
-    double Csc      = std::csc(theta);
-    double CscPlus  = std::csc(CV_PI/6. + theta);
-    double CscMinus = std::csc(CV_PI/6. - theta);
+    double Cos      = std::cos(newTheta);
+    double CosPlus  = std::cos(CV_PI/6. + newTheta);
+    double CosMinus = std::cos(CV_PI/6. - newTheta);
     
-    double Sec      = std::sec(theta);
-    double SecPlus  = std::sec(CV_PI/6. + theta);
-    double SecMinus = std::sec(CV_PI/6. - theta);
+    double Sin      = std::sin(newTheta);
+    double SinPlus  = std::sin(CV_PI/6. + newTheta);
+    double SinMinus = std::sin(CV_PI/6. - newTheta);
+    
+    double Csc      = 1./std::sin(newTheta);
+    double CscPlus  = 1./std::sin(CV_PI/6. + newTheta);
+    double CscMinus = 1./std::sin(CV_PI/6. - newTheta);
+    
+    double Sec      = 1./std::cos(newTheta);
+    double SecPlus  = 1./std::cos(CV_PI/6. + newTheta);
+    double SecMinus = 1./std::cos(CV_PI/6. - newTheta);
 
     
-    switch (std::floor(6*std::mod(theta, CV_PI/2.)/CV_PI)
+    
+    switch (int(std::floor(6* (std::fmod(theta, CV_PI/2.))/CV_PI)))
     {
         case 0:
-            fRScale = cv::Matx<double, 3>(1,(-2*SinPlus)/rRange,(-2*CosPlus)/rRange);
+            fRScale = Vec<double, 3>(1,(-2*SinPlus)/rRange,(-2*CosPlus)/rRange);
             fR = cv::Matx<sWrkType, 3, 3>(
                                         1,1,1,
                                         sWrkType(rRange/2.), sWrkType(-(rRange*Cos*CscPlus)/2.), sWrkType( (rRange*CscPlus*SinMinus)/2.),
@@ -4343,7 +4430,7 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
                                         );
             break;
         case 1:
-            fRScale = cv::Matx<double, 3>(1,(2*Cos)/rRange,(-2*Sin)/rRange);
+            fRScale = Vec<double, 3>(1,(2*Cos)/rRange,(-2*Sin)/rRange);
             fR = cv::Matx<double, 3, 3>(
                                         1,1,1,
                                         sWrkType(-(rRange*Sec*SinPlus)/2.), sWrkType(rRange/2.), sWrkType(-(rRange*Sec*SinMinus)/2.),
@@ -4351,7 +4438,7 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
                                         );
             break;
         case 2:
-            fRScale = cv::Matx<double, 3>(1,(-2*SinMinus)/rRange,(2*CosMinus)/rRange);
+            fRScale = Vec<double, 3>(1,(-2*SinMinus)/rRange,(2*CosMinus)/rRange);
             fR = cv::Matx<double, 3, 3>(
                                         1,1,1,
                                         sWrkType( (rRange*CscMinus*SinPlus)/2.), sWrkType(-(rRange*Cos*CscMinus)/2.), sWrkType(rRange/2.),
@@ -4452,7 +4539,7 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setTransformFromA
 
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRanges(){    
     // Setup internal data
-    cv::Matx<int, 3, 8> RGBBox({
+    cv::Matx<sWrkType, 3, 8> RGBBox({
         0, 1, 0, 0, 0, 1, 1, 1,
         0, 0, 1, 0, 1, 0, 1, 1,
         0, 0, 0, 1, 1, 1, 0, 1});
@@ -4471,74 +4558,74 @@ template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setuCinSrc(Vec<do
     int C[3]; // The center point for the distribution function in the rotated color space
     Vec<double, 3> newC_src_temp(newC(indxA),newC(indxB),newC(indxC));
     uC_src = newC_src_temp; // The center point for the distribution function in the source color space scaled to 0:1
-    uC = uT * uC_src - uTMin;
-    C_dst[0] = TRange[0] * uC(0); C_dst[1] = TRange[1] * uC(1); C_dst[2] = TRange[2] * uC(2);
-    C_src[0] = (srcInfo::max - srcInfo::min) * uC_src(0); C_src[1] = (srcInfo::max - srcInfo::min) * uC_src(1); C_src[2] = (srcInfo::max - srcInfo::min) * uC_src(2);
-    C[0] = TRange[0] * uC(0); C[1] = TRange[1] * uC(1); C[2] = TRange[2] * uC(2);
+    uC_wrk = uT * uC_src - uTMin;
+    qC_wrk[0] = TRange[0] * uC_wrk(0); qC_wrk[1] = TRange[1] * uC_wrk(1); qC_wrk[2] = TRange[2] * uC_wrk(2);
+    qC_src[0] = (srcInfo::max - srcInfo::min) * uC_src(0); qC_src[1] = (srcInfo::max - srcInfo::min) * uC_src(1); qC_src[2] = (srcInfo::max - srcInfo::min) * uC_src(2);
+    C[0] = TRange[0] * uC_wrk(0); C[1] = TRange[1] * uC_wrk(1); C[2] = TRange[2] * uC_wrk(2);
 };
 
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setCinSrc(Vec<int, 3> newC_src){
     Vec<srcType, 3> newC_src_temp(srcType(newC_src(indxA)),srcType(newC_src(indxB)),srcType(newC_src(indxC)));
-    C_src = newC_src_temp; // The center point for the distribution function in the source color space
-    uC_src = C_src/(srcInfo::max - srcInfo::min);
-    uC = uT * uC_src - uTMin;
-    C_dst[0] = TRange[0] * uC(0)+ TMin[0];
-    C_dst[1] = TRange[1] * uC(1)+ TMin[1];
-    C_dst[2] = TRange[2] * uC(2)+ TMin[2];
-    C[0] = TRange[0] * uC(0) + TMin[0]; C[1] = TRange[1] * uC(1) + TMin[1]; C[2] = TRange[2] * uC(2) + TMin[2];
+    qC_src = newC_src_temp; // The center point for the distribution function in the source color space
+    uC_src = qC_src/(srcInfo::max - srcInfo::min);
+    uC_wrk = uT * uC_src - uTMin;
+    qC_wrk[0] = TRange[0] * uC_wrk(0)+ TMin[0];
+    qC_wrk[1] = TRange[1] * uC_wrk(1)+ TMin[1];
+    qC_wrk[2] = TRange[2] * uC_wrk(2)+ TMin[2];
+    C[0] = TRange[0] * uC_wrk(0) + TMin[0]; C[1] = TRange[1] * uC_wrk(1) + TMin[1]; C[2] = TRange[2] * uC_wrk(2) + TMin[2];
 };
 
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setuC(Vec<double, 3> newC){
     Vec<double, 3> shift(0,0.5,0.5);
     Vec<double, 3> newC_src_temp(newC(indxA),newC(indxB),newC(indxC));
-    uC = newC_src_temp; // The center point for the distribution function in the source color space
-    C_dst[0] = (dstInfo::max - dstInfo::min) * uC[0] + dstInfo::min;
-    C_dst[1] = (dstInfo::max - dstInfo::min) * uC[1] + dstInfo::min;
-    C_dst[2] = (dstInfo::max - dstInfo::min) * uC[2] + dstInfo::min;
-    uC_src = uiT * (uC - shift);
-    C_src[0] = (srcInfo::max - srcInfo::min) * uC_src[0] + srcInfo::min;
-    C_src[1] = (srcInfo::max - srcInfo::min) * uC_src[1] + srcInfo::min;
-    C_src[2] = (srcInfo::max - srcInfo::min) * uC_src[2] + srcInfo::min;
+    uC_wrk = newC_src_temp; // The center point for the distribution function in the source color space
+    qC_wrk[0] = (dstInfo::max - dstInfo::min) * uC_wrk[0] + dstInfo::min;
+    qC_wrk[1] = (dstInfo::max - dstInfo::min) * uC_wrk[1] + dstInfo::min;
+    qC_wrk[2] = (dstInfo::max - dstInfo::min) * uC_wrk[2] + dstInfo::min;
+    uC_src = uiT * (uC_wrk - shift);
+    qC_src[0] = (srcInfo::max - srcInfo::min) * uC_src[0] + srcInfo::min;
+    qC_src[1] = (srcInfo::max - srcInfo::min) * uC_src[1] + srcInfo::min;
+    qC_src[2] = (srcInfo::max - srcInfo::min) * uC_src[2] + srcInfo::min;
 
-    C[0] = TRange[0] * uC(0) + TMin[0]; C[1] = TRange[1] * uC(1) + TMin[1]; C[2] = TRange[2] * uC(2) + TMin[2];
+    C[0] = TRange[0] * uC_wrk(0) + TMin[0]; C[1] = TRange[1] * uC_wrk(1) + TMin[1]; C[2] = TRange[2] * uC_wrk(2) + TMin[2];
     
 };
 
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setC(Vec<int, 3> newC){
     Vec<double, 3> shift(0,0.5,0.5);
     C[0] = newC(indxA); C[1] = newC(indxB); C[2] = newC(indxC);
-    C_dst[0] = newC(indxA); C_dst[1] = newC(indxB); C_dst[2] = newC(indxC);
-    uC[0] = (newC(indxA)- TMin[0])/TRange[0];
-    uC[1] = (newC(indxB)- TMin[1])/TRange[1];
-    uC[2] = (newC(indxC)- TMin[2])/TRange[2];
-    uC_src = uiT * (uC - shift);
-    C_src[0] = (srcInfo::max - srcInfo::min) * uC_src(0) + srcInfo::min;
-    C_src[1] = (srcInfo::max - srcInfo::min) * uC_src(1) + srcInfo::min;
-    C_src[2] = (srcInfo::max - srcInfo::min) * uC_src(2) + srcInfo::min;
+    qC_wrk[0] = newC(indxA); qC_wrk[1] = newC(indxB); qC_wrk[2] = newC(indxC);
+    uC_wrk[0] = (newC(indxA)- TMin[0])/TRange[0];
+    uC_wrk[1] = (newC(indxB)- TMin[1])/TRange[1];
+    uC_wrk[2] = (newC(indxC)- TMin[2])/TRange[2];
+    uC_src = uiT * (uC_wrk - shift);
+    qC_src[0] = (srcInfo::max - srcInfo::min) * uC_src(0) + srcInfo::min;
+    qC_src[1] = (srcInfo::max - srcInfo::min) * uC_src(1) + srcInfo::min;
+    qC_src[2] = (srcInfo::max - srcInfo::min) * uC_src(2) + srcInfo::min;
 };
 
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setG(Vec<double, 3> newG){
-    G[0] = newG(indxA); G[1] = newG(indxB); G[2] = newG(indxC);
+    qG[0] = newG(indxA); qG[1] = newG(indxB); qG[2] = newG(indxC);
 };
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setuG(Vec<double, 3> newG){
-    G[0] = newG(indxA); G[1] = newG(indxB); G[2] = newG(indxC);
+    qG[0] = newG(indxA); qG[1] = newG(indxB); qG[2] = newG(indxC);
 };
 
 
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRedDistributionErf(){
-    setRedDistributionErf(C[dstRGBIndices[0]],G[dstRGBIndices[0]]);
+    setRedDistributionErf(C[dstRGBIndices[0]],qG[dstRGBIndices[0]]);
 };
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setRedDistributionErf(  int center, double gradient){
     redScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (   gradient, center, wrkType((srcInfo::max - srcInfo::min) * TMin[0]), wrkType((srcInfo::max - srcInfo::min) * (TMin[0]+TRange[0])), dstType(dstInfo::min), dstType(dstInfo::max));
 };
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setGreenDistributionErf(){
-    setGreenDistributionErf(C[dstRGBIndices[1]],G[dstRGBIndices[1]]);
+    setGreenDistributionErf(C[dstRGBIndices[1]],qG[dstRGBIndices[1]]);
 };
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setGreenDistributionErf(int center, double gradient){
     greenScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> ( gradient, center, wrkType((srcInfo::max - srcInfo::min) * TMin[1]), wrkType((srcInfo::max - srcInfo::min) * (TMin[1]+TRange[1])), dstType(dstInfo::min), dstType(dstInfo::max));
     };
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setBlueDistributionErf(){
-    setBlueDistributionErf(C[dstRGBIndices[2]],G[dstRGBIndices[2]]);
+    setBlueDistributionErf(C[dstRGBIndices[2]],qG[dstRGBIndices[2]]);
 };
 template<int src_t, int dst_t> void cv::RGB2Rot<src_t, dst_t>::setBlueDistributionErf( int center, double gradient){
     blueScale = new distributeErf<wrkInfo::dataType, dstInfo::dataType> (  gradient, center, wrkType((srcInfo::max - srcInfo::min) * TMin[2]), wrkType((srcInfo::max - srcInfo::min) * (TMin[2]+TRange[2])), dstType(dstInfo::min), dstType(dstInfo::max));

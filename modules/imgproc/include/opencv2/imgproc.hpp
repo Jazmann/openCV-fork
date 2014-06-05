@@ -625,7 +625,7 @@ template<int src_t, int dst_t> class CV_EXPORTS RGB2Rot: public colorSpaceConver
 
         cv::Matx<double, 3, 3> uT, uiT; // The transformation matrix in 0:1 scale
         cv::Matx<double, 3, 3> R, fR; // The transformation matrix in 0:1 scale
-        cv::Matx<double, 3> fRScale; // The transformation matrix in 0:1 scale
+        Vec<double, 3> fRScale; // The transformation matrix in 0:1 scale
         Vec<double, dstInfo::channels> uTRange, uTMin, uTMax; // The range info for the result of the transformed space. The axis lengths and positions in the 0:1 space.
         cv::Matx<sWrkType, 3, 3> T, iT; // The transformation matrix without overflow protection in the source / destination scale
         sWrkType M[dstInfo::channels][srcInfo::channels]; // The working matrix for the transform computation with overflow protection.
