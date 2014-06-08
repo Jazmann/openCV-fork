@@ -287,12 +287,13 @@ template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distribute
         dMaxShifted = (dMax + shiftednErfConstant);
     };
 
-template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distributeErfParameters(double _g, typename distributeErfParameters::srcType _c, typename distributeErfParameters::srcType _sMin, typename distributeErfParameters::srcType _sMax, typename distributeErfParameters::dstType _dMin, typename distributeErfParameters::dstType _dMax): c(_c), g(_g), sMin(_sMin), sMax(_sMax), dMin(_dMin), dMax(_dMax)
+    
+template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distributeErfParameters(double _g, double _uC, typename distributeErfParameters::srcType _sMin, typename distributeErfParameters::srcType _sMax, typename distributeErfParameters::dstType _dMin, typename distributeErfParameters::dstType _dMax): uC(_uC), g(_g), sMin(_sMin), sMax(_sMax), dMin(_dMin), dMax(_dMax)
     {
         CV_Assert((int)sMin <= (int)c && (int)c <= (int)sMax && (int)dMin <= (int)dMax);
         sRange = (sMax - sMin);
         dRange = (dMax - dMin);
-        uC = double(c-sMin)/double(sRange);
+        c = srcType(uC * sRange) + sMin;
         
         ErfA = erf(g * uC);
         ErfB = erf((g*(1 - uC)));
@@ -302,7 +303,7 @@ template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distribute
         
         sUnitGrad[0] = std::floor(c - (sRange * std::sqrt(std::log((2*dRange * g)/(ErfAB  * std::sqrt(CV_PI) * sRange))))/g);
         sUnitGrad[1] = std::ceil( c + (sRange * sqrt(log((2*dRange * g)/(ErfAB * std::sqrt(CV_PI) * sRange))))/g);
-        ull = 1./dRange; uul = 1. - ull; // double(dRange - 1)/dRange; 
+        ull = 1./dRange; uul = 1. - ull; // double(dRange - 1)/dRange;
         sLowHigh[0] = std::floor(c + sRange * erfinv(ull*ErfB-uul*ErfA)/g);
         sLowHigh[1] = std::ceil( c - sRange * erfinv(ull*ErfA-uul*ErfB)/g);
         
@@ -311,6 +312,7 @@ template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distribute
         
         useLookUpTable = sUnitGrad[0] - sLowHigh[0] < lookUpTableMax;
         linearDistribution = sUnitGrad[0] - sLowHigh[0] < nonLinearMin;
+        linearGrad = double(dRange)/double(sLowHigh[1] - sLowHigh[0]);
         
         dUnitGrad[0] = shift + scale * erf( g * (sUnitGrad[0] - c) / sRange);
         dUnitGrad[1] = shift + scale * erf( g * (sUnitGrad[1] - c) / sRange);
@@ -318,14 +320,14 @@ template<int src_t, int dst_t> distributeErfParameters<src_t, dst_t>::distribute
         shiftednErfConstant = sUnitGrad[1] + dUnitGrad[0] - sUnitGrad[0] - dUnitGrad[1];
         dMaxShifted = (dMax + shiftednErfConstant);
     };
-
     
 template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf()
     {
-        srcType sMax = srcType::max; srcType sMin = srcType::min;
-        dstType dMax = dstType::max; dstType dMin = dstType::min;
-        par(1.0,srcType((sMax-sMin)/2),sMin,sMax,dMin,dMax);
+        par();
     };
+template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf(distributeErfParameters<src_t, dst_t> _par)
+    {
+        par = _par;    };
 
 template<int src_t, int dst_t> distributeErf<src_t, dst_t>::distributeErf(double _g, typename distributeErf::srcType _c, typename distributeErf::srcType sMin, typename distributeErf::srcType sMax, typename distributeErf::dstType dMin, typename distributeErf::dstType dMax):par(_g,_c,sMin,sMax,dMin,dMax)
     {
@@ -343,6 +345,9 @@ template<int src_t, int dst_t>  void distributeErf<src_t, dst_t>::operator()(con
     };
     
     
+template<int src_t, int dst_t> distributeErfCompact<src_t, dst_t>::distributeErfCompact(distributeErfParameters<src_t, dst_t> _par)
+    {
+        par = _par;    };
 template<int src_t, int dst_t> distributeErfCompact<src_t, dst_t>::distributeErfCompact(double _g, typename distributeErfCompact::srcType _c, typename distributeErfCompact::srcType sMin, typename distributeErfCompact::srcType sMax, typename distributeErfCompact::dstType dMin, typename distributeErfCompact::dstType dMax): par(_g,_c,sMin,sMax,dMin,dMax)
     {
         CV_Assert((int)sMin <= (int)_c && (int)_c <= (int)sMax && (int)dMin <= (int)dMax);    };
@@ -368,6 +373,32 @@ template<int src_t, int dst_t>  void distributeErfCompact<src_t, dst_t>::operato
         }
         
     };
+    
+    
+template<int src_t, int dst_t> distributeLinear<src_t, dst_t>::distributeLinear()
+    {
+        par();
+    };
+template<int src_t, int dst_t> distributeLinear<src_t, dst_t>::distributeLinear(distributeErfParameters<src_t, dst_t> _par)
+    {
+        par = _par;
+    };
+    
+template<int src_t, int dst_t> distributeLinear<src_t, dst_t>::distributeLinear(double _g, double _c, typename distributeLinear::srcType sMin, typename distributeLinear::srcType sMax, typename distributeLinear::dstType dMin, typename distributeLinear::dstType dMax): par(_g,_c,sMin,sMax,dMin,dMax)    {
+        CV_Assert((int)sMin <= (int)c && (int)c <= (int)sMax && (int)dMin <= (int)sMax);
+    };
+    
+template<int src_t, int dst_t>  void distributeLinear<src_t, dst_t>::operator()(const typename distributeLinear::srcType src, typename distributeLinear::dstType dst) const
+    {
+        if(src <= par.sLowHigh[0]){
+            dst = par.dMin;
+        }else if(src >= par.sLowHigh[1]){
+            dst = par.dMax;
+        }else{
+            dst = dstType( par.linearGrad * (src - par.sLowHigh[0]));
+        };
+    };
+    
 
     
 template<int src_t, int dst_t> distributePartition<src_t, dst_t>::distributePartition(typename distributePartition::srcType _sMinCutoff, typename distributePartition::srcType _sMaxCutoff, typename distributePartition::srcType _sMin, typename distributePartition::srcType _sMax, typename distributePartition::dstType _dMin, typename distributePartition::dstType _dMax):sMinCutoff(_sMinCutoff), sMaxCutoff(_sMaxCutoff)    {
@@ -384,43 +415,41 @@ template<int src_t, int dst_t>  void distributePartition<src_t, dst_t>::operator
         
     };
 
-
     
-template<int src_t, int dst_t> distributeLinear<src_t, dst_t>::distributeLinear()
-    {
-        srcType sMax = srcType::max; srcType sMin = srcType::min;
-        dstType dMax = dstType::max; dstType dMin = dstType::min;
-        
-        dstType sRange = (sMax - sMin);
-        dstType dRange = (dMax - dMin);
-        g =  wrkType(dRange)/wrkType(sRange); // When _g is 1 the conversion spans the range.
-        c = dstType(wrkType(sMax + sMin)/2.0); // _c is the center of the line in the src dimension.
-        fMin = sMin;
-        fMax = sMax;
-    };
+//    template<int src_t, int dst_t> distributeLinear<src_t, dst_t>::distributeLinear()
+//    {
+//        srcType sMax = srcType::max; srcType sMin = srcType::min;
+//        dstType dMax = dstType::max; dstType dMin = dstType::min;
+//        
+//        dstType sRange = (sMax - sMin);
+//        dstType dRange = (dMax - dMin);
+//        g =  wrkType(dRange)/wrkType(sRange); // When _g is 1 the conversion spans the range.
+//        c = dstType(wrkType(sMax + sMin)/2.0); // _c is the center of the line in the src dimension.
+//        fMin = sMin;
+//        fMax = sMax;
+//    };
 
-   // distributeLinear(wrkType _g, srcType _c, srcType sMin, srcType sMax, dstType dMin, dMax)
-template<int src_t, int dst_t> distributeLinear<src_t, dst_t>::distributeLinear(typename distributeLinear::wrkType _g, typename distributeLinear::srcType _c, typename distributeLinear::srcType sMin, typename distributeLinear::srcType sMax, typename distributeLinear::dstType _dMin, typename distributeLinear::dstType _dMax): dMin(_dMin), dMax(_dMax)
-    {        
-        CV_Assert((int)sMin <= (int)c && (int)c <= (int)sMax && (int)dMin <= (int)sMax);
-        dstType sRange = (sMax - sMin);
-        dstType dRange = (dMax - dMin);
-        g = _g * wrkType(dRange)/wrkType(sRange); // When _g is 1 the conversion spans the range.
-        c = dstType(wrkType(dRange)/2.0 - g * _c); // _c is the center of the line in the src dimension.
-        fMin = srcType(wrktype(dMin - c)/g);
-        fMax = srcType(wrktype(dMax - c)/g);
-    };
-    
-template<int src_t, int dst_t>  void distributeLinear<src_t, dst_t>::operator()(const typename distributeLinear::srcType src, typename distributeLinear::dstType dst) const
-    {
-        if(src <= fMin){
-            dst = dMin;
-        }else if(src >= fMax){
-            dst = dMax;
-        }else{
-            dst = dstType(g * src) + c;
-        };
-    };
+//template<int src_t, int dst_t> distributeLinear<src_t, dst_t>::distributeLinear(typename distributeLinear::wrkType _g, typename distributeLinear::srcType _c, typename distributeLinear::srcType sMin, typename distributeLinear::srcType sMax, typename distributeLinear::dstType _dMin, typename distributeLinear::dstType _dMax): dMin(_dMin), dMax(_dMax)
+//    {        
+//        CV_Assert((int)sMin <= (int)c && (int)c <= (int)sMax && (int)dMin <= (int)sMax);
+//        dstType sRange = (sMax - sMin);
+//        dstType dRange = (dMax - dMin);
+//        g = _g * wrkType(dRange)/wrkType(sRange); // When _g is 1 the conversion spans the range.
+//        c = dstType(wrkType(dRange)/2.0 - g * _c); // _c is the center of the line in the src dimension.
+//        fMin = srcType(wrktype(dMin - c)/g);
+//        fMax = srcType(wrktype(dMax - c)/g);
+//    };
+//    
+//template<int src_t, int dst_t>  void distributeLinear<src_t, dst_t>::operator()(const typename distributeLinear::srcType src, typename distributeLinear::dstType dst) const
+//    {
+//        if(src <= fMin){
+//            dst = dMin;
+//        }else if(src >= fMax){
+//            dst = dMax;
+//        }else{
+//            dst = dstType(g * src) + c;
+//        };
+//    };
     
     
 //    template<int src_t, int dst_t> distributeEuclideanMetric<src_t, dst_t>::distributeEuclideanMetric()
@@ -3058,58 +3087,7 @@ struct mRGBA2RGBA
     }
 };
         
-    ////////////////// Convert to Rotated ColorSpace /////////////////
     
-    /*template<typename _Tp> struct RGB2Rot
-    {
-         typedef _Tp src_channel_type; typedef _Tp dst_channel_type;
-        
-        Matx<int, 3, 3> T;
-        Vec<float, 3> TScale;
-        Vec<int, 3> TMin; // The minimum value in each row of Ti. This is the lowest component in the new axial vectors expressed in RGB space.
-        Vec<int, 3> TRange; // TMax - TMin. The highest minus the lowest components of the new axial vectors.
-        
-        // The transform to the new color space is (T vec - 255 TMin)/TRange. 255 is the range of 8bit RGB and can be replaced directly with a different range for 16 and 32 bit RGB spaces. The division by TRange is the direct element wise division and can safely be rounded to recast in the required bit depth.
-                
-        RGB2Rot(Matx<int, 3, 3>& _T, Vec<int, 3>&  _TRange, Vec<float,3>& _TScale) : T(_T), TRange(_TRange), TScale(_TScale) {}
-        
-        void operator()(const _Tp* src, _Tp* dst, int n) const
-        {
-            n *= 3;
-            for( int i = 0; i < n; i += 3, src += 3 )
-            {
-                dst[i] = saturate_cast<uchar>((T * src[i] - TMin )/(TRange) );
-            }
-        }
-    };*/
-    
- /*   template<typename _Tp> struct RGB2Rot
-    {
-         typedef _Tp src_channel_type; typedef _Tp dst_channel_type;
-        
-        Matx<float, 3, 4> Ms3d3;
-        
-        // The transform to the new color space is (T vec - 255 TMin)/TRange. 255 is the range of 8bit RGB and can be replaced directly with a different range for 16 and 32 bit RGB spaces. The division by TRange is the direct element wise division and can safely be rounded to recast in the required bit depth.
-        
-        RGB2Rot(Matx<int, 3, 3>& T, Vec<int, 3>&  TRange, Vec<int,3>& TMin)// NOTE: MatX constructor should be able to be constructed using the {} notation using C++11 features
-        {
-            Ms3d3 = {\
-                ((float)T(0, 0)/(float)TRange[0]), ((float)T(0, 1)/(float)TRange[1]), ((float)T(0, 2)/(float)TRange[2]), ((float)TMin[0]/(float)TRange[0]), \
-                ((float)T(1, 0)/(float)TRange[0]), ((float)T(1, 1)/(float)TRange[1]), ((float)T(1, 2)/(float)TRange[2]), ((float)TMin[1]/(float)TRange[1]), \
-                ((float)T(2, 0)/(float)TRange[0]), ((float)T(2, 1)/(float)TRange[1]), ((float)T(2, 2)/(float)TRange[2]), ((float)TMin[2]/(float)TRange[2])
-                };
-        };
-  
-        void operator()(const _Tp* src, _Tp* dst, int n) const
-        {
-     //       cv::transform(*src, dst, Ms3d3);
-        }
-    };
-  */
-/*    class color_Space_Converter{
-        public :
-            int src_data_type=0, dst_data_type=0;
-    }; */ // Now defined in hpp
         
 
 #ifdef HAVE_OPENCL

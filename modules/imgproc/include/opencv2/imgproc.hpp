@@ -499,13 +499,14 @@ template<int src_t, int dst_t> class CV_EXPORTS distributeErfParameters
         double ull, uul;
         srcType sLowHigh[2];
         bool useLookUpTable, linearDistribution;
+        double linearGrad;
         
         dstType dUnitGrad[2];
         srcType linearConstant;
         dstType shiftednErfConstant, dMaxShifted;
         
         distributeErfParameters();
-        distributeErfParameters( double _g, srcType _c, srcType sMin = srcInfo::min, srcType sMax = srcInfo::max, dstType dMin = dstInfo::min, dstType dMax = dstInfo::max);
+        distributeErfParameters( double _g, double _uC, srcType sMin = srcInfo::min, srcType sMax = srcInfo::max, dstType dMin = dstInfo::min, dstType dMax = dstInfo::max);
     };
 
     
@@ -532,6 +533,7 @@ template<int src_t, int dst_t>  class  CV_EXPORTS distributeErf: public depthCon
         dstType* map; // [cv::Data_Type<src_t>::max-cv::Data_Type<src_t>::min];
         
         distributeErf();
+        distributeErf( distributeErfParameters<src_t, dst_t> par);
         distributeErf( double _g, srcType _c, srcType sMin, srcType sMax, dstType dMin, dstType dMax);
         void operator()(const srcType src, dstType &dst);
     };
@@ -545,6 +547,7 @@ template<int src_t, int dst_t>  class  CV_EXPORTS distributeErf: public depthCon
         distributeErfParameters<src_t, dst_t> par;
         dstType* map; // [cv::Data_Type<src_t>::max-cv::Data_Type<src_t>::min];
         distributeErfCompact();
+        distributeErfCompact( distributeErfParameters<src_t, dst_t> par);
         distributeErfCompact( double _g, srcType _c, srcType sMin, srcType sMax, dstType dMin, dstType dMax);
         void operator()(const srcType src, dstType &dst);
     };
@@ -568,12 +571,14 @@ template<int src_t, int dst_t>  class CV_EXPORTS distributeLinear: public depthC
         using srcType = typename distributeLinear::srcType;
         using dstType = typename distributeLinear::dstType;
         using wrkType = typename distributeLinear::wrkType;
+        distributeErfParameters<src_t, dst_t> par;
         srcType fMin, fMax;
         wrkType g;
         dstType c, dMin, dMax;
         
         distributeLinear();
-        distributeLinear( wrkType _g, srcType _c, srcType sMin, srcType sMax, dstType dMin, dstType dMax);
+        distributeLinear( distributeErfParameters<src_t, dst_t> par);
+        distributeLinear( double _g, double _c, srcType sMin, srcType sMax, dstType dMin, dstType dMax);
         void operator()(const srcType src, dstType dst) const;
     };
         
@@ -634,6 +639,7 @@ template<int src_t, int dst_t> class CV_EXPORTS colorSpaceConverter
 
         Vec<double, dstInfo::channels> uRRange, uRMin, uRMax; // The range info for the result of the transformed space. The axis lengths and positions in the 0:1 space.
         
+        distributeErfParameters<wrkInfo::dataType, dstInfo::dataType> redParam, greenParam, blueParam;
         depthConverter<wrkInfo::dataType, dstInfo::dataType> *redScale, *greenScale, *blueScale;
         
         RGB2Rot_int(); // todo set default distribution functions.
