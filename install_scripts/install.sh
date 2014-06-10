@@ -5,12 +5,14 @@ sudo ECHO "Hello superuser!"
 
 
 sudo cp -R ./install/include /opt/local
+sudo cp -R ./install/lib/*.a /opt/local/lib
 sudo cp ./install/lib/pkgconfig/opencv.pc /opt/local/lib/pkgconfig/
 sudo find ./install/lib/libopencv*.dylib -execdir ./change_install_name.sh {} /opt/local/lib/ \;
 sudo cp -R ./install/bin /opt/local
 
 
 sudo cp -R ./install/include /usr/local
+sudo cp -R ./install/lib/*.a /usr/local/lib
 sudo cp ./install/lib/pkgconfig/opencv.pc /usr/local/lib/pkgconfig/
 sudo find ./install/lib/libopencv*.dylib -execdir ./change_install_name.sh {} /usr/local/lib/ \;
 sudo cp -R ./install/bin /usr/local
