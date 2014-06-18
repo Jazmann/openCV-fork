@@ -42,6 +42,7 @@ def build_xcode(srcroot, buildroot, target, arch):
                 "-DCMAKE_TOOLCHAIN_FILE=%s/platforms/ios/cmake/Toolchains/Toolchain-%s_Xcode.cmake " +
                 "-DBUILD_opencv_world=ON " +
                 "-DCMAKE_INSTALL_PREFIX=install") % (build_type, srcroot, target)
+                "-DCMAKE_C_FLAGS=\"-Wno-implicit-function-declaration\" " +
     # if cmake cache exists, just rerun cmake to update OpenCV.xproj if necessary
     if os.path.isfile(os.path.join(builddir, "CMakeCache.txt")):
         os.system("cmake %s ." % (cmakeargs,))

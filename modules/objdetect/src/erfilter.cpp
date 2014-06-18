@@ -294,7 +294,7 @@ void ERFilterNM::er_tree_extract( InputArray image )
         push_new_component = false;
 
         // explore the (remaining) edges to the neighbors to the current pixel
-        for (current_edge = current_edge; current_edge < 4; current_edge++)
+        for ( ; current_edge < 4; current_edge++)
         {
 
             int neighbour_pixel = current_pixel;
@@ -1949,7 +1949,6 @@ private:
     double (dissimilarity::*distfn) (const int_fast32_t, const int_fast32_t) const;
 
     auto_array_ptr<double> precomputed;
-    double * precomputed2;
 
     double * V;
     const double * V_data;
@@ -2935,7 +2934,6 @@ void erGrouping(InputArrayOfArrays _src, vector<vector<ERStat> > &regions, const
             float a1=((int)meaningful_clusters.at(i).size()*sumxy-sumx*sumy) /
                ((int)meaningful_clusters.at(i).size()*sumx2-sumx*sumx);
 
-            vector<float> data;
             if (a1 != a1)
                 data_arrays.at(i).push_back(1.f);
             else

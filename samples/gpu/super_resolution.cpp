@@ -1,6 +1,8 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include <ctype.h>
+
 #include "opencv2/core.hpp"
 #include "opencv2/core/utility.hpp"
 #include "opencv2/highgui.hpp"
@@ -53,7 +55,6 @@ static Ptr<DenseOpticalFlowExt> createOptFlow(const string& name, bool useGpu)
 
 int main(int argc, const char* argv[])
 {
-    useOclChanged = false;
     CommandLineParser cmd(argc, argv,
         "{ v video      |           | Input video }"
         "{ o output     |           | Output video }"

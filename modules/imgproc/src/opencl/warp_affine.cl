@@ -64,38 +64,59 @@
 
 #define noconvert
 
+#ifndef ST
+#define ST T
+#endif
+
+#if cn != 3
+#define loadpix(addr)  *(__global const T*)(addr)
+#define storepix(val, addr)  *(__global T*)(addr) = val
+#define scalar scalar_
+#define pixsize (int)sizeof(T)
+#else
+#define loadpix(addr)  vload3(0, (__global const T1*)(addr))
+#define storepix(val, addr) vstore3(val, 0, (__global T1*)(addr))
+#ifdef INTER_NEAREST
+#define scalar (T)(scalar_.x, scalar_.y, scalar_.z)
+#else
+#define scalar (WT)(scalar_.x, scalar_.y, scalar_.z)
+#endif
+#define pixsize ((int)sizeof(T1)*3)
+#endif
+
 #ifdef INTER_NEAREST
 
 __kernel void warpAffine(__global const uchar * srcptr, int src_step, int src_offset, int src_rows, int src_cols,
                          __global uchar * dstptr, int dst_step, int dst_offset, int dst_rows, int dst_cols,
-                         __constant CT * M, T scalar)
+                         __constant CT * M, ST scalar_)
 {
     int dx = get_global_id(0);
-    int dy = get_global_id(1);
+    int dy0 = get_global_id(1) * rowsPerWI;
 
-    if (dx < dst_cols && dy < dst_rows)
+    if (dx < dst_cols)
     {
         int round_delta = (AB_SCALE >> 1);
 
-        int X0 = rint(M[0] * dx * AB_SCALE);
-        int Y0 = rint(M[3] * dx * AB_SCALE);
-        X0 += rint((M[1]*dy + M[2]) * AB_SCALE) + round_delta;
-        Y0 += rint((M[4]*dy + M[5]) * AB_SCALE) + round_delta;
+        int X0_ = rint(M[0] * dx * AB_SCALE);
+        int Y0_ = rint(M[3] * dx * AB_SCALE);
+        int dst_index = mad24(dy0, dst_step, mad24(dx, pixsize, dst_offset));
 
-        short sx = convert_short_sat(X0 >> AB_BITS);
-        short sy = convert_short_sat(Y0 >> AB_BITS);
-
-        int dst_index = mad24(dy, dst_step, dst_offset + dx * (int)sizeof(T));
-        __global T * dst = (__global T *)(dstptr + dst_index);
-
-        if (sx >= 0 && sx < src_cols && sy >= 0 && sy < src_rows)
+        for (int dy = dy0, dy1 = min(dst_rows, dy0 + rowsPerWI); dy < dy1; ++dy, dst_index += dst_step)
         {
-            int src_index = mad24(sy, src_step, src_offset + sx * (int)sizeof(T));
-            __global const T * src = (__global const T *)(srcptr + src_index);
-            dst[0] = src[0];
+            int X0 = X0_ + rint(fma(M[1], dy, M[2]) * AB_SCALE) + round_delta;
+            int Y0 = Y0_ + rint(fma(M[4], dy, M[5]) * AB_SCALE) + round_delta;
+
+            short sx = convert_short_sat(X0 >> AB_BITS);
+            short sy = convert_short_sat(Y0 >> AB_BITS);
+
+            if (sx >= 0 && sx < src_cols && sy >= 0 && sy < src_rows)
+            {
+                int src_index = mad24(sy, src_step, mad24(sx, pixsize, src_offset));
+                storepix(loadpix(srcptr + src_index), dstptr + dst_index);
+            }
+            else
+                storepix(scalar, dstptr + dst_index);
         }
-        else
-            dst[0] = scalar;
     }
 }
 
@@ -103,56 +124,66 @@ __kernel void warpAffine(__global const uchar * srcptr, int src_step, int src_of
 
 __kernel void warpAffine(__global const uchar * srcptr, int src_step, int src_offset, int src_rows, int src_cols,
                          __global uchar * dstptr, int dst_step, int dst_offset, int dst_rows, int dst_cols,
-                         __constant CT * M, WT scalar)
+                         __constant CT * M, ST scalar_)
 {
     int dx = get_global_id(0);
-    int dy = get_global_id(1);
+    int dy0 = get_global_id(1) * rowsPerWI;
 
-    if (dx < dst_cols && dy < dst_rows)
+    if (dx < dst_cols)
     {
         int round_delta = AB_SCALE/INTER_TAB_SIZE/2;
 
         int tmp = (dx << AB_BITS);
-        int X0 = rint(M[0] * tmp);
-        int Y0 = rint(M[3] * tmp);
-        X0 += rint((M[1]*dy + M[2]) * AB_SCALE) + round_delta;
-        Y0 += rint((M[4]*dy + M[5]) * AB_SCALE) + round_delta;
-        X0 = X0 >> (AB_BITS - INTER_BITS);
-        Y0 = Y0 >> (AB_BITS - INTER_BITS);
+        int X0_ = rint(M[0] * tmp);
+        int Y0_ = rint(M[3] * tmp);
 
-        short sx = convert_short_sat(X0 >> INTER_BITS);
-        short sy = convert_short_sat(Y0 >> INTER_BITS);
-        short ax = convert_short(X0 & (INTER_TAB_SIZE-1));
-        short ay = convert_short(Y0 & (INTER_TAB_SIZE-1));
+        for (int dy = dy0, dy1 = min(dst_rows, dy0 + rowsPerWI); dy < dy1; ++dy)
+        {
+            int X0 = X0_ + rint(fma(M[1], dy, M[2]) * AB_SCALE) + round_delta;
+            int Y0 = Y0_ + rint(fma(M[4], dy, M[5]) * AB_SCALE) + round_delta;
+            X0 = X0 >> (AB_BITS - INTER_BITS);
+            Y0 = Y0 >> (AB_BITS - INTER_BITS);
 
-        WT v0 = (sx >= 0 && sx < src_cols && sy >= 0 && sy < src_rows) ?
-            convertToWT(*(__global const T *)(srcptr + mad24(sy, src_step, src_offset + sx * (int)sizeof(T)))) : scalar;
-        WT v1 = (sx+1 >= 0 && sx+1 < src_cols && sy >= 0 && sy < src_rows) ?
-            convertToWT(*(__global const T *)(srcptr + mad24(sy, src_step, src_offset + (sx+1) * (int)sizeof(T)))) : scalar;
-        WT v2 = (sx >= 0 && sx < src_cols && sy+1 >= 0 && sy+1 < src_rows) ?
-            convertToWT(*(__global const T *)(srcptr + mad24(sy+1, src_step, src_offset + sx * (int)sizeof(T)))) : scalar;
-        WT v3 = (sx+1 >= 0 && sx+1 < src_cols && sy+1 >= 0 && sy+1 < src_rows) ?
-            convertToWT(*(__global const T *)(srcptr + mad24(sy+1, src_step, src_offset + (sx+1) * (int)sizeof(T)))) : scalar;
+            short sx = convert_short_sat(X0 >> INTER_BITS);
+            short sy = convert_short_sat(Y0 >> INTER_BITS);
+            short ax = convert_short(X0 & (INTER_TAB_SIZE-1));
+            short ay = convert_short(Y0 & (INTER_TAB_SIZE-1));
 
-        float taby = 1.f/INTER_TAB_SIZE*ay;
-        float tabx = 1.f/INTER_TAB_SIZE*ax;
+            WT v0 = scalar, v1 = scalar, v2 = scalar, v3 = scalar;
+            if (sx >= 0 && sx < src_cols)
+            {
+                if (sy >= 0 && sy < src_rows)
+                    v0 = convertToWT(loadpix(srcptr + mad24(sy, src_step, mad24(sx, pixsize, src_offset))));
+                if (sy+1 >= 0 && sy+1 < src_rows)
+                    v2 = convertToWT(loadpix(srcptr + mad24(sy+1, src_step, mad24(sx, pixsize, src_offset))));
+            }
+            if (sx+1 >= 0 && sx+1 < src_cols)
+            {
+                if (sy >= 0 && sy < src_rows)
+                    v1 = convertToWT(loadpix(srcptr + mad24(sy, src_step, mad24(sx+1, pixsize, src_offset))));
+                if (sy+1 >= 0 && sy+1 < src_rows)
+                    v3 = convertToWT(loadpix(srcptr + mad24(sy+1, src_step, mad24(sx+1, pixsize, src_offset))));
+            }
 
-        int dst_index = mad24(dy, dst_step, dst_offset + dx * (int)sizeof(T));
-        __global T * dst = (__global T *)(dstptr + dst_index);
+            float taby = 1.f/INTER_TAB_SIZE*ay;
+            float tabx = 1.f/INTER_TAB_SIZE*ax;
+
+            int dst_index = mad24(dy, dst_step, mad24(dx, pixsize, dst_offset));
 
 #if depth <= 4
-        int itab0 = convert_short_sat_rte( (1.0f-taby)*(1.0f-tabx) * INTER_REMAP_COEF_SCALE );
-        int itab1 = convert_short_sat_rte( (1.0f-taby)*tabx * INTER_REMAP_COEF_SCALE );
-        int itab2 = convert_short_sat_rte( taby*(1.0f-tabx) * INTER_REMAP_COEF_SCALE );
-        int itab3 = convert_short_sat_rte( taby*tabx * INTER_REMAP_COEF_SCALE );
+            int itab0 = convert_short_sat_rte( (1.0f-taby)*(1.0f-tabx) * INTER_REMAP_COEF_SCALE );
+            int itab1 = convert_short_sat_rte( (1.0f-taby)*tabx * INTER_REMAP_COEF_SCALE );
+            int itab2 = convert_short_sat_rte( taby*(1.0f-tabx) * INTER_REMAP_COEF_SCALE );
+            int itab3 = convert_short_sat_rte( taby*tabx * INTER_REMAP_COEF_SCALE );
 
-        WT val = v0 * itab0 +  v1 * itab1 + v2 * itab2 + v3 * itab3;
-        dst[0] = convertToT((val + (1 << (INTER_REMAP_COEF_BITS-1))) >> INTER_REMAP_COEF_BITS);
+            WT val = mad24(v0, itab0, mad24(v1, itab1, mad24(v2, itab2, v3 * itab3)));
+            storepix(convertToT((val + (1 << (INTER_REMAP_COEF_BITS-1))) >> INTER_REMAP_COEF_BITS), dstptr + dst_index);
 #else
-        float tabx2 = 1.0f - tabx, taby2 = 1.0f - taby;
-        WT val = v0 * tabx2 * taby2 +  v1 * tabx * taby2 + v2 * tabx2 * taby + v3 * tabx * taby;
-        dst[0] = convertToT(val);
+            float tabx2 = 1.0f - tabx, taby2 = 1.0f - taby;
+            WT val = fma(v0, tabx2 * taby2, fma(v1, tabx * taby2, fma(v2, tabx2 * taby, v3 * tabx * taby)));
+            storepix(convertToT(val), dstptr + dst_index);
 #endif
+        }
     }
 }
 
@@ -162,15 +193,15 @@ inline void interpolateCubic( float x, float* coeffs )
 {
     const float A = -0.75f;
 
-    coeffs[0] = ((A*(x + 1.f) - 5.0f*A)*(x + 1.f) + 8.0f*A)*(x + 1.f) - 4.0f*A;
-    coeffs[1] = ((A + 2.f)*x - (A + 3.f))*x*x + 1.f;
-    coeffs[2] = ((A + 2.f)*(1.f - x) - (A + 3.f))*(1.f - x)*(1.f - x) + 1.f;
+    coeffs[0] = fma(fma(fma(A, (x + 1.f), - 5.0f*A), (x + 1.f), 8.0f*A), x + 1.f, - 4.0f*A);
+    coeffs[1] = fma(fma(A + 2.f, x, - (A + 3.f)), x*x, 1.f);
+    coeffs[2] = fma(fma(A + 2.f, 1.f - x, - (A + 3.f)), (1.f - x)*(1.f - x), 1.f);
     coeffs[3] = 1.f - coeffs[0] - coeffs[1] - coeffs[2];
 }
 
 __kernel void warpAffine(__global const uchar * srcptr, int src_step, int src_offset, int src_rows, int src_cols,
                          __global uchar * dstptr, int dst_step, int dst_offset, int dst_rows, int dst_cols,
-                         __constant CT * M, WT scalar)
+                         __constant CT * M, ST scalar_)
 {
     int dx = get_global_id(0);
     int dy = get_global_id(1);
@@ -182,8 +213,9 @@ __kernel void warpAffine(__global const uchar * srcptr, int src_step, int src_of
         int tmp = (dx << AB_BITS);
         int X0 = rint(M[0] * tmp);
         int Y0 = rint(M[3] * tmp);
-        X0 += rint((M[1]*dy + M[2]) * AB_SCALE) + round_delta;
-        Y0 += rint((M[4]*dy + M[5]) * AB_SCALE) + round_delta;
+
+        X0 += rint(fma(M[1], dy, M[2]) * AB_SCALE) + round_delta;
+        Y0 += rint(fma(M[4], dy, M[5]) * AB_SCALE) + round_delta;
         X0 = X0 >> (AB_BITS - INTER_BITS);
         Y0 = Y0 >> (AB_BITS - INTER_BITS);
 
@@ -195,10 +227,21 @@ __kernel void warpAffine(__global const uchar * srcptr, int src_step, int src_of
         WT v[16];
         #pragma unroll
         for (int y = 0; y < 4; y++)
-            #pragma unroll
-            for (int x = 0; x < 4; x++)
-                v[mad24(y, 4, x)] = (sx+x >= 0 && sx+x < src_cols && sy+y >= 0 && sy+y < src_rows) ?
-                    convertToWT(*(__global const T *)(srcptr + mad24(sy+y, src_step, src_offset + (sx+x) * (int)sizeof(T)))) : scalar;
+        {
+            if (sy+y >= 0 && sy+y < src_rows)
+            {
+                #pragma unroll
+                for (int x = 0; x < 4; x++)
+                    v[mad24(y, 4, x)] = sx+x >= 0 && sx+x < src_cols ?
+                        convertToWT(loadpix(srcptr + mad24(sy+y, src_step, mad24(sx+x, pixsize, src_offset)))) : scalar;
+            }
+            else
+            {
+                #pragma unroll
+                for (int x = 0; x < 4; x++)
+                    v[mad24(y, 4, x)] = scalar;
+            }
+        }
 
         float tab1y[4], tab1x[4];
 
@@ -207,8 +250,7 @@ __kernel void warpAffine(__global const uchar * srcptr, int src_step, int src_of
         interpolateCubic(ayy, tab1y);
         interpolateCubic(axx, tab1x);
 
-        int dst_index = mad24(dy, dst_step, dst_offset + dx * (int)sizeof(T));
-        __global T * dst = (__global T *)(dstptr + dst_index);
+        int dst_index = mad24(dy, dst_step, mad24(dx, pixsize, dst_offset));
 
         WT sum = (WT)(0);
 #if depth <= 4
@@ -220,13 +262,13 @@ __kernel void warpAffine(__global const uchar * srcptr, int src_step, int src_of
 
         #pragma unroll
         for (int i = 0; i < 16; i++)
-            sum += v[i] * itab[i];
-        dst[0] = convertToT( (sum + (1 << (INTER_REMAP_COEF_BITS-1))) >> INTER_REMAP_COEF_BITS );
+            sum = mad24(v[i], itab[i], sum);
+        storepix(convertToT( (sum + (1 << (INTER_REMAP_COEF_BITS-1))) >> INTER_REMAP_COEF_BITS ), dstptr + dst_index);
 #else
         #pragma unroll
         for (int i = 0; i < 16; i++)
-            sum += v[i] * tab1y[(i>>2)] * tab1x[(i&3)];
-        dst[0] = convertToT( sum );
+            sum = fma(v[i], tab1y[(i>>2)] * tab1x[(i&3)], sum);
+        storepix(convertToT( sum ), dstptr + dst_index);
 #endif
     }
 }
