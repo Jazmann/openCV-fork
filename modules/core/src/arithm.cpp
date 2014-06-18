@@ -731,39 +731,20 @@ static void max16s( const short* src1, size_t step1,
     vBinOp<short, OpMax<short>, IF_SIMD(VMax<short>)>(src1, step1, src2, step2, dst, step, sz);
 }
 
-static void max32u( const CV_32U_TYPE * src1, size_t step1,
-                   const CV_32U_TYPE * src2, size_t step2,
-                   CV_32U_TYPE * dst, size_t step, Size sz, void* )
-{
-#if (ARITHM_USE_IPP == 1)
-    {
-        CV_32U_TYPE* s1 = (CV_32U_TYPE*)src1;
-        CV_32U_TYPE* s2 = (CV_32U_TYPE*)src2;
-        CV_32U_TYPE* d  = dst;
-        fixSteps(sz, sizeof(dst[0]), step1, step2, step);
-        for(int i = 0; i < sz.height; i++)
-        {
-            ippsMaxEvery_32u(s1, s2, d, sz.width);
-            s1 = (CV_32U_TYPE*)((uchar*)s1 + step1);
-            s2 = (CV_32U_TYPE*)((uchar*)s2 + step2);
-            d  = (CV_32U_TYPE*)((uchar*)d + step);
-        }
-    }
-#else
-    vBinOp32u<OpMax<CV_32U_TYPE>, IF_SIMD(VMax<int>)>(src1, step1, src2, step2, dst, step, sz); // Change for VMax<unsigned 32 int>
-#endif
-    
-    //    IF_IPP(fixSteps(sz, sizeof(dst[0]), step1, step2, step);
-    //           ippiMaxEvery_16u_C1R(src1, (int)step1, src2, (int)step2, dst, (IppiSize&)sz),
-    //           (vBinOp16<ushort, OpMax<ushort>, IF_SIMD(_VMax16u)>(src1, step1, src2, step2, dst, step, sz)));
-}
-    
-static void max32s( const int* src1, size_t step1,
-                    const int* src2, size_t step2,
-                    int* dst, size_t step, Size sz, void* )
+static void max32s( const CV_32S_TYPE * src1, size_t step1,
+                   const CV_32S_TYPE * src2, size_t step2,
+                   CV_32S_TYPE * dst, size_t step, Size sz, void* )
 {
     vBinOp32<int, OpMax<int>, IF_SIMD(VMax<int>)>(src1, step1, src2, step2, dst, step, sz);
 }
+    
+    
+static void max32u( const CV_32U_TYPE * src1, size_t step1,
+                       const CV_32U_TYPE * src2, size_t step2,
+                       CV_32U_TYPE * dst, size_t step, Size sz, void* )
+    {
+        vBinOp32u<OpMax<CV_32U_TYPE>, IF_SIMD(VMax<int>)>(src1, step1, src2, step2, dst, step, sz); // Change for VMax<unsigned 32 int>
+    }
 
 static void max32f( const float* src1, size_t step1,
                     const float* src2, size_t step2,
