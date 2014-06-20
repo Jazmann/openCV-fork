@@ -2315,7 +2315,50 @@ void sqrt(InputArray a, OutputArray b)
 /************************** CheckArray for NaN's, Inf's *********************************/
 
 template<int cv_mat_type> struct mat_type_assotiations{};
+    
+    template<> struct mat_type_assotiations<CV_2U>
+    {
+        typedef CV_2U_TYPE type;
+        static const CV_8U_TYPE min_allowable = CV_2U_MAX;
+        static const CV_8U_TYPE max_allowable = CV_2U_MAX;
+    };
+    
+    template<> struct mat_type_assotiations<CV_4U>
+    {
+        typedef CV_4U_TYPE type;
+        static const CV_8U_TYPE min_allowable = CV_8U_TYPE(CV_4U_MIN);
+        static const CV_8U_TYPE max_allowable = CV_8U_TYPE(CV_4U_MAX);
+    };
+    
+    template<> struct mat_type_assotiations<CV_32U>
+    {
+        typedef CV_32U_TYPE type;
+        static const type min_allowable = CV_32U_MIN;
+        static const type max_allowable = CV_32U_MAX;
+    };
+    
+    template<> struct mat_type_assotiations<CV_32S>
+    {
+        typedef CV_32S_TYPE type;
+        static const type min_allowable = CV_32S_MIN;
+        static const type max_allowable = CV_32S_MAX;
+    };
+    
+    template<> struct mat_type_assotiations<CV_64U>
+    {
+        typedef CV_64U_TYPE type;
+        static const type min_allowable = CV_64U_MIN;
+        static const type max_allowable = CV_64U_MAX;
+    };
+    
+    template<> struct mat_type_assotiations<CV_64S>
+    {
+        typedef CV_64S_TYPE type;
+        static const type min_allowable = CV_64S_MIN;
+        static const type max_allowable = CV_64S_MAX;
+    };
 
+    
 template<> struct mat_type_assotiations<CV_8U>
 {
     typedef unsigned char type;
@@ -2343,12 +2386,6 @@ template<> struct mat_type_assotiations<CV_16S>
     static const type max_allowable = SHRT_MAX;
 };
 
-template<> struct mat_type_assotiations<CV_32S>
-{
-    typedef int type;
-    static const type min_allowable = (-INT_MAX - 1);
-    static const type max_allowable = INT_MAX;
-};
 
 // inclusive maxVal !!!
 template<int depth>
@@ -2384,14 +2421,21 @@ bool checkIntegerRange(cv::Mat src, Point& bad_pt, int minVal, int maxVal, doubl
 }
 
 typedef bool (*check_range_function)(cv::Mat src, Point& bad_pt, int minVal, int maxVal, double& bad_value);
-
+    
+// {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S, CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
 check_range_function check_range_functions[] =
-{
+    {
+    &checkIntegerRange<CV_2U>,
+    &checkIntegerRange<CV_4U>,
     &checkIntegerRange<CV_8U>,
     &checkIntegerRange<CV_8S>,
     &checkIntegerRange<CV_16U>,
-    &checkIntegerRange<CV_16S>,
-    &checkIntegerRange<CV_32S>
+        &checkIntegerRange<CV_16S>,
+        &checkIntegerRange<CV_32U>,
+        &checkIntegerRange<CV_32S>,
+        &checkIntegerRange<CV_64U>,
+        &checkIntegerRange<CV_64S>
+
 };
 
 bool checkRange(InputArray _src, bool quiet, Point* pt, double minVal, double maxVal)

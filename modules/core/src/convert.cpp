@@ -200,11 +200,13 @@ static SplitFunc getSplitFunc(int depth)
     static SplitFunc splitTab[] =
 { // {CV_2U, CV_4U, CV_8U, CV_8S, CV_16U, CV_16S, CV_32U, CV_32S, CV_64U, CV_64S,
   //  CV_32F, CV_64F, CV_USRTYPE1, CV_USRTYPE2, CV_USRTYPE3, CV_USRTYPE4}
-    (SplitFunc)GET_OPTIMIZED(split8u), (SplitFunc)GET_OPTIMIZED(split8u),
-    (SplitFunc)GET_OPTIMIZED(split8u), (SplitFunc)GET_OPTIMIZED(split8u),
-    (SplitFunc)GET_OPTIMIZED(split16u), (SplitFunc)GET_OPTIMIZED(split16u),
-    (SplitFunc)GET_OPTIMIZED(split32s), (SplitFunc)GET_OPTIMIZED(split32s),
-    (SplitFunc)GET_OPTIMIZED(split64s), (SplitFunc)GET_OPTIMIZED(split64s), 0, 0, 0, 0, 0, 0
+    (SplitFunc)GET_OPTIMIZED(split8u), (SplitFunc)GET_OPTIMIZED(split8u), // CV_2U, CV_4U
+    (SplitFunc)GET_OPTIMIZED(split8u), (SplitFunc)GET_OPTIMIZED(split8u), // CV_8U, CV_8S
+    (SplitFunc)GET_OPTIMIZED(split16u), (SplitFunc)GET_OPTIMIZED(split16u), // CV_16U, CV_16S
+    (SplitFunc)GET_OPTIMIZED(split32s), (SplitFunc)GET_OPTIMIZED(split32s), // CV_32U, CV_32S
+    (SplitFunc)GET_OPTIMIZED(split64s), (SplitFunc)GET_OPTIMIZED(split64s), // CV_64U, CV_64S
+    (SplitFunc)GET_OPTIMIZED(split32s), (SplitFunc)GET_OPTIMIZED(split64s), //  CV_32F, CV_64F
+    0, 0, 0, 0
     };
 
     return splitTab[depth];
@@ -218,8 +220,10 @@ static MergeFunc getMergeFunc(int depth)
     (MergeFunc)GET_OPTIMIZED(merge8u),  (MergeFunc)GET_OPTIMIZED(merge8u),
     (MergeFunc)GET_OPTIMIZED(merge16u), (MergeFunc)GET_OPTIMIZED(merge16u),
     (MergeFunc)GET_OPTIMIZED(merge32s), (MergeFunc)GET_OPTIMIZED(merge32s),
-    (MergeFunc)GET_OPTIMIZED(merge64s), (MergeFunc)GET_OPTIMIZED(merge64s), 0, 0, 0, 0, 0, 0
-};
+    (MergeFunc)GET_OPTIMIZED(merge64s), (MergeFunc)GET_OPTIMIZED(merge64s),
+    (MergeFunc)GET_OPTIMIZED(merge32s), (MergeFunc)GET_OPTIMIZED(merge64s),
+    0, 0, 0, 0
+    };
 
     return mergeTab[depth];
 }
@@ -348,6 +352,10 @@ void cv::merge(const Mat* mv, size_t n, OutputArray _dst)
     CV_Assert( mv && n > 0 );
 
     int depth = mv[0].depth();
+    auto mv0 = mv[0];
+    int typemv = mv[0].type();
+    int magic = Mat::MAGIC_VAL;
+    int depth2 = CV_MAT_DEPTH(mv[0].type());
     bool allch1 = true;
     int k, cn = 0;
     size_t i;
@@ -577,7 +585,7 @@ static MixChannelsFunc getMixchFunc(int depth)
     (MixChannelsFunc)mixChannels16u,(MixChannelsFunc)mixChannels16u,
     (MixChannelsFunc)mixChannels32s,(MixChannelsFunc)mixChannels32s,
     (MixChannelsFunc)mixChannels64s,(MixChannelsFunc)mixChannels64s,
-    0, 0, 0, 0, 0, 0
+    (MixChannelsFunc)mixChannels32s,(MixChannelsFunc)mixChannels64s, 0, 0, 0, 0
 };
 
     return mixchTab[depth];
@@ -1908,66 +1916,45 @@ void cv::convertScaleAbs( InputArray _src, OutputArray _dst, double alpha, doubl
 
 void cv::Mat::convertTo(OutputArray _dst, int _type, double alpha, double beta) const
 {
-    printf("convert.cpp :: cv::Mat::convertTo : \n");
     bool noScale = fabs(alpha-1) < DBL_EPSILON && fabs(beta) < DBL_EPSILON;
 
     if( _type < 0 )
         _type = _dst.fixedType() ? _dst.type() : type();
     else
         _type = CV_MAKETYPE(CV_MAT_DEPTH(_type), channels());
-    printf("convert.cpp :: cv::Mat::convertTo : _type : %i\n",_type);
 
     int sdepth = depth(), ddepth = CV_MAT_DEPTH(_type);
-    printf("convert.cpp :: cv::Mat::convertTo : \n");
     if( sdepth == ddepth && noScale )
     {
-        printf("convert.cpp :: cv::Mat::convertTo : copyTo \n");
         copyTo(_dst);
         return;
     }
     
-    printf("convert.cpp :: cv::Mat::convertTo : \n");
     Mat src = *this;
     
-    printf("convert.cpp :: cv::Mat::convertTo : \n");
     BinaryFunc func = noScale ? getConvertFunc(sdepth, ddepth) : getConvertScaleFunc(sdepth, ddepth);
-    printf("convert.cpp :: cv::Mat::convertTo : \n");
     double scale[] = {alpha, beta};
     int cn = channels();
     CV_Assert( func != 0 );
     
-    printf("convert.cpp :: cv::Mat::convertTo : \n");
     if( dims <= 2 )
     {
-        printf("convert.cpp :: cv::Mat::convertTo : dims <= 2 IN\n");
         _dst.create( size(), _type );
-        printf("convert.cpp :: cv::Mat::convertTo : dims <= 2\n");
         Mat dst = _dst.getMat();
-        printf("convert.cpp :: cv::Mat::convertTo : dims <= 2\n");
         Size sz = getContinuousSize(src, dst, cn);
-        printf("convert.cpp :: cv::Mat::convertTo : dims <= 2\n");
         func( src.data, src.step, 0, 0, dst.data, dst.step, sz, scale );
-        printf("convert.cpp :: cv::Mat::convertTo : dims <= 2 OUT\n");
     }
     else
     {
-        printf("convert.cpp :: cv::Mat::convertTo : dims > 2 IN\n");
         _dst.create( dims, size, _type );
-        printf("convert.cpp :: cv::Mat::convertTo : dims > 2\n");
         Mat dst = _dst.getMat();
-        printf("convert.cpp :: cv::Mat::convertTo : dims > 2\n");
         const Mat* arrays[] = {&src, &dst, 0};
-        printf("convert.cpp :: cv::Mat::convertTo : dims > 2\n");
         uchar* ptrs[2];
-        printf("convert.cpp :: cv::Mat::convertTo : dims > 2\n");
         NAryMatIterator it(arrays, ptrs);
-        printf("convert.cpp :: cv::Mat::convertTo : dims > 2\n");
         Size sz((int)(it.size*cn), 1);
-        printf("convert.cpp :: cv::Mat::convertTo : dims > 2 \n");
 
         for( size_t i = 0; i < it.nplanes; i++, ++it )
             func(ptrs[0], 1, 0, 0, ptrs[1], 1, sz, scale);
-        printf("convert.cpp :: cv::Mat::convertTo : dims > 2 OUT\n");
     }
 }
 
