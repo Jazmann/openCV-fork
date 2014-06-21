@@ -4599,7 +4599,7 @@ struct Image2D::Impl
             devData = clCreateBuffer(context, CL_MEM_READ_ONLY, src.cols * src.rows * src.elemSize(), NULL, &err);
             CV_OclDbgAssert(err == CL_SUCCESS);
 
-            const size_t roi[3] = {src.cols * src.elemSize(), static_cast<size_t>(src.rows), 1};
+            const size_t roi[3] = {static_cast<size_t>(src.cols) * src.elemSize(), static_cast<size_t>(src.rows), 1};
             CV_Assert(clEnqueueCopyBufferRect(queue, (cl_mem)src.handle(ACCESS_READ), devData, origin, origin,
                 roi, src.step, 0, src.cols * src.elemSize(), 0, 0, NULL, NULL) == CL_SUCCESS);
             CV_OclDbgAssert(clFlush(queue) == CL_SUCCESS);
